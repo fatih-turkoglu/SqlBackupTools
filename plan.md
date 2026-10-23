@@ -102,14 +102,58 @@ ZIP, `.bak` silme ve retention işlemleri `accessPath` üzerinden yapılır.
 
 ---
 
-## Faz 2 – Batch ve Zamanlanmış Görev (`internal/scheduler`)
+## Faz 2 – Çoklu Dil Desteği (`internal/i18n`)
 
-### 2.1 Batch dosyası
+Exe ile aynı klasördeki `lang\` altında `<dilkodu>.lng` dosyaları (ör. `lang\en.lng`, `lang\tr.lng`). CLI ve GUI'deki **tüm** kullanıcıya görünen metinler bu dosyalardan gelir. Varsayılan dil **İngilizce**; ilk sürümde ek olarak yalnızca **Türkçe** dosyası üretilir.
+Faz 1'den sonra yapılır (CLI metinleri de hazır olur), GUI'den (Faz 4) önce biter; böylece arayüz baştan çok dilli yazılır.
+
+### 2.1 Dil dosyası biçimi
+- [ ] UTF-8 (BOM'lu/BOM'suz ikisi de okunur), satır başına `anahtar = değer`; `#` ile yorum, boş satırlar yok sayılır
+- [ ] Anahtarlar noktalı ve gruplu: `cli.run.started`, `gui.menu.jobs`, `err.config.nameInvalid`, `backup.db.failed` …
+- [ ] Yer tutucular adlandırılmış: `{db}`, `{path}`, `{count}` (çevirmen sırayı değiştirebilir; `%s` kullanılmaz)
+- [ ] Çok satırlı metin için `\n`, ters bölü için `\\` kaçışı
+- [ ] Başlık anahtarları: `@code = tr`, `@name = Türkçe` (dil seçim listesinde gösterilir)
+
+### 2.2 `internal/i18n` paketi
+- [ ] `lang\` klasörünün bulunması: `filepath.Dir(os.Executable())\lang`; `SQLBACKUP_LANG_DIR` ile değiştirilebilir (dev/test)
+- [ ] `en.lng` exe'ye `go:embed` ile gömülür → `lang\` klasörü yoksa/bozuksa program yine İngilizce çalışır
+- [ ] Geri düşme sırası: seçili dil → gömülü İngilizce → anahtarın kendisi (eksik anahtar uyarı olarak loglanır, program çökmez)
+- [ ] API: `i18n.T(key, args...)` (ör. `T("backup.db.failed", "db", name, "err", msg)`), `i18n.SetLanguage(code)`, `i18n.Languages()` (kod + ad listesi), `i18n.All()` (frontend için tüm sözlük)
+- [ ] Eşzamanlı kullanıma güvenli (dil değişimi GUI'de çalışma anında olabilir)
+- [ ] Birim testleri: ayrıştırma, kaçışlar, yer tutucu, geri düşme, bozuk satır
+
+### 2.3 Dil seçimi
+- [ ] Öncelik: CLI `--lang <kod>` → ayarlar dosyası (`%ProgramData%\SqlBackup\settings.json` → `language`) → `en`
+- [ ] Zamanlanmış görev (CLI, SYSTEM hesabı) dili ayarlar dosyasından okur; `.bat` içine dil yazılmaz
+- [ ] Bilinmeyen dil kodu → İngilizce + uyarı
+
+### 2.4 Mevcut kodun dönüştürülmesi
+- [ ] `internal/config` (`Validate` hataları vb.), `internal/mssql`, `internal/backup`, `internal/archive`, retention, logging ve CLI'daki tüm kullanıcıya görünen metinler `i18n.T` ile
+- [ ] Hata türleri: sabit metin yerine anahtar + parametre taşıyan hata (`i18n.Error`) — metin gösterim anında üretilir, `errors.Is/As` çalışmaya devam eder
+- [ ] SQL Server'dan gelen hata metinleri çevrilmez (olduğu gibi gösterilir), yalnızca etrafındaki açıklama çevrilir
+- [ ] Log dosyaları ve JSON çalışma kayıtları yazıldığı andaki dilde; kod yorumları ve commit mesajları Türkçe kalır
+- [ ] `lang\en.lng` ve `lang\tr.lng` dosyalarının üretilmesi
+
+### 2.5 GUI entegrasyonu (Faz 4 ile birlikte kullanılır)
+- [ ] Backend: `GetLanguages()`, `GetTranslations()`, `SetLanguage(code)` (ayarlara kaydeder)
+- [ ] Frontend: `t('key', {param})` yardımcısı + `data-i18n` öznitelikli statik metinler; dil değişince yeniden çizim (yeniden başlatma gerekmez)
+- [ ] Ayarlar ekranında dil seçimi (liste `lang\` klasöründeki dosyalardan)
+
+### 2.6 Build ve tutarlılık
+- [ ] Kaynak dosyalar repo kökünde `lang\`; `wails build` sonrası `build\bin\lang\` içine kopyalanması (`wails.json` `postBuildHooks` veya build betiği)
+- [ ] Test: koddaki her `T("...")` anahtarı `en.lng`'de var; `tr.lng` ile `en.lng` anahtar kümeleri ve yer tutucuları birebir aynı
+- [ ] Yeni dil ekleme rehberi (README): `en.lng` kopyala → çevir → `lang\`'a koy
+
+---
+
+## Faz 3 – Batch ve Zamanlanmış Görev (`internal/scheduler`)
+
+### 3.1 Batch dosyası
 - [ ] Şablondan `.bat` üretimi (exe yolu + `run --job "..."`, `exit /b %ERRORLEVEL%`)
 - [ ] Türkçe karakter / boşluk içeren yollar için doğru tırnaklama ve kod sayfası (`chcp 65001`)
 - [ ] Kaydetme konumu: varsayılan `jobs\<job>.bat`, kullanıcı farklı yer seçebilir
 
-### 2.2 Zamanlanmış görev
+### 3.2 Zamanlanmış görev
 - [ ] Zamanlama modeli: günlük / haftalık (gün seçimi) / N saatte bir, başlangıç saati
 - [ ] `schtasks /Create` komutu üretimi (`/TN "SqlBackup\<job>"`, `/RU SYSTEM` veya kullanıcı, `/RL HIGHEST`, `/F`)
 - [ ] Görev sorgulama (`schtasks /Query /XML`) → var mı, sonraki çalışma, son sonuç
@@ -119,9 +163,9 @@ ZIP, `.bak` silme ve retention işlemleri `accessPath` üzerinden yapılır.
 
 ---
 
-## Faz 3 – Arayüz (Wails)
+## Faz 4 – Arayüz (Wails)
 
-### 3.1 Backend köprüsü (`app.go`)
+### 4.1 Backend köprüsü (`app.go`)
 - [ ] Job CRUD: `ListJobs`, `GetJob`, `SaveJob`, `DeleteJob`, `DuplicateJob`
 - [ ] `TestConnection(conn, password)`, `ListDatabases(conn, password)`
 - [ ] `RunJobNow(name)` + ilerleme için Wails event'leri (`backup:progress`, `backup:done`)
@@ -129,13 +173,13 @@ ZIP, `.bak` silme ve retention işlemleri `accessPath` üzerinden yapılır.
 - [ ] `ListRuns`, `ReadLog`
 - [ ] Klasör seçme diyaloğu (`runtime.OpenDirectoryDialog`)
 
-### 3.2 Tema ve layout
+### 4.2 Tema ve layout
 - [ ] CSS değişkenleri ile koyu tema (varsayılan) + açık tema
   - bg `#0f1115`, panel `#171a21`, border `#262b36`, text `#e6e8ee`, accent `#4f8cff`, success `#3ecf8e`, error `#ff5c5c`
 - [ ] Sol menü + içerik alanı layout'u, pencere başlığı ve ikon
 - [ ] Ortak bileşenler: buton, input, switch, checkbox, tablo, toast bildirim, modal, ilerleme çubuğu
 
-### 3.3 Ekranlar
+### 4.3 Ekranlar
 - [ ] **İşler (Dashboard):** iş kartları/tablosu, son çalışma durumu, sonraki çalışma, Yeni/Düzenle/Kopyala/Sil/Şimdi Çalıştır
 - [ ] **Bağlantı:** sunucu, port/instance, kimlik tipi, kullanıcı/şifre, encrypt/trust, Test Et
 - [ ] **Veritabanları:** liste + çoklu seçim, boyut/durum, "tümü", "sistem DB hariç", "yeni DB'leri dahil et"
@@ -143,25 +187,25 @@ ZIP, `.bak` silme ve retention işlemleri `accessPath` üzerinden yapılır.
 - [ ] **ZIP ve Saklama:** ZIP aç/kapa, mod, ZIP sonrası `.bak` sil, retention modu ve değeri
 - [ ] **Zamanlama:** sıklık, gün, saat, çalışacak hesap; `.bat Kaydet`, `Görev Oluştur`, `Görevi Sil`, görev durumu
 - [ ] **Loglar:** çalışma geçmişi tablosu, detay ve log görüntüleyici
-- [ ] **Ayarlar:** tema, varsayılan klasörler, log saklama süresi
+- [ ] **Ayarlar:** dil, tema, varsayılan klasörler, log saklama süresi
 
-### 3.4 UX detayları
+### 4.4 UX detayları
 - [ ] Form doğrulama ve anlaşılır hata mesajları
 - [ ] Kaydedilmemiş değişiklik uyarısı
 - [ ] Uzun işlemlerde kilitlenmeyen arayüz (async + spinner)
 
 ---
 
-## Faz 4 – Kalite, Test ve Paketleme
+## Faz 5 – Kalite, Test ve Paketleme
 
-### 4.1 Test
-- [ ] Birim testleri: config, DPAPI, dosya adı şablonu, retention, zip, batch/schtasks komut üretimi
+### 5.1 Test
+- [ ] Birim testleri: config, DPAPI, i18n, dosya adı şablonu, retention, zip, batch/schtasks komut üretimi
 - [ ] Entegrasyon testi: yerel SQL Express ile yedek alma
 - [ ] Uzak sunucu senaryosu: UNC `accessPath` ile zip + retention
 - [ ] Hata senaryoları: yanlış şifre, erişilemeyen yol, dolu disk, OFFLINE DB
 
-### 4.2 Paketleme
+### 5.2 Paketleme
 - [ ] Uygulama ikonu ve sürüm bilgisi (`wails.json`, `-ldflags` ile sürüm)
 - [ ] `wails build -clean -platform windows/amd64`
-- [ ] (Opsiyonel) NSIS installer (`wails build -nsis`)
+- [ ] (Opsiyonel) NSIS installer (`wails build -nsis`) – `lang\` klasörü pakete dahil
 - [ ] README: kurulum, kullanım, uzak sunucu yol açıklaması, SQL yetki gereksinimleri

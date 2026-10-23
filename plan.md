@@ -71,7 +71,11 @@ ZIP, `.bak` silme ve retention işlemleri `accessPath` üzerinden yapılır.
   - Seçili modda bulunamayan/OFFLINE DB **hata** sayılır; "yeni DB'leri dahil et" modunda OFFLINE **atlanır**, tempdb sessizce çıkarılır
 - [x] DB'leri sırayla yedekleme; biri hata verse de diğerlerine devam etme (doğrulama hatası da DB'yi başarısız yapar)
 - [x] Çalışma sonucu özeti: DB bazında başarı/hata, süre, dosya boyutu (`msdb.backupset` üzerinden)
-- [x] Exit code: `0` tümü başarılı, `1` kısmi hata, `2` tamamen başarısız/config hatası (hiçbir DB yedeklenmediyse de `2`)
+- [x] Exit code: `0` tümü başarılı, `1` kısmi hata, `2` tamamen başarısız/config hatası (hiçbir DB yedeklenmediyse de `2`), `3` iş zaten çalışıyor
+- [x] Aynı işin eşzamanlı ikinci çalışması engellenir (iş bazında; farklı işler paralel çalışabilir)
+  - Süreçler arası adlandırılmış mutex `Global\SqlBackup.Job.<iş adı küçük harf>` (SYSTEM görevi ile GUI aynı kilidi görür; süreç çökerse OS bırakır)
+  - Kilit tutuluyorsa hiçbir şey yapılmaz: `Result.AlreadyRunning = true`, uyarı mesajı, exit `3`
+  - `backup.IsRunning(job)` → arayüzde durum gösterimi ve "Şimdi çalıştır" öncesi uyarı
 
 ### 1.5 ZIP (`internal/archive`)
 - [x] `accessPath` erişilebilirlik kontrolü (yoksa anlaşılır hata) – okuma/yazma/silme gerçekten denenir; iş başında yapılır
@@ -97,7 +101,7 @@ ZIP, `.bak` silme ve retention işlemleri `accessPath` üzerinden yapılır.
 
 ### 1.8 CLI (`internal/cli`)
 - [ ] `main.go`: argüman varsa CLI, yoksa GUI
-- [ ] `SqlBackup.exe run --job <path>`
+- [ ] `SqlBackup.exe run --job <path>` (iş zaten çalışıyorsa uyarı yazılır, exit `3`)
 - [ ] `SqlBackup.exe test --job <path>` (yalnızca bağlantı testi)
 - [ ] `SqlBackup.exe list --job <path>` (DB listesi)
 - [ ] CLI modunda konsol penceresi davranışı (GUI build'de `AttachConsole` ile çıktı)
@@ -171,7 +175,7 @@ Faz 1'den sonra yapılır (CLI metinleri de hazır olur), GUI'den (Faz 4) önce 
 ### 4.1 Backend köprüsü (`app.go`)
 - [ ] Job CRUD: `ListJobs`, `GetJob`, `SaveJob`, `DeleteJob`, `DuplicateJob`
 - [ ] `TestConnection(conn, password)`, `ListDatabases(conn, password)`
-- [ ] `RunJobNow(name)` + ilerleme için Wails event'leri (`backup:progress`, `backup:done`)
+- [ ] `RunJobNow(name)` + ilerleme için Wails event'leri (`backup:progress`, `backup:done`); iş zaten çalışıyorsa (`IsRunning` / `AlreadyRunning`) uyarı gösterilip başlatılmaz
 - [ ] `SaveBatch`, `CreateTask`, `DeleteTask`, `GetTaskStatus`
 - [ ] `ListRuns`, `ReadLog`
 - [ ] Klasör seçme diyaloğu (`runtime.OpenDirectoryDialog`)
@@ -183,7 +187,7 @@ Faz 1'den sonra yapılır (CLI metinleri de hazır olur), GUI'den (Faz 4) önce 
 - [ ] Ortak bileşenler: buton, input, switch, checkbox, tablo, toast bildirim, modal, ilerleme çubuğu
 
 ### 4.3 Ekranlar
-- [ ] **İşler (Dashboard):** iş kartları/tablosu, son çalışma durumu, sonraki çalışma, Yeni/Düzenle/Kopyala/Sil/Şimdi Çalıştır
+- [ ] **İşler (Dashboard):** iş kartları/tablosu, son çalışma durumu ("çalışıyor" dahil), sonraki çalışma, Yeni/Düzenle/Kopyala/Sil/Şimdi Çalıştır
 - [ ] **Bağlantı:** sunucu, port/instance, kimlik tipi, kullanıcı/şifre, encrypt/trust, Test Et
 - [ ] **Veritabanları:** liste + çoklu seçim, boyut/durum, "tümü", "sistem DB hariç", "yeni DB'leri dahil et"
 - [ ] **Yedek Ayarları:** `serverPath`, `accessPath` (+ yerel/uzak açıklaması), dosya adı şablonu + önizleme, compression/checksum/copy_only/verify

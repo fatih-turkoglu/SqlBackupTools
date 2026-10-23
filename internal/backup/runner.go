@@ -21,6 +21,7 @@ const (
 	ExitOK      = 0 // tüm veritabanları başarılı
 	ExitPartial = 1 // en az biri başarılı, en az biri hatalı
 	ExitFailed  = 2 // hiçbiri başarılı değil veya config/bağlantı hatası
+	ExitBusy    = 3 // aynı iş zaten çalışıyor; bu çalışma başlatılmadı
 )
 
 // Server, çalıştırıcının ihtiyaç duyduğu SQL Server işlemleridir.
@@ -129,8 +130,11 @@ type Result struct {
 	Warnings  []string         `json:"warnings"`
 	// Error, işin hiç başlayamamasına yol açan hatadır (config, şifre,
 	// bağlantı, listeleme). Doluysa Databases genelde boştur.
-	Error    string `json:"error,omitempty"`
-	ExitCode int    `json:"exitCode"`
+	Error string `json:"error,omitempty"`
+	// AlreadyRunning, aynı işin başka bir çalışması sürdüğü için bu
+	// çalışmanın başlatılmadığını belirtir (Error de doludur).
+	AlreadyRunning bool `json:"alreadyRunning,omitempty"`
+	ExitCode       int  `json:"exitCode"`
 }
 
 // Counts, başarılı, hatalı ve atlanan veritabanı sayılarını döner.
@@ -158,6 +162,9 @@ func (r *Result) archiveErrors() (n int) {
 }
 
 func (r *Result) exitCode() int {
+	if r.AlreadyRunning {
+		return ExitBusy
+	}
 	if r.Error != "" {
 		return ExitFailed
 	}
@@ -179,7 +186,9 @@ func (r *Result) exitCode() int {
 func (r *Result) Summary() string {
 	var b strings.Builder
 	fmt.Fprintf(&b, "İş: %s  Sunucu: %s  Süre: %s\n", r.Job, r.Server, msDuration(r.ElapsedMs))
-	if r.Error != "" {
+	if r.AlreadyRunning {
+		fmt.Fprintf(&b, "UYARI: %s\n", r.Error)
+	} else if r.Error != "" {
 		fmt.Fprintf(&b, "HATA: %s\n", r.Error)
 	}
 	for _, w := range r.Warnings {
@@ -233,7 +242,8 @@ func (r *Result) Summary() string {
 
 // Run, işi çalıştırır: bağlanır, hedef veritabanlarını çözümler ve sırayla
 // yedekler (opsiyonel doğrulama ile). Bir veritabanının hatası diğerlerini
-// durdurmaz. Dönen sonuç hiçbir zaman nil değildir; ExitCode alanı doludur.
+// durdurmaz. Aynı iş başka bir süreçte çalışıyorsa hiçbir şey yapılmaz ve
+// ExitBusy döner. Dönen sonuç hiçbir zaman nil değildir; ExitCode alanı doludur.
 func Run(ctx context.Context, j *config.Job, opts Options) *Result {
 	rn := newRunner(j, opts)
 	rn.run(ctx)
@@ -299,6 +309,20 @@ func (rn *runner) run(ctx context.Context) {
 		rn.fail(err)
 		return
 	}
+
+	// Kilit doğrulamadan sonra alınır: ad geçerli olmalı (mutex adında kullanılır).
+	lock, err := acquireJobLock(j.Name)
+	if errors.Is(err, ErrAlreadyRunning) {
+		rn.res.AlreadyRunning = true
+		rn.res.Error = fmt.Sprintf("%q işi zaten çalışıyor; bu çalışma başlatılmadı", j.Name)
+		rn.log.Warn("iş zaten çalışıyor; çalışma başlatılmadı")
+		return
+	}
+	if err != nil {
+		rn.fail(err)
+		return
+	}
+	defer lock.release()
 
 	// Erişim yolu yalnızca zip ve saklama için gerekir; yedeği sunucu yazar.
 	// Bu yüzden erişim yoksa yedekler yine alınır, yalnızca zip/saklama

@@ -1,0 +1,13 @@
+build/bin
+node_modules
+frontend/dist
+
+# Go
+*.exe
+*.test
+*.out
+
+# Editör / OS
+.vscode/
+.idea/
+Thumbs.db

@@ -28,6 +28,7 @@ import (
 	"sqlbackup/internal/config"
 	"sqlbackup/internal/i18n"
 	"sqlbackup/internal/mssql"
+	"sqlbackup/internal/scheduler"
 )
 
 // env, komutların dış dünyayla etkileşimidir; testlerde değiştirilir.
@@ -44,7 +45,7 @@ type env struct {
 	keepDays int
 
 	// Zamanlanmış görev komutları için; nil ise gerçek sistem kullanılır.
-	tasks      taskService
+	tasks      scheduler.Service
 	user       string // "current" görev hesabı (boşsa oturumdaki kullanıcı)
 	isElevated func() bool
 	runAsAdmin func(exe string, args []string) (int, error)

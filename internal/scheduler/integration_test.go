@@ -105,6 +105,10 @@ func TestTaskLifecycle(t *testing.T) {
 		!strings.EqualFold(st.Definition.User, currentUser(t)) {
 		t.Errorf("tanım: %+v", st.Definition)
 	}
+	// Görev Zamanlayıcı'nın geri verdiği XML'den zamanlama okunabilmeli.
+	if !st.Definition.Matches(j, Command{Exe: exe, JobFile: jobFile}) {
+		t.Errorf("görev işle eşleşmeli: %+v", st.Definition)
+	}
 	if st.Path != TaskFolder+`\gece` {
 		t.Errorf("yol: %s", st.Path)
 	}

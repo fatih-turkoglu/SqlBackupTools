@@ -314,7 +314,7 @@ func QueryTask(name string) (TaskStatus, error) {
 			st.NextRun = variantTime(v)
 		}
 		if v, err := prop("Xml"); err == nil {
-			if def, err := parseTaskXML(v.ToString()); err == nil {
+			if def, err := ParseTaskXML(v.ToString()); err == nil {
 				def.User = accountName(def.User)
 				st.Definition = def
 			}

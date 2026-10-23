@@ -195,13 +195,18 @@ Faz 1'den sonra yapılır (CLI metinleri de hazır olur), GUI'den (Faz 4) önce 
 
 ## Faz 4 – Arayüz (Wails)
 
-### 4.1 Backend köprüsü (`app.go`)
-- [ ] Job CRUD: `ListJobs`, `GetJob`, `SaveJob`, `DeleteJob`, `DuplicateJob`
-- [ ] `TestConnection(conn, password)`, `ListDatabases(conn, password)`
-- [ ] `RunJobNow(name)` + ilerleme için Wails event'leri (`backup:progress`, `backup:done`); iş zaten çalışıyorsa (`IsRunning` / `AlreadyRunning`) uyarı gösterilip başlatılmaz
-- [ ] `SaveBatch`, `CreateTask`, `DeleteTask`, `GetTaskStatus` (`scheduler` paketi; `ErrAccessDenied` → CLI `task ... --elevate` ile yükseltilmiş çalıştırma, `EnsureDirs` hatası arayüzde gösterilmeli)
-- [ ] `ListRuns`, `ReadLog`
-- [ ] Klasör seçme diyaloğu (`runtime.OpenDirectoryDialog`)
+### 4.1 Backend köprüsü (`internal/app`)
+**Karar:** Köprü `main` yerine `internal/app` paketinde (test edilebilir; `main` testte `frontend/dist` ve Wails ister). Frontend: `wailsjs/go/app/App`. Yaşam döngüsü `app.Startup(a)` / `app.Shutdown(a)` paket işlevleri (App yöntemi olsalardı frontend'e açılırlardı).
+**Karar:** CLI ve GUI'nin ortak çalışma akışı `internal/jobrun.Execute` (EnsureDirs → log → `backup.Run` → kayıt → temizlik); log kaydı başlatanı belirtir (`log.cli.started` / `log.gui.started`).
+- [x] Job CRUD: `ListJobs` (son çalışma, görev durumu, çalışıyor mu, doğrulama hataları, okunamayan dosyalar), `NewJob`, `GetJob`, `SaveJob`, `DeleteJob`, `DuplicateJob`
+  - Şifre frontend'e gitmez: `GetJob` → `hasPassword` / `passwordError` (başka makineden kopyalanmış iş); `SaveJob` `passwordChanged=false` ise kayıtlı şifreyi korur, Windows kimliğinde siler
+  - `SaveJob` geçersiz işi kaydetmez, hataları liste döner (`errors`); aynı ad (harf duyarsız) çakışması; yeniden adlandırmada eski dosya silinir, eski görev/.bat için uyarı (yalnızca harf değişikliğinde uyarı yok); kayıtlı görev ayarlarla uyuşmuyorsa uyarı
+  - `DeleteJob`: görev (gerekirse UAC) → varsayılan .bat → iş dosyası; görev silinemezse hiçbir şey silinmez; çalışan iş silinemez/yeniden adlandırılamaz
+- [x] `TestConnection(req)`, `ListDatabases(req)` (`ConnectionRequest`: girilen şifre veya `storedJob`'un kayıtlı şifresi), `CheckFolderAccess`, `PreviewFileName`
+- [x] `RunJobNow(name)` + olaylar `backup:started`, `backup:progress`, `backup:done` (sonuç + uyarılar); iş zaten çalışıyorsa (bu arayüzde veya başka süreçte) hata; `CancelJob`, `IsJobRunning`, `RunningJobs`; kapanışta çalışmalar iptal edilip kayıt beklenir
+- [x] `SaveBatch`, `DefaultBatchPath`, `CreateTask`, `DeleteTask`, `RunTask`, `GetTaskStatus` (`outdated`: görev XML'inden zamanlama geri okunup işle karşılaştırılır), `TaskWarnings`; `ErrAccessDenied` → `cli.RunElevated` ile `task <sub> --job <ad>` (UAC)
+- [x] `ListRuns(job, limit)`, `ReadRun`, `ListLogs`, `ReadLog` (son 2 MB); yollar yalnızca log klasörü içinden okunur
+- [x] Klasör seçme (`SelectFolder`) ve .bat kaydetme (`SelectBatchFile`) diyalogları; `GetAppInfo` (sürüm, klasörler, açılış hatası), `GetSettings` / `SaveSettings`
 
 ### 4.2 Tema ve layout
 - [ ] CSS değişkenleri ile koyu tema (varsayılan) + açık tema

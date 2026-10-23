@@ -6,7 +6,7 @@
 //   data-i18n-title / data-i18n-placeholder → title / placeholder öznitelikleri
 // Dil değişince onLanguageChange ile kaydolan fonksiyonlar çağrılır; ekran
 // yeniden başlatma gerekmeden yeniden çizilir.
-import {GetLanguages, GetTranslations, SetLanguage} from '../wailsjs/go/main/App';
+import {GetLanguages, GetTranslations, SetLanguage} from '../wailsjs/go/app/App';
 
 let dict: Record<string, string> = {};
 const listeners: Array<() => void> = [];

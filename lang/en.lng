@@ -9,6 +9,7 @@
 # ---------- Common ----------
 common.unknown = unknown
 common.taskDescription = Runs the SqlBackup job "{job}" (created by SqlBackup).
+common.batchFiles = Batch files
 
 # ---------- Job settings (config) ----------
 err.config.nameInvalid = job name must be 1-64 characters and may only contain letters, digits, '_', '-' and '.'
@@ -139,6 +140,19 @@ warn.scheduler.systemWindowsAuth = the task runs as SYSTEM with Windows authenti
 warn.scheduler.systemNetworkPath = the task runs as SYSTEM: the network folder {path} is accessed with the computer account (DOMAIN\\COMPUTER$), which needs read, write and delete permission
 warn.scheduler.currentUser = the task runs only while {user} is logged on
 
+# ---------- User interface backend (app) ----------
+err.app.jobNotFound = job not found: {job}
+err.app.jobExists = a job named "{job}" already exists
+err.app.alreadyRunning = job "{job}" is already running
+err.app.renameRunning = job "{job}" is running; it cannot be renamed now
+err.app.deleteRunning = job "{job}" is running; it cannot be deleted now
+err.app.elevatedExit = the command run with administrator rights failed (exit code {code})
+err.app.pathOutside = file is not in the log folder: {path}
+err.app.keepDays = log retention cannot be negative
+warn.app.renamedTask = the scheduled task of the old name ({path}) still runs the old job and will fail; delete it and create the task again
+warn.app.renamedBatch = the batch file of the old name ({path}) still runs the old job
+warn.app.taskOutdated = the scheduled task ({path}) does not match the saved settings; update the task
+
 # ---------- Log messages ----------
 log.job.started = job started
 log.job.done = job finished
@@ -161,6 +175,8 @@ log.retention.failed = retention could not be applied
 log.retention.noSuccess = retention not applied because there is no successful backup
 log.retention.deleted = old backup deleted
 log.cli.started = started from command line
+log.gui.started = started from the user interface
+warn.run.noLogFile = {err}; nothing will be written to the log file
 log.run.saved = run record written
 log.run.saveFailed = could not write run record
 log.cleanup.done = old logs cleaned up
@@ -197,7 +213,6 @@ cli.err.noJob = --job not specified
 cli.err.jobNotFound = job file not found: {path}
 cli.err.connect = could not connect: {err}
 cli.warn.language = could not load language ({code}): {err}
-cli.warn.noLogFile = {err}; nothing will be written to the log file
 cli.phase.backup = backup
 cli.phase.verify = verify
 cli.phase.zip = zip

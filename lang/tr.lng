@@ -8,6 +8,7 @@
 # ---------- Ortak ----------
 common.unknown = bilinmiyor
 common.taskDescription = SqlBackup "{job}" işini çalıştırır (SqlBackup tarafından oluşturuldu).
+common.batchFiles = Batch dosyaları
 
 # ---------- İş ayarları (config) ----------
 err.config.nameInvalid = iş adı 1-64 karakter olmalı; yalnızca harf, rakam, '_', '-' ve '.' içerebilir
@@ -138,6 +139,19 @@ warn.scheduler.systemWindowsAuth = görev SYSTEM hesabıyla ve Windows kimlik do
 warn.scheduler.systemNetworkPath = görev SYSTEM hesabıyla çalışır: {path} ağ klasörüne bilgisayar hesabıyla (DOMAIN\\BILGISAYAR$) erişilir; bu hesabın okuma, yazma ve silme izni olmalı
 warn.scheduler.currentUser = görev yalnızca {user} oturum açmışken çalışır
 
+# ---------- Arayüz backend'i (app) ----------
+err.app.jobNotFound = iş bulunamadı: {job}
+err.app.jobExists = "{job}" adında bir iş zaten var
+err.app.alreadyRunning = "{job}" işi zaten çalışıyor
+err.app.renameRunning = "{job}" işi çalışıyor; şu anda yeniden adlandırılamaz
+err.app.deleteRunning = "{job}" işi çalışıyor; şu anda silinemez
+err.app.elevatedExit = yönetici yetkisiyle çalıştırılan komut başarısız oldu (çıkış kodu {code})
+err.app.pathOutside = dosya log klasöründe değil: {path}
+err.app.keepDays = log saklama süresi negatif olamaz
+warn.app.renamedTask = eski adın zamanlanmış görevi ({path}) hâlâ eski işi çalıştırıyor ve başarısız olacak; silip görevi yeniden oluşturun
+warn.app.renamedBatch = eski adın batch dosyası ({path}) hâlâ eski işi çalıştırıyor
+warn.app.taskOutdated = zamanlanmış görev ({path}) kaydedilen ayarlarla uyuşmuyor; görevi güncelleyin
+
 # ---------- Log mesajları ----------
 log.job.started = iş başladı
 log.job.done = iş tamamlandı
@@ -160,6 +174,8 @@ log.retention.failed = saklama kuralı uygulanamadı
 log.retention.noSuccess = başarılı yedek olmadığı için saklama kuralı uygulanmadı
 log.retention.deleted = eski yedek silindi
 log.cli.started = komut satırından çalıştırıldı
+log.gui.started = arayüzden çalıştırıldı
+warn.run.noLogFile = {err}; log dosyasına yazılmayacak
 log.run.saved = çalışma kaydı yazıldı
 log.run.saveFailed = çalışma kaydı yazılamadı
 log.cleanup.done = eski loglar temizlendi
@@ -196,7 +212,6 @@ cli.err.noJob = --job belirtilmedi
 cli.err.jobNotFound = iş dosyası bulunamadı: {path}
 cli.err.connect = bağlantı kurulamadı: {err}
 cli.warn.language = dil yüklenemedi ({code}): {err}
-cli.warn.noLogFile = {err}; log dosyasına yazılmayacak
 cli.phase.backup = yedek
 cli.phase.verify = doğrulama
 cli.phase.zip = zip

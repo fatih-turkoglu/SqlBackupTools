@@ -4,6 +4,7 @@ import (
 	"strings"
 	"time"
 
+	"sqlbackup/internal/config"
 	"sqlbackup/internal/i18n"
 )
 
@@ -142,4 +143,17 @@ func sanitize(s string) string {
 		}
 		return r
 	}, strings.TrimSpace(s))
+}
+
+// PreviewFileName, işin şablonundan db için örnek dosya adını üretir
+// (arayüzdeki önizleme). server boşsa bağlantı ayarlarındaki ad kullanılır;
+// gerçek çalışmada sunucunun bildirdiği ad ({server}) farklı olabilir.
+func PreviewFileName(j *config.Job, db, server string, t time.Time) (string, error) {
+	if server == "" {
+		server = j.Connection.DisplayName()
+	}
+	if err := config.ValidateTemplate(j.Backup.FileNameTemplate); err != nil {
+		return "", err
+	}
+	return ExpandTemplate(j.Backup.FileNameTemplate, TemplateVars{Server: server, Database: db, Job: j.Name, Time: t})
 }

@@ -306,7 +306,7 @@ func (rn *runner) warn(msg string) {
 
 func (rn *runner) run(ctx context.Context) {
 	j := rn.job
-	rn.res.Server = configServerName(j.Connection)
+	rn.res.Server = j.Connection.DisplayName()
 	rn.log.Info(i18n.T("log.job.started"), "server", rn.res.Server)
 
 	if err := j.Validate(); err != nil {
@@ -644,14 +644,6 @@ func (rn *runner) uniqueFileName(name string) string {
 // Yol sunucunun bakış açısıyla yorumlandığı için filepath kullanılmaz.
 func joinServerPath(dir, name string) string {
 	return strings.TrimRight(strings.TrimSpace(dir), `\/`) + `\` + name
-}
-
-func configServerName(c config.Connection) string {
-	s := strings.TrimSpace(c.Server)
-	if c.Instance != "" && !strings.Contains(s, `\`) {
-		s += `\` + c.Instance
-	}
-	return s
 }
 
 func formatBytes(n int64) string {

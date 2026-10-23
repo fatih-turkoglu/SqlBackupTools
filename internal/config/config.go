@@ -172,6 +172,16 @@ func (j *Job) ApplyDefaults() {
 	}
 }
 
+// DisplayName, sunucunun ayarlardaki adıdır (HOST\INSTANCE). Çalışmada
+// bağlandıktan sonra sunucunun bildirdiği ad kullanılır.
+func (c Connection) DisplayName() string {
+	s := strings.TrimSpace(c.Server)
+	if c.Instance != "" && !strings.Contains(s, `\`) {
+		s += `\` + c.Instance
+	}
+	return s
+}
+
 // EffectiveAccessPath, programın yedek klasörüne erişeceği yolu döner.
 func (b Backup) EffectiveAccessPath() string {
 	if strings.TrimSpace(b.AccessPath) != "" {
@@ -250,7 +260,7 @@ func (j *Job) Validate() error {
 	if strings.TrimSpace(b.ServerPath) == "" {
 		add("err.config.serverPathEmpty")
 	}
-	if err := validateTemplate(b.FileNameTemplate); err != nil {
+	if err := ValidateTemplate(b.FileNameTemplate); err != nil {
 		errs = append(errs, err)
 	}
 	if b.CommandTimeoutMin < 0 {
@@ -305,7 +315,9 @@ func (j *Job) Validate() error {
 	return errors.Join(errs...)
 }
 
-func validateTemplate(t string) error {
+// ValidateTemplate, dosya adı şablonunun temel kurallarını ({db} içermesi,
+// geçersiz karakter olmaması) kontrol eder; yer tutucuları backup paketi doğrular.
+func ValidateTemplate(t string) error {
 	if strings.TrimSpace(t) == "" {
 		return i18n.Errorf("err.config.templateEmpty")
 	}

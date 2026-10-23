@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"path/filepath"
+	"slices"
 	"strings"
 	"time"
 
@@ -241,10 +242,87 @@ type TaskDefinition struct {
 	// Command ve Arguments, görevin ilk eylemidir.
 	Command   string `json:"command"`
 	Arguments string `json:"arguments"`
+	// Schedule, tetikleyiciden geri okunan zamanlamadır (RunAs dahil).
+	// Görev elle değiştirilmiş ve TaskXML biçimine uymuyorsa Frequency boştur.
+	Schedule config.Schedule `json:"schedule"`
 }
 
-// parseTaskXML, görev XML'inden hesap ve komutu okur.
-func parseTaskXML(s string) (TaskDefinition, error) {
+// Matches, kayıtlı görevin işin zamanlamasını, hesabını ve komutunu (c)
+// yansıtıp yansıtmadığını döner. false ise görev yeniden oluşturulmalıdır
+// (ör. iş kaydedildi ama görev güncellenmedi, program taşındı).
+func (d TaskDefinition) Matches(j *config.Job, c Command) bool {
+	want, got := j.Schedule, d.Schedule
+	if got.RunAs != want.RunAs || got.Frequency != want.Frequency || got.Time != want.Time {
+		return false
+	}
+	switch want.Frequency {
+	case config.FrequencyWeekly:
+		if !slices.Equal(sortedDays(got.Days), sortedDays(want.Days)) {
+			return false
+		}
+	case config.FrequencyHourly:
+		if got.IntervalHours != want.IntervalHours {
+			return false
+		}
+	}
+	args, err := c.Args()
+	// Argümanlar yalnızca yol ve bayrak içerir; Windows yolları harf duyarsızdır.
+	return err == nil && strings.EqualFold(d.Command, c.Exe) && strings.EqualFold(d.Arguments, args)
+}
+
+// sortedDays, gün kodlarını hafta sırasına dizer ve tekrarları atar.
+func sortedDays(days []string) []string {
+	out := []string{}
+	for _, wd := range weekdays {
+		if slices.Contains(days, wd.code) {
+			out = append(out, wd.code)
+		}
+	}
+	return out
+}
+
+// scheduleFromTriggers, TaskXML'in ürettiği tetikleyicilerden zamanlamayı
+// geri okur; biçim tanınmazsa Frequency boş kalır.
+func scheduleFromTriggers(tr triggers) config.Schedule {
+	s := config.Schedule{Days: []string{}}
+	hhmm := func(b string) string {
+		if len(b) >= 16 && b[10] == 'T' {
+			return b[11:16]
+		}
+		return ""
+	}
+	switch {
+	case len(tr.Calendar) == 1 && len(tr.Time) == 0:
+		c := tr.Calendar[0]
+		s.Time = hhmm(c.StartBoundary)
+		switch {
+		case c.ByDay != nil && c.ByDay.DaysInterval == 1:
+			s.Frequency = config.FrequencyDaily
+		case c.ByWeek != nil && c.ByWeek.WeeksInterval <= 1:
+			s.Frequency = config.FrequencyWeekly
+			d := c.ByWeek.Days
+			for _, p := range []struct {
+				set  *struct{}
+				code string
+			}{{d.Monday, "MON"}, {d.Tuesday, "TUE"}, {d.Wednesday, "WED"}, {d.Thursday, "THU"},
+				{d.Friday, "FRI"}, {d.Saturday, "SAT"}, {d.Sunday, "SUN"}} {
+				if p.set != nil {
+					s.Days = append(s.Days, p.code)
+				}
+			}
+		}
+	case len(tr.Time) == 1 && len(tr.Calendar) == 0 && tr.Time[0].Repetition != nil:
+		var n int
+		if _, err := fmt.Sscanf(tr.Time[0].Repetition.Interval, "PT%dH", &n); err == nil &&
+			tr.Time[0].Repetition.Interval == fmt.Sprintf("PT%dH", n) {
+			s.Frequency, s.IntervalHours, s.Time = config.FrequencyHourly, n, hhmm(tr.Time[0].StartBoundary)
+		}
+	}
+	return s
+}
+
+// ParseTaskXML, görev XML'inden hesap, komut ve zamanlamayı okur.
+func ParseTaskXML(s string) (TaskDefinition, error) {
 	var t taskXML
 	// encoding/xml UTF-16 bildirimini okuyamaz; metin zaten Go string'i (UTF-8).
 	d := xml.NewDecoder(strings.NewReader(s))
@@ -266,5 +344,7 @@ func parseTaskXML(s string) (TaskDefinition, error) {
 	if len(t.Actions.Exec) > 0 {
 		def.Command, def.Arguments = t.Actions.Exec[0].Command, t.Actions.Exec[0].Arguments
 	}
+	def.Schedule = scheduleFromTriggers(t.Triggers)
+	def.Schedule.RunAs = def.RunAs
 	return def, nil
 }

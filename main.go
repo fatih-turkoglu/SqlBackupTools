@@ -8,6 +8,7 @@ import (
 	"github.com/wailsapp/wails/v2/pkg/options"
 	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
 
+	"sqlbackup/internal/app"
 	"sqlbackup/internal/cli"
 )
 
@@ -24,10 +25,8 @@ func main() {
 		os.Exit(cli.Main(os.Args[1:], version))
 	}
 
-	// Create an instance of the app structure
-	app := NewApp()
-
-	// Create application with options
+	// Arayüz: app paketinin dışa açık yöntemleri frontend'e bağlanır.
+	a := app.New(version)
 	err := wails.Run(&options.App{
 		Title:  "SqlBackup",
 		Width:  1024,
@@ -36,10 +35,9 @@ func main() {
 			Assets: assets,
 		},
 		BackgroundColour: &options.RGBA{R: 27, G: 38, B: 54, A: 1},
-		OnStartup:        app.startup,
-		Bind: []interface{}{
-			app,
-		},
+		OnStartup:        app.Startup(a),
+		OnShutdown:       app.Shutdown(a),
+		Bind:             []interface{}{a},
 	})
 
 	if err != nil {

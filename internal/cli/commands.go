@@ -5,19 +5,18 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
-	"os/user"
 	"strings"
 	"text/tabwriter"
 
 	"sqlbackup/internal/backup"
 	"sqlbackup/internal/config"
 	"sqlbackup/internal/i18n"
-	"sqlbackup/internal/logging"
+	"sqlbackup/internal/jobrun"
 	"sqlbackup/internal/mssql"
 )
 
-// cmdRun, işi çalıştırır: log dosyasını açar, yedeği alır, özeti yazar,
-// çalışma kaydını kaydeder ve eski logları temizler.
+// cmdRun, işi çalıştırır (log, yedek, çalışma kaydı, eski log temizliği;
+// bkz. jobrun) ve özeti yazar.
 func (e *env) cmdRun(args []string) int {
 	fs, jobArg := e.newFlags("run")
 	verbose := fs.Bool("v", false, "")
@@ -34,56 +33,27 @@ func (e *env) cmdRun(args []string) int {
 		return backup.ExitFailed
 	}
 
-	// Klasörler log açılmadan önce oluşturulmalı: log klasörünün izinleri
-	// yalnızca EnsureDirs ile ilk oluşturmada verilir.
-	if err := config.EnsureDirs(); err != nil {
-		e.warnf(err)
-	}
-	logsDir := config.LogsDir()
-	start := e.now()
 	var handlers []slog.Handler
-	jl, err := logging.OpenJobLog(logsDir, j.Name, start)
-	if err != nil {
-		e.warnf(i18n.T("cli.warn.noLogFile", "err", err))
-	} else {
-		defer jl.Close()
-		handlers = append(handlers, jl.Handler(slog.LevelInfo))
-	}
 	if *verbose {
 		handlers = append(handlers, slog.NewTextHandler(e.stdout, &slog.HandlerOptions{Level: slog.LevelInfo}))
 	}
-	log := slog.New(slog.NewMultiHandler(handlers...))
-	account := ""
-	if u, err := user.Current(); err == nil {
-		account = u.Username
-	}
-	log.Info(i18n.T("log.cli.started"), "job", j.Name, "file", path, "version", e.version,
-		"account", account, "lang", i18n.Language())
-
 	pp := &progressPrinter{w: e.stdout, console: e.console && !*verbose}
-	r := backup.Run(e.ctx, j, backup.Options{
-		Logger:   log,
+	r := jobrun.Execute(e.ctx, j, jobrun.Options{
+		Source:   jobrun.SourceCLI,
+		JobFile:  path,
+		Version:  e.version,
+		Handlers: handlers,
 		Progress: pp.update,
 		Connect:  e.connect,
 		Now:      e.now,
+		KeepDays: e.keepDays,
+		Warn: func(err error) {
+			pp.finish()
+			e.warnf(err)
+		},
 	})
 	pp.finish()
 	fmt.Fprint(e.stdout, r.Summary())
-
-	if p, err := logging.SaveRun(logsDir, j.Name, r.Start, r); err != nil {
-		e.warnf(err)
-		log.Warn(i18n.T("log.run.saveFailed"), "error", err)
-	} else {
-		log.Info(i18n.T("log.run.saved"), "file", p)
-	}
-	if n, err := logging.Cleanup(logsDir, e.keepDays, e.now()); err != nil {
-		log.Warn(i18n.T("log.cleanup.failed"), "error", err)
-	} else if n > 0 {
-		log.Info(i18n.T("log.cleanup.done"), "deleted", n, "keepDays", e.keepDays)
-	}
-	if m := i18n.Missing(); len(m) > 0 {
-		log.Warn(i18n.T("log.i18n.missing"), "keys", strings.Join(m, ","))
-	}
 	return r.ExitCode
 }
 

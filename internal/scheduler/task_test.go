@@ -142,7 +142,7 @@ func TestParseTaskXML(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		def, err := parseTaskXML(x)
+		def, err := ParseTaskXML(x)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -152,7 +152,7 @@ func TestParseTaskXML(t *testing.T) {
 		}
 	}
 	// Görev Zamanlayıcı'nın döndürdüğü biçim (SYSTEM adıyla, fazladan öğelerle).
-	def, err := parseTaskXML(`<?xml version="1.0" encoding="UTF-16"?>
+	def, err := ParseTaskXML(`<?xml version="1.0" encoding="UTF-16"?>
 <Task version="1.4" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
   <Principals><Principal id="Author"><UserId>NT AUTHORITY\SYSTEM</UserId><RunLevel>HighestAvailable</RunLevel></Principal></Principals>
   <Settings><Priority>7</Priority></Settings>
@@ -179,5 +179,54 @@ func TestWarnings(t *testing.T) {
 	j.Schedule.RunAs = config.RunAsCurrent
 	if w := Warnings(j, `PC01\Fatih`); len(w) != 1 || !strings.Contains(w[0], `PC01\Fatih oturum açmışken`) {
 		t.Errorf("current: %q", w)
+	}
+}
+
+func TestTaskDefinitionMatches(t *testing.T) {
+	jobs := []*config.Job{
+		scheduleJob(nil),
+		scheduleJob(func(s *config.Schedule) {
+			s.Frequency, s.Days, s.RunAs = config.FrequencyWeekly, []string{"SUN", "MON", "MON"}, config.RunAsCurrent
+		}),
+		scheduleJob(func(s *config.Schedule) { s.Frequency, s.IntervalHours, s.Time = config.FrequencyHourly, 4, "00:15" }),
+	}
+	for _, j := range jobs {
+		x, err := TaskXML(j, TaskOptions{Command: testCommand(), User: `PC01\Fatih`, Now: testNow})
+		if err != nil {
+			t.Fatal(err)
+		}
+		def, err := ParseTaskXML(x)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !def.Matches(j, testCommand()) {
+			t.Errorf("%s: eşleşmeli: %+v", j.Schedule.Frequency, def.Schedule)
+		}
+		changes := []func(*config.Job, *Command){
+			func(j *config.Job, _ *Command) { j.Schedule.Time = "04:00" },
+			func(j *config.Job, _ *Command) { j.Schedule.RunAs = "x" },
+			func(j *config.Job, _ *Command) { j.Schedule.Frequency = "x" },
+			func(_ *config.Job, c *Command) { c.Exe = `D:\Yeni\SqlBackup.exe` },
+			func(_ *config.Job, c *Command) { c.Home = `D:\Veri` },
+		}
+		switch j.Schedule.Frequency {
+		case config.FrequencyWeekly:
+			changes = append(changes, func(j *config.Job, _ *Command) { j.Schedule.Days = []string{"MON"} })
+		case config.FrequencyHourly:
+			changes = append(changes, func(j *config.Job, _ *Command) { j.Schedule.IntervalHours = 5 })
+		}
+		for i, ch := range changes {
+			j2 := *j
+			c := testCommand()
+			ch(&j2, &c)
+			if def.Matches(&j2, c) {
+				t.Errorf("%s: değişiklik %d fark edilmedi", j.Schedule.Frequency, i)
+			}
+		}
+	}
+	// Elle değiştirilmiş (tanınmayan) tetikleyici.
+	def, _ := ParseTaskXML(`<Task xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task"><Triggers><BootTrigger/></Triggers></Task>`)
+	if def.Schedule.Frequency != "" || def.Matches(scheduleJob(nil), testCommand()) {
+		t.Errorf("%+v", def.Schedule)
 	}
 }

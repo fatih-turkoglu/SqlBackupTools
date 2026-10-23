@@ -18,28 +18,11 @@ import (
 	"sqlbackup/internal/scheduler"
 )
 
-// taskService, Görev Zamanlayıcı işlemleridir; testlerde sahtesi kullanılır.
-type taskService interface {
-	Create(name, taskXML, runAs string) error
-	Delete(name string) error
-	Run(name string) error
-	Query(name string) (scheduler.TaskStatus, error)
-}
-
-type systemTasks struct{}
-
-func (systemTasks) Create(name, x, runAs string) error { return scheduler.CreateTask(name, x, runAs) }
-func (systemTasks) Delete(name string) error           { return scheduler.DeleteTask(name) }
-func (systemTasks) Run(name string) error              { return scheduler.RunTask(name) }
-func (systemTasks) Query(name string) (scheduler.TaskStatus, error) {
-	return scheduler.QueryTask(name)
-}
-
-func (e *env) taskAPI() taskService {
+func (e *env) taskAPI() scheduler.Service {
 	if e.tasks != nil {
 		return e.tasks
 	}
-	return systemTasks{}
+	return scheduler.System{}
 }
 
 // userName, "current" hesabıyla çalışacak görevin kullanıcısıdır (DOMAIN\ad).
@@ -166,40 +149,47 @@ func elevatedJobArg(arg string) string {
 	return p
 }
 
-// runElevated, programı aynı argümanlarla yönetici yetkisiyle çalıştırır.
-// Yükseltilmiş süreç konsolu ve ortam değişkenlerini devralmadığı için
-// dil, veri klasörü ve çıktı dosyası argümanla verilir; çıktı buraya kopyalanır.
+// runElevated, komutu yönetici yetkisiyle çalıştırır ve çıktısını aktarır.
 func (e *env) runElevated(args []string) int {
+	code, out, err := RunElevated(args, e.runAsAdmin)
+	if err != nil {
+		e.errorf(err)
+		return backup.ExitFailed
+	}
+	io.WriteString(e.stdout, out)
+	return code
+}
+
+// RunElevated, programın komut satırını verilen argümanlarla yönetici
+// yetkisiyle (UAC) çalıştırır, bitmesini bekler; çıkış kodunu ve çıktısını
+// döner. Yükseltilmiş süreç konsolu ve ortam değişkenlerini devralmadığı
+// için dil, veri klasörü ve çıktı dosyası argümanla verilir. Arayüz de
+// görev işlemlerinde bunu kullanır. run nil ise scheduler.RunElevated.
+func RunElevated(args []string, run func(exe string, args []string) (int, error)) (int, string, error) {
 	tmp, err := os.CreateTemp("", "sqlbackup-elevated-*.txt")
 	if err != nil {
-		e.errorf(i18n.T("err.scheduler.elevate", "err", err))
-		return backup.ExitFailed
+		return 0, "", i18n.Errorf("err.scheduler.elevate", "err", err)
 	}
 	tmp.Close()
 	defer os.Remove(tmp.Name())
 
-	args = append(args, "--lang", i18n.Language(), "--output", tmp.Name())
+	args = append(append([]string(nil), args...), "--lang", i18n.Language(), "--output", tmp.Name())
 	if h := os.Getenv(config.HomeEnv); h != "" {
 		args = append(args, "--home", h)
 	}
 	exe, err := os.Executable()
 	if err != nil {
-		e.errorf(i18n.T("err.scheduler.exePath", "err", err))
-		return backup.ExitFailed
+		return 0, "", i18n.Errorf("err.scheduler.exePath", "err", err)
 	}
-	run := scheduler.RunElevated
-	if e.runAsAdmin != nil {
-		run = e.runAsAdmin
+	if run == nil {
+		run = scheduler.RunElevated
 	}
 	code, err := run(exe, args)
 	if err != nil {
-		e.errorf(err)
-		return backup.ExitFailed
+		return 0, "", err
 	}
-	if out, err := os.ReadFile(tmp.Name()); err == nil {
-		e.stdout.Write(out)
-	}
-	return code
+	out, _ := os.ReadFile(tmp.Name())
+	return code, string(out), nil
 }
 
 // taskJobName, --job değerinden görev adını bulur. Düz iş adıysa iş dosyası

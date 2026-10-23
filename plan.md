@@ -95,9 +95,10 @@ ZIP, `.bak` silme ve retention işlemleri `accessPath` üzerinden yapılır.
 - [x] Silinen dosyaların loglanması (`Result.Retention.Deleted`); silme/erişim hatası exit `1`
 
 ### 1.7 Loglama (`internal/logging`)
-- [ ] `log/slog` ile dosyaya yazma: `logs\<job>_<yyyyMMdd>.log`
-- [ ] Her çalışma için JSON sonuç kaydı (`logs\runs\<job>_<timestamp>.json`), Loglar ekranı bunu okuyacak
-- [ ] Eski logların temizlenmesi (ör. 30 gün)
+- [x] `log/slog` ile dosyaya yazma: `logs\<job>_<yyyyMMdd>.log` (metin biçimi, ekleme kipi, çalışma başlangıç günü; `OpenJobLog` + `Handler`)
+- [x] Her çalışma için JSON sonuç kaydı (`logs\runs\<job>_<yyyyMMdd_HHmmss>.json`, atomik yazma, aynı saniyede `_2`), Loglar ekranı bunu okuyacak (`SaveRun`, `ListRuns`, `ReadRun`, `ListLogs`)
+- [x] Eski logların temizlenmesi (`Cleanup`, varsayılan 30 gün; tarih dosya adından, biçime uymayan dosyalara dokunulmaz)
+- Paket `backup`/`config`'ten bağımsız; bağlama işi CLI (1.8) ve GUI'de: log aç → `backup.Run(Logger)` → `SaveRun(Result)` → `Cleanup`
 
 ### 1.8 CLI (`internal/cli`)
 - [ ] `main.go`: argüman varsa CLI, yoksa GUI

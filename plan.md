@@ -83,9 +83,12 @@ ZIP, `.bak` silme ve retention işlemleri `accessPath` üzerinden yapılır.
 - [x] ZIP başarısızsa `.bak` asla silinmez; doğrulaması (VERIFYONLY) başarısız yedek zip'lenmez
 
 ### 1.6 Retention
-- [ ] `accessPath` içinde iş adına ait dosyaları bulma (şablona uyan `.bak` / `.zip`)
-- [ ] "X günden eski" ve "son N adet tut" modları
-- [ ] Silinen dosyaların loglanması
+- [x] `accessPath` içinde iş adına ait dosyaları bulma (şablona uyan `.bak` / `.zip`)
+  - Şablondan regex üretilir (`_2` eki ve `.bak`/`.zip` dahil, büyük/küçük harf duyarsız); `{db}` yalnızca bu çalışmada **başarılı** yedeklenen DB adlarıyla (tek zip'te iş adıyla) eşleşir → hatalı DB'nin ve başka DB'lerin eski yedeklerine dokunulmaz
+  - Yedek zamanı dosya adından okunur; şablonda yıl+ay+gün yoksa retention uygulanmaz (uyarı)
+  - Bu çalışmanın dosyaları hiçbir zaman silinmez; hiç başarılı yedek yoksa retention çalışmaz
+- [x] "X günden eski" ve "son N adet tut" modları (N, DB başına çalışma sayısı; aynı çalışmanın `.bak` + `.zip`'i tek sayılır)
+- [x] Silinen dosyaların loglanması (`Result.Retention.Deleted`); silme/erişim hatası exit `1`
 
 ### 1.7 Loglama (`internal/logging`)
 - [ ] `log/slog` ile dosyaya yazma: `logs\<job>_<yyyyMMdd>.log`

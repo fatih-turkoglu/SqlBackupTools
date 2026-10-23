@@ -49,31 +49,13 @@ func ValidateTemplate(tmpl string) error {
 // (ör. {yyyyMMdd}, {HHmmss}, {yyyy-MM-dd}).
 func ExpandTemplate(tmpl string, v TemplateVars) (string, error) {
 	var b strings.Builder
-	rest := tmpl
-	for {
-		open := strings.IndexByte(rest, '{')
-		if open < 0 {
-			if strings.IndexByte(rest, '}') >= 0 {
-				return "", errors.New("dosya adı şablonunda eşleşmeyen '}' var")
-			}
-			b.WriteString(rest)
-			break
-		}
-		if strings.IndexByte(rest[:open], '}') >= 0 {
-			return "", errors.New("dosya adı şablonunda eşleşmeyen '}' var")
-		}
-		b.WriteString(rest[:open])
-		end := strings.IndexByte(rest[open:], '}')
-		if end < 0 {
-			return "", errors.New("dosya adı şablonunda kapanmamış '{' var")
-		}
-		name := rest[open+1 : open+end]
+	err := walkTemplate(tmpl, func(lit string) { b.WriteString(lit) }, func(name string) error {
 		val, err := placeholder(name, v)
-		if err != nil {
-			return "", err
-		}
 		b.WriteString(val)
-		rest = rest[open+end+1:]
+		return err
+	})
+	if err != nil {
+		return "", err
 	}
 
 	out := strings.TrimSpace(b.String())
@@ -81,6 +63,34 @@ func ExpandTemplate(tmpl string, v TemplateVars) (string, error) {
 		out += ".bak"
 	}
 	return out, nil
+}
+
+// walkTemplate, şablonu sırayla sabit metin ve yer tutucu parçalarına ayırır.
+// Parantez hatalarında ve ph'nin döndürdüğü ilk hatada durur.
+func walkTemplate(tmpl string, literal func(string), ph func(name string) error) error {
+	rest := tmpl
+	for {
+		open := strings.IndexByte(rest, '{')
+		if open < 0 {
+			if strings.IndexByte(rest, '}') >= 0 {
+				return errors.New("dosya adı şablonunda eşleşmeyen '}' var")
+			}
+			literal(rest)
+			return nil
+		}
+		if strings.IndexByte(rest[:open], '}') >= 0 {
+			return errors.New("dosya adı şablonunda eşleşmeyen '}' var")
+		}
+		literal(rest[:open])
+		end := strings.IndexByte(rest[open:], '}')
+		if end < 0 {
+			return errors.New("dosya adı şablonunda kapanmamış '{' var")
+		}
+		if err := ph(rest[open+1 : open+end]); err != nil {
+			return err
+		}
+		rest = rest[open+end+1:]
+	}
 }
 
 func placeholder(name string, v TemplateVars) (string, error) {

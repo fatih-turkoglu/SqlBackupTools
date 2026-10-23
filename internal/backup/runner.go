@@ -116,16 +116,17 @@ type ArchiveResult struct {
 
 // Result, bir iş çalışmasının özetidir.
 type Result struct {
-	Job       string          `json:"job"`
-	Server    string          `json:"server"`
-	Edition   string          `json:"edition,omitempty"`
-	Protocol  string          `json:"protocol,omitempty"`
-	Start     time.Time       `json:"start"`
-	End       time.Time       `json:"end"`
-	ElapsedMs int64           `json:"elapsedMs"`
-	Databases []DBResult      `json:"databases"`
-	Archives  []ArchiveResult `json:"archives"`
-	Warnings  []string        `json:"warnings"`
+	Job       string           `json:"job"`
+	Server    string           `json:"server"`
+	Edition   string           `json:"edition,omitempty"`
+	Protocol  string           `json:"protocol,omitempty"`
+	Start     time.Time        `json:"start"`
+	End       time.Time        `json:"end"`
+	ElapsedMs int64            `json:"elapsedMs"`
+	Databases []DBResult       `json:"databases"`
+	Archives  []ArchiveResult  `json:"archives"`
+	Retention *RetentionResult `json:"retention,omitempty"`
+	Warnings  []string         `json:"warnings"`
 	// Error, işin hiç başlayamamasına yol açan hatadır (config, şifre,
 	// bağlantı, listeleme). Doluysa Databases genelde boştur.
 	Error    string `json:"error,omitempty"`
@@ -162,6 +163,9 @@ func (r *Result) exitCode() int {
 	}
 	ok, failed, _ := r.Counts()
 	failed += r.archiveErrors()
+	if r.Retention != nil && r.Retention.Error != "" {
+		failed++
+	}
 	switch {
 	case ok == 0:
 		return ExitFailed
@@ -207,10 +211,21 @@ func (r *Result) Summary() string {
 		fmt.Fprintf(&b, "  [ZIP]  %s  %s → %s  %s%s\n", a.File, formatBytes(a.SourceBytes),
 			formatBytes(a.SizeBytes), msDuration(a.ElapsedMs), extra)
 	}
+	if rt := r.Retention; rt != nil {
+		for _, d := range rt.Deleted {
+			fmt.Fprintf(&b, "  [SİL]  %s  %s\n", d.File, formatBytes(d.Bytes))
+		}
+		if rt.Error != "" {
+			fmt.Fprintf(&b, "  [SAKLAMA HATA] %s\n", rt.Error)
+		}
+	}
 	ok, failed, skipped := r.Counts()
 	fmt.Fprintf(&b, "Sonuç: %d başarılı, %d hatalı, %d atlandı", ok, failed, skipped)
 	if n := r.archiveErrors(); n > 0 {
 		fmt.Fprintf(&b, ", %d zip hatası", n)
+	}
+	if r.Retention != nil && r.Retention.Error != "" {
+		b.WriteString(", saklama hatası")
 	}
 	fmt.Fprintf(&b, " (çıkış kodu %d)\n", r.ExitCode)
 	return b.String()
@@ -285,12 +300,12 @@ func (rn *runner) run(ctx context.Context) {
 		return
 	}
 
-	// Erişim yolu yalnızca zip için gerekir; yedeği sunucu yazar. Bu yüzden
-	// erişim yoksa yedekler yine alınır, yalnızca zip adımı hata verir.
-	// Kontrol başta yapılır ki sorun uzun yedeklerden önce loglansın.
-	if j.Archive.ZipEnabled {
+	// Erişim yolu yalnızca zip ve saklama için gerekir; yedeği sunucu yazar.
+	// Bu yüzden erişim yoksa yedekler yine alınır, yalnızca zip/saklama
+	// adımı hata verir. Kontrol başta yapılır ki sorun uzun yedeklerden önce loglansın.
+	if j.Archive.ZipEnabled || j.Retention.Mode != config.RetentionNone {
 		if rn.accessErr = checkAccess(j.Backup.EffectiveAccessPath()); rn.accessErr != nil {
-			rn.log.Error("yedek klasörüne erişilemiyor; zip yapılmayacak", "error", rn.accessErr)
+			rn.log.Error("yedek klasörüne erişilemiyor; zip ve saklama yapılmayacak", "error", rn.accessErr)
 		}
 	}
 
@@ -367,6 +382,9 @@ func (rn *runner) run(ctx context.Context) {
 
 	if j.Archive.ZipEnabled {
 		rn.archive(ctx)
+	}
+	if j.Retention.Mode != config.RetentionNone {
+		rn.retention(ctx)
 	}
 }
 
@@ -484,7 +502,7 @@ func checkAccess(dir string) error {
 	}
 	// Windows hata metinleri noktayla biter ("Access is denied."); çift nokta olmasın.
 	msg := strings.TrimRight(err.Error(), ". ")
-	return fmt.Errorf("yedek klasörüne erişilemiyor, zip yapılamadı: %s. Klasör hem SQL Server servis hesabının "+
+	return fmt.Errorf("yedek klasörüne erişilemiyor: %s. Klasör hem SQL Server servis hesabının "+
 		"hem de bu programı çalıştıran hesabın (%s) okuma/yazma/silme izni olan bir yer olmalı "+
 		"(ör. D:\\SqlBackups); uzak sunucuda erişim yolu bir UNC yolu olmalı", msg, account)
 }

@@ -65,12 +65,13 @@ ZIP, `.bak` silme ve retention işlemleri `accessPath` üzerinden yapılır.
 - [x] Uzun süreli komutlar için context + timeout yönetimi
 
 ### 1.4 Yedek çalıştırıcı (`internal/backup`)
-- [ ] Sıkıştırma desteklenmiyorsa (Express/Web) COMPRESSION kapatılıp uyarı loglanması
-- [ ] Dosya adı şablonu: `{server}`, `{db}`, `{yyyyMMdd}`, `{HHmmss}` gibi yer tutucular
-- [ ] Hedef DB listesinin çözümlenmesi (seçili / tümü / yeni eklenenler, sistem DB hariç, OFFLINE olanları atla)
-- [ ] DB'leri sırayla yedekleme; biri hata verse de diğerlerine devam etme
-- [ ] Çalışma sonucu özeti: DB bazında başarı/hata, süre, dosya boyutu
-- [ ] Exit code: `0` tümü başarılı, `1` kısmi hata, `2` tamamen başarısız/config hatası
+- [x] Sıkıştırma desteklenmiyorsa (Express/Web) COMPRESSION kapatılıp uyarı loglanması
+- [x] Dosya adı şablonu: `{server}`, `{db}`, `{job}`, tarih belirteçleri (`yyyy yy MM dd HH mm ss` + `-_. ` ayırıcılar, ör. `{yyyyMMdd}`, `{HHmmss}`, `{yyyy-MM-dd}`); tüm dosyalar çalışma başlangıç zamanıyla adlandırılır
+- [x] Hedef DB listesinin çözümlenmesi (seçili / tümü / yeni eklenenler, sistem DB hariç, OFFLINE olanları atla)
+  - Seçili modda bulunamayan/OFFLINE DB **hata** sayılır; "yeni DB'leri dahil et" modunda OFFLINE **atlanır**, tempdb sessizce çıkarılır
+- [x] DB'leri sırayla yedekleme; biri hata verse de diğerlerine devam etme (doğrulama hatası da DB'yi başarısız yapar)
+- [x] Çalışma sonucu özeti: DB bazında başarı/hata, süre, dosya boyutu (`msdb.backupset` üzerinden)
+- [x] Exit code: `0` tümü başarılı, `1` kısmi hata, `2` tamamen başarısız/config hatası (hiçbir DB yedeklenmediyse de `2`)
 
 ### 1.5 ZIP (`internal/archive`)
 - [ ] `accessPath` erişilebilirlik kontrolü (yoksa anlaşılır hata)

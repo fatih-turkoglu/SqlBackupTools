@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/golang-sql/sqlexp"
 	mssqldb "github.com/microsoft/go-mssqldb"
@@ -74,6 +75,44 @@ func (c *Client) VerifyBackup(ctx context.Context, file string, checksum bool, p
 		return fmt.Errorf("yedek doğrulanamadı (%s): %w", file, err)
 	}
 	return nil
+}
+
+// BackupSetInfo, msdb'deki bir yedek setinin bilgisidir.
+type BackupSetInfo struct {
+	// SizeBytes, yedeklenen veri boyutudur (sıkıştırma öncesi).
+	SizeBytes int64
+	// CompressedBytes, sıkıştırılmış boyuttur; sıkıştırma yoksa SizeBytes'a
+	// eşittir. Diskteki dosya boyutuna yaklaşık olarak karşılık gelir.
+	CompressedBytes int64
+	// Finish, sunucunun yerel saatidir; datetime saat dilimi taşımadığı için
+	// sürücü bunu UTC olarak işaretler.
+	Finish time.Time
+}
+
+// LastBackupSet, veritabanının verilen dosyaya alınmış son FULL yedeğinin
+// bilgisini msdb'den okur. Dosya sunucu servis hesabı tarafından yazıldığı
+// için program dosyaya erişemeyebilir; boyut bu yüzden msdb'den alınır.
+// Kayıt yoksa (nil, nil) döner.
+func (c *Client) LastBackupSet(ctx context.Context, database, file string) (*BackupSetInfo, error) {
+	const q = `
+SELECT TOP (1)
+  CAST(bs.backup_size AS bigint),
+  CAST(ISNULL(bs.compressed_backup_size, bs.backup_size) AS bigint),
+  bs.backup_finish_date
+FROM msdb.dbo.backupset bs
+JOIN msdb.dbo.backupmediafamily mf ON mf.media_set_id = bs.media_set_id
+WHERE bs.database_name = @db AND mf.physical_device_name = @file AND bs.type = 'D'
+ORDER BY bs.backup_finish_date DESC`
+	var i BackupSetInfo
+	err := c.db.QueryRowContext(ctx, q, sql.Named("db", database), sql.Named("file", file)).
+		Scan(&i.SizeBytes, &i.CompressedBytes, &i.Finish)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("yedek bilgisi okunamadı (%s): %w", database, err)
+	}
+	return &i, nil
 }
 
 // execWithMessages, sorguyu çalıştırır ve sunucunun gönderdiği bilgi

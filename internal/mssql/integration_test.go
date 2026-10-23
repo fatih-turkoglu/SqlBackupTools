@@ -136,6 +136,14 @@ func TestIntegrationBackupAndVerify(t *testing.T) {
 	if len(pcts) == 0 || pcts[len(pcts)-1] != 100 {
 		t.Errorf("ilerleme 100 ile bitmeli: %v", pcts)
 	}
+	set, err := cl.LastBackupSet(ctx, name, file)
+	if err != nil || set == nil || set.SizeBytes <= 0 || set.CompressedBytes <= 0 {
+		t.Fatalf("yedek seti bilgisi okunamadı: %+v %v", set, err)
+	}
+	t.Logf("yedek seti: %+v", *set)
+	if set, err := cl.LastBackupSet(ctx, name, file+".yok"); set != nil || err != nil {
+		t.Errorf("olmayan dosya için (nil, nil) bekleniyordu: %+v %v", set, err)
+	}
 	var vp []int
 	if err := cl.VerifyBackup(ctx, file, true, func(p int) { vp = append(vp, p) }); err != nil {
 		t.Fatal(err)

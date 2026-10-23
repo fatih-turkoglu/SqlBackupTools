@@ -40,18 +40,18 @@ ZIP, `.bak` silme ve retention işlemleri `accessPath` üzerinden yapılır.
 ## Faz 1 – Çekirdek (GUI olmadan uçtan uca yedek)
 
 ### 1.1 Config modeli (`internal/config`)
-- [ ] `Job` struct: `name`, `connection`, `databases`, `includeNewDatabases`, `excludeSystemDatabases`, `backup`, `archive`, `retention`, `schedule`
-- [ ] `Connection`: `server`, `port`, `instance`, `auth (sql|windows)`, `user`, `passwordEnc`, `encrypt`, `trustServerCert`, `timeoutSec`
-- [ ] `Backup`: `serverPath`, `accessPath`, `fileNameTemplate`, `compression`, `checksum`, `copyOnly`, `verify`
-- [ ] `Archive`: `zipEnabled`, `deleteBakAfterZip`, `zipPerDatabase (tek zip / DB başına zip)`
-- [ ] `Retention`: `mode (days|count|none)`, `value`
-- [ ] JSON okuma/yazma, doğrulama (validate) fonksiyonu
-- [ ] Uygulama veri klasörü: `%ProgramData%\SqlBackup\{jobs,logs}`
+- [x] `Job` struct: `name`, `connection`, `databases`, `excludedDatabases`, `includeNewDatabases`, `excludeSystemDatabases`, `backup`, `archive`, `retention`, `schedule`
+- [x] `Connection`: `server`, `port`, `instance`, `auth (sql|windows)`, `user`, `passwordEnc`, `encrypt`, `trustServerCert`, `timeoutSec`
+- [x] `Backup`: `serverPath`, `accessPath`, `fileNameTemplate`, `compression`, `checksum`, `copyOnly`, `verify`
+- [x] `Archive`: `zipEnabled`, `deleteBakAfterZip`, `zipPerDatabase (tek zip / DB başına zip)`
+- [x] `Retention`: `mode (days|count|none)`, `value`
+- [x] JSON okuma/yazma, doğrulama (validate) fonksiyonu
+- [x] Uygulama veri klasörü: `%ProgramData%\SqlBackup\{jobs,logs}`
 
 ### 1.2 Şifre saklama – DPAPI
-- [ ] `CryptProtectData` / `CryptUnprotectData` sarmalayıcı (`CRYPTPROTECT_LOCAL_MACHINE` kapsamı)
-- [ ] Config'e yalnızca şifreli + base64 değer yazılması
-- [ ] Birim testi: şifrele → çöz eşitliği
+- [x] `CryptProtectData` / `CryptUnprotectData` sarmalayıcı (`CRYPTPROTECT_LOCAL_MACHINE` kapsamı)
+- [x] Config'e yalnızca şifreli + base64 değer yazılması
+- [x] Birim testi: şifrele → çöz eşitliği
 
 ### 1.3 MSSQL katmanı (`internal/mssql`)
 - [ ] Bağlantı dizesi üretimi (SQL Auth + Windows Auth/SSPI, instance/port, encrypt seçenekleri)

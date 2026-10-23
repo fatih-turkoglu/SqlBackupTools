@@ -62,7 +62,7 @@ func Open(ctx context.Context, c config.Connection, password string) (*Client, e
 			cl.info.Protocol = p
 			return cl, nil
 		}
-		errs = append(errs, fmt.Sprintf("%s: %v", protocolLabel(p), err))
+		errs = append(errs, fmt.Sprintf("%s: %v", ProtocolLabel(p), err))
 		if ctx.Err() != nil {
 			break
 		}
@@ -111,7 +111,8 @@ func candidateProtocols(c config.Connection) []string {
 	return []string{config.ProtocolTCP, config.ProtocolNP}
 }
 
-func protocolLabel(p string) string {
+// ProtocolLabel, protokol kodunun okunabilir adını döner.
+func ProtocolLabel(p string) string {
 	switch p {
 	case config.ProtocolTCP:
 		return "TCP/IP"

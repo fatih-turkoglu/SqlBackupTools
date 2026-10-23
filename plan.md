@@ -101,12 +101,18 @@ ZIP, `.bak` silme ve retention işlemleri `accessPath` üzerinden yapılır.
 - Paket `backup`/`config`'ten bağımsız; bağlama işi CLI (1.8) ve GUI'de: log aç → `backup.Run(Logger)` → `SaveRun(Result)` → `Cleanup`
 
 ### 1.8 CLI (`internal/cli`)
-- [ ] `main.go`: argüman varsa CLI, yoksa GUI
-- [ ] `SqlBackup.exe run --job <path>` (iş zaten çalışıyorsa uyarı yazılır, exit `3`)
-- [ ] `SqlBackup.exe test --job <path>` (yalnızca bağlantı testi)
-- [ ] `SqlBackup.exe list --job <path>` (DB listesi)
-- [ ] CLI modunda konsol penceresi davranışı (GUI build'de `AttachConsole` ile çıktı)
+- [x] `main.go`: argüman varsa CLI, yoksa GUI (sürüm `-ldflags "-X main.version=..."`)
+- [x] `--job` değeri iş adı (`jobs\<ad>.json`) veya `.json` dosya yolu olabilir
+- [x] `SqlBackup.exe run --job <iş> [-v]` (iş zaten çalışıyorsa uyarı yazılır, exit `3`)
+  - Log dosyası + JSON çalışma kaydı + eski log temizliği (30 gün); `-v` logları konsola da yazar; Ctrl+C iptal eder
+  - İlerleme: konsolda tek satır (`\r`), yönlendirilmiş çıktıda aşama sonu satırları
+- [x] `SqlBackup.exe test --job <iş>` (bağlantı + sunucu bilgisi; zip/saklama açıksa yedek klasörü erişimi → hata exit `1`)
+- [x] `SqlBackup.exe list --job <iş> [--json]` (DB listesi + işin hangilerini yedekleyeceği / neden yedeklemeyeceği)
+- [x] `version`, `help`; kullanım hataları exit `2`
+- [x] CLI modunda konsol penceresi davranışı (GUI build'de `AttachConsole(ATTACH_PARENT_PROCESS)` + `CONOUT$`; çıktı yönlendirilmişse dokunulmaz)
+  - Yönlendirilmiş çıktıyla gerçek exe test edildi; **etkileşimli cmd'de elle denenmeli** (cmd GUI exe'yi beklemez → `start /wait` önerilir; .bat bekler)
 - [ ] Faz 1 kabul testi: elle yazılmış JSON ile uzak sunucudan yedek + zip + retention
+  - Yerel SQL Express ile gerçek exe üzerinden yapıldı (test/list/run, zip + .bak silme + count retention ✓); **uzak sunucu** senaryosu bekliyor
 
 ---
 

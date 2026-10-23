@@ -328,7 +328,7 @@ func (rn *runner) run(ctx context.Context) {
 	// Bu yüzden erişim yoksa yedekler yine alınır, yalnızca zip/saklama
 	// adımı hata verir. Kontrol başta yapılır ki sorun uzun yedeklerden önce loglansın.
 	if j.Archive.ZipEnabled || j.Retention.Mode != config.RetentionNone {
-		if rn.accessErr = checkAccess(j.Backup.EffectiveAccessPath()); rn.accessErr != nil {
+		if rn.accessErr = CheckAccess(j.Backup.EffectiveAccessPath()); rn.accessErr != nil {
 			rn.log.Error("yedek klasörüne erişilemiyor; zip ve saklama yapılmayacak", "error", rn.accessErr)
 		}
 	}
@@ -513,9 +513,9 @@ func (rn *runner) zipGroup(ctx context.Context, dir string, g []DBResult, label 
 	return a, nil
 }
 
-// checkAccess, archive.CheckAccess hatasını yapılması gerekene dair bir
+// CheckAccess, archive.CheckAccess hatasını yapılması gerekene dair bir
 // açıklamayla zenginleştirir.
-func checkAccess(dir string) error {
+func CheckAccess(dir string) error {
 	err := archive.CheckAccess(dir)
 	if err == nil {
 		return nil

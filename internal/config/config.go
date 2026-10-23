@@ -3,9 +3,10 @@ package config
 
 import (
 	"errors"
-	"fmt"
 	"regexp"
 	"strings"
+
+	"sqlbackup/internal/i18n"
 )
 
 // CurrentVersion, job dosya formatının sürümüdür. İleride format değişirse
@@ -188,10 +189,10 @@ var (
 // ValidateName, iş adının dosya ve görev adı olarak kullanılabilir olduğunu kontrol eder.
 func ValidateName(name string) error {
 	if !jobNameRe.MatchString(name) {
-		return errors.New("iş adı 1-64 karakter olmalı; yalnızca harf, rakam, '_', '-' ve '.' içerebilir")
+		return i18n.Errorf("err.config.nameInvalid")
 	}
 	if strings.Trim(name, ".") == "" {
-		return errors.New("iş adı yalnızca noktadan oluşamaz")
+		return i18n.Errorf("err.config.nameDots")
 	}
 	return nil
 }
@@ -200,7 +201,7 @@ func ValidateName(name string) error {
 // birlikte döner (errors.Join).
 func (j *Job) Validate() error {
 	var errs []error
-	add := func(format string, a ...any) { errs = append(errs, fmt.Errorf(format, a...)) }
+	add := func(key string, a ...any) { errs = append(errs, i18n.Errorf(key, a...)) }
 
 	if err := ValidateName(j.Name); err != nil {
 		errs = append(errs, err)
@@ -209,56 +210,56 @@ func (j *Job) Validate() error {
 	// Bağlantı
 	c := j.Connection
 	if strings.TrimSpace(c.Server) == "" {
-		add("sunucu adı boş olamaz")
+		add("err.config.serverEmpty")
 	}
 	if c.Port < 0 || c.Port > 65535 {
-		add("port 0-65535 aralığında olmalı")
+		add("err.config.portRange")
 	}
 	switch c.Protocol {
 	case ProtocolAuto, ProtocolTCP:
 	case ProtocolNP, ProtocolLPC:
 		if c.Port > 0 {
-			add("port yalnızca TCP protokolünde kullanılabilir")
+			add("err.config.portTCPOnly")
 		}
 	default:
-		add("geçersiz protokol: %q", c.Protocol)
+		add("err.config.protocolInvalid", "value", c.Protocol)
 	}
 	switch c.Auth {
 	case AuthSQL:
 		if strings.TrimSpace(c.User) == "" {
-			add("SQL kimlik doğrulamasında kullanıcı adı boş olamaz")
+			add("err.config.userEmpty")
 		}
 		if c.PasswordEnc == "" {
-			add("SQL kimlik doğrulamasında şifre girilmeli")
+			add("err.config.passwordEmpty")
 		}
 	case AuthWindows:
 	default:
-		add("geçersiz kimlik doğrulama tipi: %q", c.Auth)
+		add("err.config.authInvalid", "value", c.Auth)
 	}
 	if c.TimeoutSec < 0 {
-		add("bağlantı zaman aşımı negatif olamaz")
+		add("err.config.timeoutNegative")
 	}
 
 	// Veritabanları
 	if len(j.Databases) == 0 && !j.IncludeNewDatabases {
-		add("en az bir veritabanı seçilmeli")
+		add("err.config.noDatabase")
 	}
 
 	// Yedek
 	b := j.Backup
 	if strings.TrimSpace(b.ServerPath) == "" {
-		add("yedek klasörü (sunucu yolu) boş olamaz")
+		add("err.config.serverPathEmpty")
 	}
 	if err := validateTemplate(b.FileNameTemplate); err != nil {
 		errs = append(errs, err)
 	}
 	if b.CommandTimeoutMin < 0 {
-		add("komut zaman aşımı negatif olamaz")
+		add("err.config.commandTimeoutNegative")
 	}
 
 	// Arşiv
 	if j.Archive.DeleteBakAfterZip && !j.Archive.ZipEnabled {
-		add("zip sonrası .bak silme için zip seçeneği açık olmalı")
+		add("err.config.deleteBakNeedsZip")
 	}
 
 	// Retention
@@ -266,39 +267,39 @@ func (j *Job) Validate() error {
 	case RetentionNone:
 	case RetentionDays, RetentionCount:
 		if j.Retention.Value <= 0 {
-			add("saklama değeri 0'dan büyük olmalı")
+			add("err.config.retentionValue")
 		}
 	default:
-		add("geçersiz saklama modu: %q", j.Retention.Mode)
+		add("err.config.retentionModeInvalid", "value", j.Retention.Mode)
 	}
 
 	// Zamanlama
 	s := j.Schedule
 	if !timeRe.MatchString(s.Time) {
-		add("zamanlama saati SS:DD formatında olmalı (ör. 02:00)")
+		add("err.config.scheduleTime")
 	}
 	switch s.Frequency {
 	case FrequencyDaily:
 	case FrequencyWeekly:
 		if len(s.Days) == 0 {
-			add("haftalık zamanlamada en az bir gün seçilmeli")
+			add("err.config.scheduleNoDays")
 		}
 		for _, d := range s.Days {
 			if !validDays[d] {
-				add("geçersiz gün: %q", d)
+				add("err.config.scheduleDayInvalid", "value", d)
 			}
 		}
 	case FrequencyHourly:
 		if s.IntervalHours < 1 || s.IntervalHours > 23 {
-			add("saatlik zamanlamada aralık 1-23 saat olmalı")
+			add("err.config.scheduleInterval")
 		}
 	default:
-		add("geçersiz zamanlama sıklığı: %q", s.Frequency)
+		add("err.config.scheduleFrequencyInvalid", "value", s.Frequency)
 	}
 	switch s.RunAs {
 	case RunAsSystem, RunAsCurrent:
 	default:
-		add("geçersiz çalışma hesabı: %q", s.RunAs)
+		add("err.config.runAsInvalid", "value", s.RunAs)
 	}
 
 	return errors.Join(errs...)
@@ -306,13 +307,13 @@ func (j *Job) Validate() error {
 
 func validateTemplate(t string) error {
 	if strings.TrimSpace(t) == "" {
-		return errors.New("dosya adı şablonu boş olamaz")
+		return i18n.Errorf("err.config.templateEmpty")
 	}
 	if !strings.Contains(t, "{db}") {
-		return errors.New("dosya adı şablonu {db} içermeli")
+		return i18n.Errorf("err.config.templateNoDb")
 	}
 	if strings.ContainsAny(t, `\/:*?"<>|`) {
-		return errors.New(`dosya adı şablonu \ / : * ? " < > | karakterlerini içeremez`)
+		return i18n.Errorf("err.config.templateInvalidChars")
 	}
 	return nil
 }

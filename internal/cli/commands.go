@@ -11,6 +11,7 @@ import (
 
 	"sqlbackup/internal/backup"
 	"sqlbackup/internal/config"
+	"sqlbackup/internal/i18n"
 	"sqlbackup/internal/logging"
 	"sqlbackup/internal/mssql"
 )
@@ -19,7 +20,7 @@ import (
 // çalışma kaydını kaydeder ve eski logları temizler.
 func (e *env) cmdRun(args []string) int {
 	fs, jobArg := e.newFlags("run")
-	verbose := fs.Bool("v", false, "log kayıtlarını konsola da yaz")
+	verbose := fs.Bool("v", false, "")
 	if !e.parse(fs, jobArg, args) {
 		return backup.ExitFailed
 	}
@@ -29,7 +30,7 @@ func (e *env) cmdRun(args []string) int {
 	}
 	// Ad log ve kayıt dosyası adında kullanılır; geçersizse dosya açılmaz.
 	if err := config.ValidateName(j.Name); err != nil {
-		fmt.Fprintf(e.stderr, "HATA: %v\n", err)
+		e.errorf(err)
 		return backup.ExitFailed
 	}
 
@@ -38,7 +39,7 @@ func (e *env) cmdRun(args []string) int {
 	var handlers []slog.Handler
 	jl, err := logging.OpenJobLog(logsDir, j.Name, start)
 	if err != nil {
-		fmt.Fprintf(e.stderr, "UYARI: %v; log dosyasına yazılmayacak\n", err)
+		e.warnf(i18n.T("cli.warn.noLogFile", "err", err))
 	} else {
 		defer jl.Close()
 		handlers = append(handlers, jl.Handler(slog.LevelInfo))
@@ -51,7 +52,8 @@ func (e *env) cmdRun(args []string) int {
 	if u, err := user.Current(); err == nil {
 		account = u.Username
 	}
-	log.Info("komut satırından çalıştırıldı", "job", j.Name, "file", path, "version", e.version, "account", account)
+	log.Info(i18n.T("log.cli.started"), "job", j.Name, "file", path, "version", e.version,
+		"account", account, "lang", i18n.Language())
 
 	pp := &progressPrinter{w: e.stdout, console: e.console && !*verbose}
 	r := backup.Run(e.ctx, j, backup.Options{
@@ -64,15 +66,18 @@ func (e *env) cmdRun(args []string) int {
 	fmt.Fprint(e.stdout, r.Summary())
 
 	if p, err := logging.SaveRun(logsDir, j.Name, r.Start, r); err != nil {
-		fmt.Fprintf(e.stderr, "UYARI: %v\n", err)
-		log.Warn("çalışma kaydı yazılamadı", "error", err)
+		e.warnf(err)
+		log.Warn(i18n.T("log.run.saveFailed"), "error", err)
 	} else {
-		log.Info("çalışma kaydı yazıldı", "file", p)
+		log.Info(i18n.T("log.run.saved"), "file", p)
 	}
-	if n, err := logging.Cleanup(logsDir, logging.DefaultKeepDays, e.now()); err != nil {
-		log.Warn("eski loglar temizlenemedi", "error", err)
+	if n, err := logging.Cleanup(logsDir, e.keepDays, e.now()); err != nil {
+		log.Warn(i18n.T("log.cleanup.failed"), "error", err)
 	} else if n > 0 {
-		log.Info("eski loglar temizlendi", "deleted", n, "keepDays", logging.DefaultKeepDays)
+		log.Info(i18n.T("log.cleanup.done"), "deleted", n, "keepDays", e.keepDays)
+	}
+	if m := i18n.Missing(); len(m) > 0 {
+		log.Warn(i18n.T("log.i18n.missing"), "keys", strings.Join(m, ","))
 	}
 	return r.ExitCode
 }
@@ -91,35 +96,39 @@ func (e *env) cmdTest(args []string) int {
 	}
 	srv, err := e.openServer(j)
 	if err != nil {
-		fmt.Fprintf(e.stderr, "HATA: bağlantı kurulamadı: %v\n", err)
+		e.errorf(i18n.T("cli.err.connect", "err", err))
 		return backup.ExitFailed
 	}
 	defer srv.Close()
 
 	info := srv.Info()
 	w := tabwriter.NewWriter(e.stdout, 0, 0, 2, ' ', 0)
-	row := func(k, v string) { fmt.Fprintf(w, "%s:\t%s\n", k, v) }
-	row("Sunucu", info.ServerName)
-	row("Sürüm", strings.TrimSpace(info.ProductVersion+" "+info.ProductLevel))
-	row("Edition", info.Edition)
-	row("Protokol", mssql.ProtocolLabel(info.Protocol))
-	row("Oturum", fmt.Sprintf("%s (sysadmin: %s)", info.LoginName, yesNo(info.IsSysAdmin)))
-	row("Sıkıştırma", map[bool]string{true: "destekleniyor", false: "desteklenmiyor"}[info.SupportsCompression()])
+	row := func(key, v string) { fmt.Fprintf(w, "%s:\t%s\n", i18n.T(key), v) }
+	row("cli.test.server", info.ServerName)
+	row("cli.test.version", strings.TrimSpace(info.ProductVersion+" "+info.ProductLevel))
+	row("cli.test.edition", info.Edition)
+	row("cli.test.protocol", mssql.ProtocolLabel(info.Protocol))
+	row("cli.test.login", i18n.T("cli.test.loginValue", "login", info.LoginName, "sysadmin", yesNo(info.IsSysAdmin)))
+	compression := i18n.T("cli.test.compressionNo")
+	if info.SupportsCompression() {
+		compression = i18n.T("cli.test.compressionYes")
+	}
+	row("cli.test.compression", compression)
 	if info.DefaultBackup != "" {
-		row("Varsayılan yedek klasörü", info.DefaultBackup)
+		row("cli.test.defaultBackupDir", info.DefaultBackup)
 	}
 	if j.Archive.ZipEnabled || j.Retention.Mode != config.RetentionNone {
 		dir := j.Backup.EffectiveAccessPath()
 		if err := backup.CheckAccess(dir); err != nil {
-			row("Yedek klasörü erişimi", "HATA")
+			row("cli.test.access", i18n.T("cli.test.accessFailed"))
 			w.Flush()
-			fmt.Fprintf(e.stderr, "HATA: %v\n", err)
+			e.errorf(err)
 			return backup.ExitPartial
 		}
-		row("Yedek klasörü erişimi", "OK ("+dir+")")
+		row("cli.test.access", i18n.T("cli.test.accessOK", "path", dir))
 	}
 	w.Flush()
-	fmt.Fprintln(e.stdout, "Bağlantı başarılı.")
+	fmt.Fprintln(e.stdout, i18n.T("cli.test.success"))
 	return backup.ExitOK
 }
 
@@ -138,7 +147,7 @@ type listRow struct {
 // cmdList, sunucudaki veritabanlarını ve işin hangilerini yedekleyeceğini listeler.
 func (e *env) cmdList(args []string) int {
 	fs, jobArg := e.newFlags("list")
-	asJSON := fs.Bool("json", false, "JSON olarak yaz")
+	asJSON := fs.Bool("json", false, "")
 	if !e.parse(fs, jobArg, args) {
 		return backup.ExitFailed
 	}
@@ -148,13 +157,13 @@ func (e *env) cmdList(args []string) int {
 	}
 	srv, err := e.openServer(j)
 	if err != nil {
-		fmt.Fprintf(e.stderr, "HATA: bağlantı kurulamadı: %v\n", err)
+		e.errorf(i18n.T("cli.err.connect", "err", err))
 		return backup.ExitFailed
 	}
 	defer srv.Close()
 	dbs, err := srv.ListDatabases(e.ctx)
 	if err != nil {
-		fmt.Fprintf(e.stderr, "HATA: %v\n", err)
+		e.errorf(err)
 		return backup.ExitFailed
 	}
 
@@ -163,7 +172,7 @@ func (e *env) cmdList(args []string) int {
 		enc := json.NewEncoder(e.stdout)
 		enc.SetIndent("", "  ")
 		if err := enc.Encode(rows); err != nil {
-			fmt.Fprintf(e.stderr, "HATA: %v\n", err)
+			e.errorf(err)
 			return backup.ExitFailed
 		}
 		return backup.ExitOK
@@ -201,22 +210,22 @@ func listRows(j *config.Job, dbs []mssql.Database) []listRow {
 
 func printList(w io.Writer, rows []listRow) {
 	tw := tabwriter.NewWriter(w, 0, 0, 2, ' ', 0)
-	fmt.Fprintln(tw, "VERİTABANI\tDURUM\tKURTARMA\tBOYUT (MB)\tSİSTEM\tSON FULL\tYEDEK")
+	fmt.Fprintln(tw, i18n.T("cli.list.header"))
 	count := 0
 	for _, r := range rows {
 		last := "-"
 		if r.LastFullBackup != nil {
 			last = r.LastFullBackup.Local().Format("2006-01-02 15:04")
 		}
-		backupCol := "hayır"
+		backupCol := i18n.T("cli.no")
 		switch {
 		case r.Backup:
-			backupCol = "evet"
+			backupCol = i18n.T("cli.yes")
 			count++
 		case r.Failed:
-			backupCol = "HATA: " + r.Note
+			backupCol = i18n.T("cli.list.failed", "reason", r.Note)
 		case r.Note != "":
-			backupCol = "hayır (" + r.Note + ")"
+			backupCol = i18n.T("cli.list.skipped", "reason", r.Note)
 		}
 		if r.Missing {
 			fmt.Fprintf(tw, "%s\t-\t-\t-\t-\t-\t%s\n", r.Name, backupCol)
@@ -226,14 +235,14 @@ func printList(w io.Writer, rows []listRow) {
 			yesNo(r.IsSystem), last, backupCol)
 	}
 	tw.Flush()
-	fmt.Fprintf(w, "%d veritabanı, %d tanesi yedeklenecek\n", len(rows), count)
+	fmt.Fprintln(w, i18n.T("cli.list.footer", "count", len(rows), "backup", count))
 }
 
 func yesNo(b bool) string {
 	if b {
-		return "evet"
+		return i18n.T("cli.yes")
 	}
-	return "hayır"
+	return i18n.T("cli.no")
 }
 
 // progressPrinter, yedek ilerlemesini konsola yazar. Konsolda tek satır \r
@@ -246,14 +255,20 @@ type progressPrinter struct {
 	open    bool // konsolda bitmemiş bir satır var
 }
 
-var phaseLabels = map[backup.Phase]string{
-	backup.PhaseBackup: "yedek",
-	backup.PhaseVerify: "doğrulama",
-	backup.PhaseZip:    "zip",
+func phaseLabel(p backup.Phase) string {
+	switch p {
+	case backup.PhaseBackup:
+		return i18n.T("cli.phase.backup")
+	case backup.PhaseVerify:
+		return i18n.T("cli.phase.verify")
+	case backup.PhaseZip:
+		return i18n.T("cli.phase.zip")
+	}
+	return string(p)
 }
 
 func (p *progressPrinter) update(pr backup.Progress) {
-	line := fmt.Sprintf("[%d/%d] %s  %s  %%%d", pr.Index, pr.Total, pr.Database, phaseLabels[pr.Phase], pr.Percent)
+	line := fmt.Sprintf("[%d/%d] %s  %s  %%%d", pr.Index, pr.Total, pr.Database, phaseLabel(pr.Phase), pr.Percent)
 	if p.console {
 		if p.open && (pr.Database != p.last.Database || pr.Phase != p.last.Phase) {
 			fmt.Fprintln(p.w)

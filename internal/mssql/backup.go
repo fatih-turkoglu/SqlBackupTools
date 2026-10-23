@@ -12,6 +12,8 @@ import (
 
 	"github.com/golang-sql/sqlexp"
 	mssqldb "github.com/microsoft/go-mssqldb"
+
+	"sqlbackup/internal/i18n"
 )
 
 // ProgressFunc, yedek/doğrulama sırasında yüzde bilgisini bildirir.
@@ -39,7 +41,7 @@ var firstNumberRe = regexp.MustCompile(`\d+`)
 func (c *Client) BackupDatabase(ctx context.Context, database, file string, opts BackupOptions, progress ProgressFunc) error {
 	query, args := buildBackupQuery(database, file, opts)
 	if err := c.execWithMessages(ctx, query, progress, args...); err != nil {
-		return fmt.Errorf("%s yedeklenemedi: %w", database, err)
+		return i18n.Errorf("err.mssql.backup", "db", database, "err", err)
 	}
 	return nil
 }
@@ -72,7 +74,7 @@ func (c *Client) VerifyBackup(ctx context.Context, file string, checksum bool, p
 		q += ", CHECKSUM"
 	}
 	if err := c.execWithMessages(ctx, q, progress, sql.Named("file", file)); err != nil {
-		return fmt.Errorf("yedek doğrulanamadı (%s): %w", file, err)
+		return i18n.Errorf("err.mssql.verify", "file", file, "err", err)
 	}
 	return nil
 }
@@ -110,7 +112,7 @@ ORDER BY bs.backup_finish_date DESC`
 		return nil, nil
 	}
 	if err != nil {
-		return nil, fmt.Errorf("yedek bilgisi okunamadı (%s): %w", database, err)
+		return nil, i18n.Errorf("err.mssql.backupSet", "db", database, "err", err)
 	}
 	return &i, nil
 }
@@ -146,7 +148,7 @@ func (c *Client) execWithMessages(ctx context.Context, query string, progress Pr
 		}
 	}
 	if err := ctx.Err(); err != nil {
-		return fmt.Errorf("işlem iptal edildi veya zaman aşımına uğradı: %w", err)
+		return i18n.Errorf("err.mssql.canceled", "err", err)
 	}
 	if len(sqlErrs) > 0 {
 		return errors.New(strings.Join(sqlErrs, " | "))

@@ -6,6 +6,9 @@
   "frontend:build": "npm run build",
   "frontend:dev:watcher": "npm run dev",
   "frontend:dev:serverUrl": "auto",
+  "postBuildHooks": {
+    "windows/*": "powershell -NoProfile -NonInteractive -Command \"New-Item -ItemType Directory -Force lang | Out-Null; Copy-Item ../../lang/*.lng lang -Force\""
+  },
   "author": {
     "name": "Fatih TÜRKOĞLU",
     "email": "mbrroot@gmail.com"

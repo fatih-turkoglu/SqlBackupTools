@@ -3,8 +3,9 @@ package mssql
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"time"
+
+	"sqlbackup/internal/i18n"
 )
 
 // Database, sunucudaki bir veritabanının listeleme bilgisidir.
@@ -46,7 +47,7 @@ ORDER BY CASE WHEN d.database_id <= 4 THEN 0 ELSE 1 END, d.name`
 
 	rows, err := c.db.QueryContext(ctx, q)
 	if err != nil {
-		return nil, fmt.Errorf("veritabanları listelenemedi: %w", err)
+		return nil, i18n.Errorf("err.mssql.listDatabases", "err", err)
 	}
 	defer rows.Close()
 

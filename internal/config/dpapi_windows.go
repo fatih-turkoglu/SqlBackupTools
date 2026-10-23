@@ -2,11 +2,11 @@ package config
 
 import (
 	"encoding/base64"
-	"errors"
-	"fmt"
 	"unsafe"
 
 	"golang.org/x/sys/windows"
+
+	"sqlbackup/internal/i18n"
 )
 
 // entropy, DPAPI'ye verilen ek anahtardır; başka uygulamaların aynı makine
@@ -26,7 +26,7 @@ func Protect(plain string) (string, error) {
 	err := windows.CryptProtectData(in, nil, ent, 0, nil,
 		windows.CRYPTPROTECT_LOCAL_MACHINE|windows.CRYPTPROTECT_UI_FORBIDDEN, &out)
 	if err != nil {
-		return "", fmt.Errorf("şifre şifrelenemedi: %w", err)
+		return "", i18n.Errorf("err.config.encrypt", "err", err)
 	}
 	defer windows.LocalFree(windows.Handle(unsafe.Pointer(out.Data)))
 	return base64.StdEncoding.EncodeToString(blobBytes(out)), nil
@@ -39,14 +39,14 @@ func Unprotect(enc string) (string, error) {
 	}
 	raw, err := base64.StdEncoding.DecodeString(enc)
 	if err != nil {
-		return "", errors.New("şifreli değer geçersiz (base64 değil)")
+		return "", i18n.Errorf("err.config.decryptBase64")
 	}
 	in := newBlob(raw)
 	ent := newBlob(entropy)
 	var out windows.DataBlob
 	err = windows.CryptUnprotectData(in, nil, ent, 0, nil, windows.CRYPTPROTECT_UI_FORBIDDEN, &out)
 	if err != nil {
-		return "", fmt.Errorf("şifre çözülemedi (başka bir makinede mi oluşturuldu?): %w", err)
+		return "", i18n.Errorf("err.config.decrypt", "err", err)
 	}
 	defer windows.LocalFree(windows.Handle(unsafe.Pointer(out.Data)))
 	return string(blobBytes(out)), nil

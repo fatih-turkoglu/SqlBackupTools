@@ -73,7 +73,7 @@ ZIP, `.bak` silme ve retention işlemleri `accessPath` üzerinden yapılır.
 - [x] Çalışma sonucu özeti: DB bazında başarı/hata, süre, dosya boyutu (`msdb.backupset` üzerinden)
 - [x] Exit code: `0` tümü başarılı, `1` kısmi hata, `2` tamamen başarısız/config hatası (hiçbir DB yedeklenmediyse de `2`), `3` iş zaten çalışıyor
 - [x] Aynı işin eşzamanlı ikinci çalışması engellenir (iş bazında; farklı işler paralel çalışabilir)
-  - Süreçler arası adlandırılmış mutex `Global\SqlBackup.Job.<iş adı küçük harf>` (SYSTEM görevi ile GUI aynı kilidi görür; süreç çökerse OS bırakır)
+  - Süreçler arası adlandırılmış mutex `Global\SqlBackup.Job.<veri klasörü özeti>.<iş adı küçük harf>` (SYSTEM görevi ile GUI aynı kilidi görür; süreç çökerse OS bırakır)
   - Kilit tutuluyorsa hiçbir şey yapılmaz: `Result.AlreadyRunning = true`, uyarı mesajı, exit `3`
   - `backup.IsRunning(job)` → arayüzde durum gösterimi ve "Şimdi çalıştır" öncesi uyarı
 
@@ -122,41 +122,45 @@ Exe ile aynı klasördeki `lang\` altında `<dilkodu>.lng` dosyaları (ör. `lan
 Faz 1'den sonra yapılır (CLI metinleri de hazır olur), GUI'den (Faz 4) önce biter; böylece arayüz baştan çok dilli yazılır.
 
 ### 2.1 Dil dosyası biçimi
-- [ ] UTF-8 (BOM'lu/BOM'suz ikisi de okunur), satır başına `anahtar = değer`; `#` ile yorum, boş satırlar yok sayılır
-- [ ] Anahtarlar noktalı ve gruplu: `cli.run.started`, `gui.menu.jobs`, `err.config.nameInvalid`, `backup.db.failed` …
-- [ ] Yer tutucular adlandırılmış: `{db}`, `{path}`, `{count}` (çevirmen sırayı değiştirebilir; `%s` kullanılmaz)
-- [ ] Çok satırlı metin için `\n`, ters bölü için `\\` kaçışı
-- [ ] Başlık anahtarları: `@code = tr`, `@name = Türkçe` (dil seçim listesinde gösterilir)
+- [x] UTF-8 (BOM'lu/BOM'suz ikisi de okunur), satır başına `anahtar = değer`; `#` ile yorum, boş satırlar yok sayılır
+- [x] Anahtarlar noktalı ve gruplu: `err.*`, `warn.*`, `log.*`, `reason.*`, `summary.*`, `cli.*`, `common.*`, `gui.*` (ör. `err.config.nameInvalid`)
+- [x] Yer tutucular adlandırılmış: `{db}`, `{path}`, `{count}` (çevirmen sırayı değiştirebilir; `%s` kullanılmaz)
+- [x] Çok satırlı metin için `\n`, ters bölü için `\\` kaçışı
+- [x] Başlık anahtarları: `@code = tr`, `@name = Türkçe` (dil seçim listesinde gösterilir)
 
 ### 2.2 `internal/i18n` paketi
-- [ ] `lang\` klasörünün bulunması: `filepath.Dir(os.Executable())\lang`; `SQLBACKUP_LANG_DIR` ile değiştirilebilir (dev/test)
-- [ ] `en.lng` exe'ye `go:embed` ile gömülür → `lang\` klasörü yoksa/bozuksa program yine İngilizce çalışır
-- [ ] Geri düşme sırası: seçili dil → gömülü İngilizce → anahtarın kendisi (eksik anahtar uyarı olarak loglanır, program çökmez)
-- [ ] API: `i18n.T(key, args...)` (ör. `T("backup.db.failed", "db", name, "err", msg)`), `i18n.SetLanguage(code)`, `i18n.Languages()` (kod + ad listesi), `i18n.All()` (frontend için tüm sözlük)
-- [ ] Eşzamanlı kullanıma güvenli (dil değişimi GUI'de çalışma anında olabilir)
-- [ ] Birim testleri: ayrıştırma, kaçışlar, yer tutucu, geri düşme, bozuk satır
+- [x] `lang\` klasörünün bulunması: `filepath.Dir(os.Executable())\lang`; `SQLBACKUP_LANG_DIR` ile değiştirilebilir (dev/test)
+- [x] `en.lng` exe'ye `go:embed` ile gömülür → `lang\` klasörü yoksa/bozuksa program yine İngilizce çalışır
+- [x] Geri düşme sırası: seçili dil → gömülü İngilizce → anahtarın kendisi (eksik anahtar uyarı olarak loglanır, program çökmez)
+- [x] API: `i18n.T(key, args...)` (ör. `T("err.mssql.backup", "db", name, "err", err)`), `i18n.Errorf(key, args...)`, `i18n.SetLanguage(code)`, `i18n.Languages()` (kod + ad listesi), `i18n.All()` (frontend için tüm sözlük)
+- [x] Eşzamanlı kullanıma güvenli (dil değişimi GUI'de çalışma anında olabilir)
+- [x] Birim testleri: ayrıştırma, kaçışlar, yer tutucu, geri düşme, bozuk satır, eşzamanlılık
+- [x] `lang/` repo kökünde bir Go paketi (`lang/embed.go`) → `en.lng` kökte durur ve gömülebilir
 
 ### 2.3 Dil seçimi
-- [ ] Öncelik: CLI `--lang <kod>` → ayarlar dosyası (`%ProgramData%\SqlBackup\settings.json` → `language`) → `en`
-- [ ] Zamanlanmış görev (CLI, SYSTEM hesabı) dili ayarlar dosyasından okur; `.bat` içine dil yazılmaz
-- [ ] Bilinmeyen dil kodu → İngilizce + uyarı
+- [x] Öncelik: CLI `--lang <kod>` → ayarlar dosyası (`%ProgramData%\SqlBackup\settings.json` → `language`) → `en`
+- [x] Zamanlanmış görev (CLI, SYSTEM hesabı) dili ayarlar dosyasından okur; `.bat` içine dil yazılmaz
+- [x] Bilinmeyen dil kodu → İngilizce + uyarı
+- [x] `settings.json` ayrıca `logKeepDays` tutar (CLI log temizliği bunu kullanır; varsayılan 30)
 
 ### 2.4 Mevcut kodun dönüştürülmesi
-- [ ] `internal/config` (`Validate` hataları vb.), `internal/mssql`, `internal/backup`, `internal/archive`, retention, logging ve CLI'daki tüm kullanıcıya görünen metinler `i18n.T` ile
-- [ ] Hata türleri: sabit metin yerine anahtar + parametre taşıyan hata (`i18n.Error`) — metin gösterim anında üretilir, `errors.Is/As` çalışmaya devam eder
-- [ ] SQL Server'dan gelen hata metinleri çevrilmez (olduğu gibi gösterilir), yalnızca etrafındaki açıklama çevrilir
-- [ ] Log dosyaları ve JSON çalışma kayıtları yazıldığı andaki dilde; kod yorumları ve commit mesajları Türkçe kalır
-- [ ] `lang\en.lng` ve `lang\tr.lng` dosyalarının üretilmesi
+- [x] `internal/config` (`Validate` hataları vb.), `internal/mssql`, `internal/backup`, `internal/archive`, retention, logging ve CLI'daki tüm kullanıcıya görünen metinler `i18n.T` ile
+- [x] Hata türleri: sabit metin yerine anahtar + parametre taşıyan hata (`i18n.Error`) — metin gösterim anında üretilir, `errors.Is/As` çalışmaya devam eder
+- [x] SQL Server'dan gelen hata metinleri çevrilmez (olduğu gibi gösterilir), yalnızca etrafındaki açıklama çevrilir
+- [x] Log dosyaları ve JSON çalışma kayıtları yazıldığı andaki dilde; kod yorumları ve commit mesajları Türkçe kalır
+- [x] `lang\en.lng` ve `lang\tr.lng` dosyalarının üretilmesi (~170 anahtar)
+- [x] Mevcut testler `TestMain` + `i18ntest.Use("tr")` ile Türkçe çalışır (tr.lng de sınanır); CLI testleri İngilizce/dil seçimini ayrıca sınar
 
 ### 2.5 GUI entegrasyonu (Faz 4 ile birlikte kullanılır)
-- [ ] Backend: `GetLanguages()`, `GetTranslations()`, `SetLanguage(code)` (ayarlara kaydeder)
-- [ ] Frontend: `t('key', {param})` yardımcısı + `data-i18n` öznitelikli statik metinler; dil değişince yeniden çizim (yeniden başlatma gerekmez)
-- [ ] Ayarlar ekranında dil seçimi (liste `lang\` klasöründeki dosyalardan)
+- [x] Backend: `GetLanguages()`, `GetTranslations()`, `SetLanguage(code)` (ayarlara kaydeder)
+- [x] Frontend (`frontend/src/i18n.ts`): `t('key', {param})` yardımcısı + `data-i18n` öznitelikli statik metinler; dil değişince yeniden çizim (yeniden başlatma gerekmez)
+- [ ] Ayarlar ekranında dil seçimi (liste `lang\` klasöründeki dosyalardan) – **Faz 4**; şimdilik geçici başlangıç ekranında dil seçici var
 
 ### 2.6 Build ve tutarlılık
-- [ ] Kaynak dosyalar repo kökünde `lang\`; `wails build` sonrası `build\bin\lang\` içine kopyalanması (`wails.json` `postBuildHooks` veya build betiği)
-- [ ] Test: koddaki her `T("...")` anahtarı `en.lng`'de var; `tr.lng` ile `en.lng` anahtar kümeleri ve yer tutucuları birebir aynı
-- [ ] Yeni dil ekleme rehberi (README): `en.lng` kopyala → çevir → `lang\`'a koy
+- [x] Kaynak dosyalar repo kökünde `lang\`; `wails build` sonrası `build\bin\lang\` içine kopyalanması (`wails.json` `postBuildHooks`, PowerShell ile)
+- [x] Test (`internal/i18n/consistency_test.go`): Go kodundaki ve `frontend/src`'deki her anahtar `en.lng`'de var, `en.lng`'de kullanılmayan anahtar yok; diğer diller ile anahtar kümeleri ve yer tutucular birebir aynı
+- [x] Yeni dil ekleme rehberi (`lang/README.md`, İngilizce): `en.lng` kopyala → çevir → `lang\`'a koy
+- [x] İş kilidi adı veri klasörüne göre kapsamlandı (`Global\SqlBackup.Job.<veri klasörü özeti>.<iş>`): farklı `SQLBACKUP_HOME`'lardaki aynı adlı işler ve paralel test paketleri çakışmaz
 
 ---
 
@@ -201,7 +205,7 @@ Faz 1'den sonra yapılır (CLI metinleri de hazır olur), GUI'den (Faz 4) önce 
 - [ ] **ZIP ve Saklama:** ZIP aç/kapa, mod, ZIP sonrası `.bak` sil, retention modu ve değeri
 - [ ] **Zamanlama:** sıklık, gün, saat, çalışacak hesap; `.bat Kaydet`, `Görev Oluştur`, `Görevi Sil`, görev durumu
 - [ ] **Loglar:** çalışma geçmişi tablosu, detay ve log görüntüleyici
-- [ ] **Ayarlar:** dil, tema, varsayılan klasörler, log saklama süresi
+- [ ] **Ayarlar:** dil (`i18n.ts` + `SetLanguage`), tema, varsayılan klasörler, log saklama süresi
 
 ### 4.4 UX detayları
 - [ ] Form doğrulama ve anlaşılır hata mesajları

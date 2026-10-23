@@ -5,8 +5,9 @@
 //	SqlBackup.exe list --job <iş adı | dosya yolu> [--json]
 //	SqlBackup.exe version | help
 //
-// Çıkış kodları backup paketindeki sözleşmeye uyar (0, 1, 2, 3); kullanım ve
-// iş dosyası hataları 2 döner.
+// Tüm komutlar --lang <kod> alabilir; verilmezse dil ayarlar dosyasından,
+// orada da yoksa İngilizce seçilir. Çıkış kodları backup paketindeki
+// sözleşmeye uyar (0, 1, 2, 3); kullanım ve iş dosyası hataları 2 döner.
 package cli
 
 import (
@@ -23,6 +24,7 @@ import (
 
 	"sqlbackup/internal/backup"
 	"sqlbackup/internal/config"
+	"sqlbackup/internal/i18n"
 	"sqlbackup/internal/mssql"
 )
 
@@ -36,6 +38,8 @@ type env struct {
 	console bool
 	connect backup.ConnectFunc
 	now     func() time.Time
+	// keepDays, log ve çalışma kayıtlarının saklama süresidir (ayarlardan).
+	keepDays int
 }
 
 // Main, komut satırı argümanlarını (program adı hariç) işler ve çıkış
@@ -51,10 +55,55 @@ func Main(args []string, version string) int {
 		console: isConsole(os.Stdout),
 		now:     time.Now,
 	}
+	args = e.setup(args)
 	return e.main(args)
 }
 
+// setup, dili (--lang → ayarlar → İngilizce) ve ayarları yükler; --lang
+// argümanını listeden çıkarır. Sorunlar uyarı olarak yazılır, çalışmayı durdurmaz.
+func (e *env) setup(args []string) []string {
+	langArg, args := extractLang(args)
+	settings, serr := config.LoadSettings()
+	e.keepDays = settings.EffectiveLogKeepDays()
+	code := langArg
+	if code == "" {
+		code = settings.Language
+	}
+	// Dil, uyarı metinlerinden önce seçilmeli.
+	if err := i18n.SetLanguage(code); err != nil {
+		fmt.Fprintln(e.stderr, i18n.T("cli.warning", "msg", i18n.T("cli.warn.language", "code", code, "err", err)))
+	}
+	if serr != nil {
+		fmt.Fprintln(e.stderr, i18n.T("cli.warning", "msg", serr))
+	}
+	return args
+}
+
+// extractLang, argümanlardan "--lang kod" / "--lang=kod" (tek tire de olur)
+// değerini çıkarır ve kalan argümanları döner.
+func extractLang(args []string) (string, []string) {
+	var code string
+	rest := make([]string, 0, len(args))
+	for i := 0; i < len(args); i++ {
+		a := args[i]
+		name, val, hasVal := strings.Cut(strings.TrimLeft(a, "-"), "=")
+		if !strings.HasPrefix(a, "-") || !strings.EqualFold(name, "lang") {
+			rest = append(rest, a)
+			continue
+		}
+		if !hasVal && i+1 < len(args) {
+			i++
+			val = args[i]
+		}
+		code = val
+	}
+	return code, rest
+}
+
 func (e *env) main(args []string) int {
+	if e.keepDays <= 0 {
+		e.keepDays = config.DefaultLogKeepDays
+	}
 	if len(args) == 0 {
 		e.usage(e.stderr)
 		return backup.ExitFailed
@@ -74,49 +123,45 @@ func (e *env) main(args []string) int {
 		e.usage(e.stdout)
 		return backup.ExitOK
 	}
-	fmt.Fprintf(e.stderr, "HATA: bilinmeyen komut: %s\n\n", args[0])
+	e.errorf(i18n.T("cli.err.unknownCommand", "cmd", args[0]))
+	fmt.Fprintln(e.stderr)
 	e.usage(e.stderr)
 	return backup.ExitFailed
 }
 
+// errorf ve warnf, stderr'e seçili dilde "HATA:"/"UYARI:" önekiyle yazar.
+func (e *env) errorf(msg any) { fmt.Fprintln(e.stderr, i18n.T("cli.error", "msg", msg)) }
+func (e *env) warnf(msg any)  { fmt.Fprintln(e.stderr, i18n.T("cli.warning", "msg", msg)) }
+
 func (e *env) usage(w io.Writer) {
-	fmt.Fprintf(w, `SqlBackup %s – MSSQL otomatik yedekleme
-
-Kullanım:
-  SqlBackup.exe                         arayüzü açar
-  SqlBackup.exe run  --job <iş> [-v]    işi çalıştırır (yedek, doğrulama, zip, saklama)
-  SqlBackup.exe test --job <iş>         bağlantıyı ve yedek klasörü erişimini sınar
-  SqlBackup.exe list --job <iş> [--json] sunucudaki veritabanlarını listeler
-  SqlBackup.exe version                 sürümü yazar
-
-<iş>: iş adı (%s içinde aranır) veya .json dosya yolu
-  -v       log kayıtlarını konsola da yazar
-  --json   listeyi JSON olarak yazar
-
-Çıkış kodları: 0 başarılı, 1 kısmi hata, 2 başarısız/ayar hatası, 3 iş zaten çalışıyor
-`, e.version, config.JobsDir())
+	fmt.Fprintln(w, i18n.T("cli.usage", "version", e.version, "jobsDir", config.JobsDir()))
 }
 
 // newFlags, komut için ortak --job bayrağıyla bir bayrak kümesi oluşturur.
+// Bayrak hataları flag paketi yerine burada (seçili dilde önekle) yazılır.
 func (e *env) newFlags(name string) (*flag.FlagSet, *string) {
 	fs := flag.NewFlagSet(name, flag.ContinueOnError)
-	fs.SetOutput(e.stderr)
-	fs.Usage = func() { e.usage(e.stderr) }
-	job := fs.String("job", "", "iş adı veya .json dosya yolu")
+	fs.SetOutput(io.Discard)
+	job := fs.String("job", "", "")
 	return fs, job
 }
 
 // parse, bayrakları ayrıştırır; hata veya eksik --job durumunda false döner.
 func (e *env) parse(fs *flag.FlagSet, job *string, args []string) bool {
 	if err := fs.Parse(args); err != nil {
+		if errors.Is(err, flag.ErrHelp) {
+			e.usage(e.stderr)
+		} else {
+			e.errorf(err)
+		}
 		return false
 	}
 	if fs.NArg() > 0 {
-		fmt.Fprintf(e.stderr, "HATA: beklenmeyen argüman: %s\n", fs.Arg(0))
+		e.errorf(i18n.T("cli.err.unexpectedArg", "arg", fs.Arg(0)))
 		return false
 	}
 	if strings.TrimSpace(*job) == "" {
-		fmt.Fprintln(e.stderr, "HATA: --job belirtilmedi")
+		e.errorf(i18n.T("cli.err.noJob"))
 		return false
 	}
 	return true
@@ -137,11 +182,11 @@ func (e *env) loadJob(arg string) (*config.Job, string) {
 	p := jobPath(arg)
 	j, err := config.LoadJob(p)
 	if errors.Is(err, os.ErrNotExist) {
-		fmt.Fprintf(e.stderr, "HATA: iş dosyası bulunamadı: %s\n", p)
+		e.errorf(i18n.T("cli.err.jobNotFound", "path", p))
 		return nil, p
 	}
 	if err != nil {
-		fmt.Fprintf(e.stderr, "HATA: %v\n", err)
+		e.errorf(err)
 		return nil, p
 	}
 	return j, p
@@ -153,7 +198,7 @@ func (e *env) openServer(j *config.Job) (backup.Server, error) {
 	if j.Connection.Auth == config.AuthSQL {
 		var err error
 		if password, err = config.Unprotect(j.Connection.PasswordEnc); err != nil {
-			return nil, fmt.Errorf("kayıtlı şifre çözülemedi; iş dosyası başka bir makineden kopyalandıysa şifreyi yeniden girin: %w", err)
+			return nil, i18n.Errorf("err.backup.password", "err", err)
 		}
 	}
 	if e.connect != nil {

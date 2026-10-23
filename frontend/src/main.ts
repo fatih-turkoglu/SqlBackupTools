@@ -1,49 +1,33 @@
 import './style.css';
 import './app.css';
 
-import logo from './assets/images/logo-universal.png';
-import {Greet} from '../wailsjs/go/main/App';
+import {applyI18n, changeLanguage, languages, loadTranslations, onLanguageChange} from './i18n';
 
-// Setup the greet function
-window.greet = function () {
-    // Get name
-    let name = nameElement!.value;
-
-    // Check if the input is empty
-    if (name === "") return;
-
-    // Call App.Greet(name)
-    try {
-        Greet(name)
-            .then((result) => {
-                // Update result with data back from App.Greet()
-                resultElement!.innerText = result;
-            })
-            .catch((err) => {
-                console.error(err);
-            });
-    } catch (err) {
-        console.error(err);
-    }
-};
-
-document.querySelector('#app')!.innerHTML = `
-    <img id="logo" class="logo">
-      <div class="result" id="result">Please enter your name below 👇</div>
-      <div class="input-box" id="input">
-        <input class="input" id="name" type="text" autocomplete="off" />
-        <button class="btn" onclick="greet()">Greet</button>
-      </div>
-    </div>
-`;
-(document.getElementById('logo') as HTMLImageElement).src = logo;
-
-let nameElement = (document.getElementById("name") as HTMLInputElement);
-nameElement.focus();
-let resultElement = document.getElementById("result");
-
-declare global {
-    interface Window {
-        greet: () => void;
-    }
+// Geçici başlangıç ekranı: asıl arayüz Faz 4'te yazılacak. Şimdilik çoklu
+// dil altyapısını (dil seçimi + yeniden çizim) göstermek için kullanılır.
+async function render(): Promise<void> {
+    const state = await languages();
+    const options = state.languages
+        .map((l) => `<option value="${l.code}"${l.code === state.current ? ' selected' : ''}>${l.name}</option>`)
+        .join('');
+    document.querySelector('#app')!.innerHTML = `
+        <h1 data-i18n="gui.app.title"></h1>
+        <p data-i18n="gui.app.placeholder"></p>
+        <label>
+            <span data-i18n="gui.settings.language"></span>
+            <select id="language">${options}</select>
+        </label>
+    `;
+    applyI18n();
+    document.getElementById('language')!.addEventListener('change', (ev) => {
+        changeLanguage((ev.target as HTMLSelectElement).value).catch(console.error);
+    });
 }
+
+onLanguageChange(() => {
+    render().catch(console.error);
+});
+
+loadTranslations()
+    .then(render)
+    .catch(console.error);

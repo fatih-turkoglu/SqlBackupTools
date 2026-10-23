@@ -13,6 +13,8 @@ import (
 	"time"
 
 	"sqlbackup/internal/config"
+
+	"sqlbackup/internal/i18n"
 )
 
 // RetentionResult, saklama kuralının uygulanma sonucudur.
@@ -34,7 +36,7 @@ type DeletedFile struct {
 
 // errNoDate: şablonda tarih yoksa her çalışma aynı dosyanın üzerine yazar;
 // biriken dosya olmadığı için saklama kuralı uygulanmaz (uyarı verilir).
-var errNoDate = errors.New("dosya adı şablonunda tarih (yıl, ay ve gün) olmadığı için saklama kuralı uygulanmadı")
+var errNoDate = i18n.Errorf("warn.retention.noDate")
 
 // retentionPattern, işin dosya adı şablonundan üretilen eşleştiricidir.
 // Şablonun ürettiği adlara ek olarak çakışma eki (_2, _3) ve .bak/.zip
@@ -90,7 +92,7 @@ func newRetentionPattern(tmpl, server, job string, series []string) (*retentionP
 			return nil
 		}
 		if _, ok := formatDate(name, time.Time{}); !ok {
-			return fmt.Errorf("dosya adı şablonunda bilinmeyen yer tutucu: {%s}", name)
+			return i18n.Errorf("err.template.unknown", "name", name)
 		}
 		s := name
 	outer:
@@ -221,7 +223,7 @@ func expiredFiles(files []retentionFile, mode string, value int, now time.Time, 
 func (rn *runner) retention(ctx context.Context) {
 	j := rn.job
 	if ctx.Err() != nil {
-		rn.warn("işlem iptal edildi; saklama kuralı uygulanmadı")
+		rn.warn(i18n.T("warn.retention.canceled"))
 		return
 	}
 
@@ -240,7 +242,7 @@ func (rn *runner) retention(ctx context.Context) {
 		protect[strings.ToLower(a.File)] = true
 	}
 	if len(series) == 0 {
-		rn.log.Warn("başarılı yedek olmadığı için saklama kuralı uygulanmadı")
+		rn.log.Warn(i18n.T("log.retention.noSuccess"))
 		return
 	}
 	if j.Archive.ZipEnabled && !j.Archive.ZipPerDatabase {
@@ -254,10 +256,10 @@ func (rn *runner) retention(ctx context.Context) {
 
 	if err := rn.applyRetention(dir, series, protect, rt); err != nil {
 		rt.Error = err.Error()
-		rn.log.Error("saklama kuralı uygulanamadı", "error", err)
+		rn.log.Error(i18n.T("log.retention.failed"), "error", err)
 		return
 	}
-	rn.log.Info("saklama kuralı uygulandı", "mode", rt.Mode, "value", rt.Value, "deleted", len(rt.Deleted))
+	rn.log.Info(i18n.T("log.retention.done"), "mode", rt.Mode, "value", rt.Value, "deleted", len(rt.Deleted))
 }
 
 func (rn *runner) applyRetention(dir string, series []string, protect map[string]bool, rt *RetentionResult) error {
@@ -275,7 +277,7 @@ func (rn *runner) applyRetention(dir string, series []string, protect map[string
 	}
 	entries, err := os.ReadDir(dir)
 	if err != nil {
-		return fmt.Errorf("yedek klasörü okunamadı: %w", err)
+		return i18n.Errorf("err.retention.readDir", "err", err)
 	}
 
 	var files []retentionFile
@@ -301,11 +303,11 @@ func (rn *runner) applyRetention(dir string, series []string, protect map[string
 			continue
 		}
 		rt.Deleted = append(rt.Deleted, DeletedFile{File: f.Path, Bytes: f.Size, Time: f.Time})
-		rn.log.Info("eski yedek silindi", "file", f.Path, "size", formatBytes(f.Size),
+		rn.log.Info(i18n.T("log.retention.deleted"), "file", f.Path, "size", formatBytes(f.Size),
 			"time", f.Time.Format("2006-01-02 15:04:05"))
 	}
 	if len(errs) > 0 {
-		return fmt.Errorf("bazı eski yedekler silinemedi: %w", errors.Join(errs...))
+		return i18n.Errorf("err.retention.delete", "err", errors.Join(errs...))
 	}
 	return nil
 }

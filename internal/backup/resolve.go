@@ -1,11 +1,12 @@
 package backup
 
 import (
-	"fmt"
 	"strings"
 
 	"sqlbackup/internal/config"
 	"sqlbackup/internal/mssql"
+
+	"sqlbackup/internal/i18n"
 )
 
 // Target, çözümleme sonucunda yedeklenmesi planlanan veritabanıdır.
@@ -42,12 +43,12 @@ func ResolveDatabases(j *config.Job, server []mssql.Database) []Target {
 		seen[key] = true
 		d, ok := byName[key]
 		if !ok {
-			out = append(out, Target{Name: name, Reason: "sunucuda bulunamadı", Failed: true})
+			out = append(out, Target{Name: name, Reason: i18n.T("reason.notFound"), Failed: true})
 			return
 		}
 		if d.IsSystem && j.ExcludeSystemDatabases {
 			if explicit {
-				out = append(out, Target{Name: d.Name, Reason: "sistem veritabanları hariç tutuluyor"})
+				out = append(out, Target{Name: d.Name, Reason: i18n.T("reason.systemExcluded")})
 			}
 			return
 		}
@@ -80,7 +81,7 @@ func ResolveDatabases(j *config.Job, server []mssql.Database) []Target {
 
 func notBackupableReason(d mssql.Database) string {
 	if strings.EqualFold(d.Name, "tempdb") {
-		return "tempdb yedeklenemez"
+		return i18n.T("reason.tempdb")
 	}
-	return fmt.Sprintf("veritabanı yedeklenebilir durumda değil (%s)", d.State)
+	return i18n.T("reason.state", "state", d.State)
 }

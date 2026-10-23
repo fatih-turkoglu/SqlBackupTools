@@ -1,0 +1,204 @@
+# SqlBackup language file – English (default, embedded into the executable)
+# Format: key = value  (UTF-8). Lines starting with "#" are comments.
+# Placeholders like {name} are filled in at runtime; keep them unchanged when translating.
+# Escapes: \n new line, \t tab, \\ backslash.
+# To add a language: copy this file to lang\<code>.lng, set @code/@name and translate the values.
+@code = en
+@name = English
+
+# ---------- Common ----------
+common.unknown = unknown
+
+# ---------- Job settings (config) ----------
+err.config.nameInvalid = job name must be 1-64 characters and may only contain letters, digits, '_', '-' and '.'
+err.config.nameDots = job name cannot consist of dots only
+err.config.serverEmpty = server name cannot be empty
+err.config.portRange = port must be between 0 and 65535
+err.config.portTCPOnly = port can only be used with the TCP protocol
+err.config.protocolInvalid = invalid protocol: "{value}"
+err.config.userEmpty = user name is required for SQL authentication
+err.config.passwordEmpty = password is required for SQL authentication
+err.config.authInvalid = invalid authentication type: "{value}"
+err.config.timeoutNegative = connection timeout cannot be negative
+err.config.noDatabase = at least one database must be selected
+err.config.serverPathEmpty = backup folder (server path) cannot be empty
+err.config.commandTimeoutNegative = command timeout cannot be negative
+err.config.deleteBakNeedsZip = deleting .bak after zip requires the zip option to be enabled
+err.config.retentionValue = retention value must be greater than 0
+err.config.retentionModeInvalid = invalid retention mode: "{value}"
+err.config.scheduleTime = schedule time must be in HH:MM format (e.g. 02:00)
+err.config.scheduleNoDays = at least one day must be selected for a weekly schedule
+err.config.scheduleDayInvalid = invalid day: "{value}"
+err.config.scheduleInterval = hourly schedule interval must be 1-23 hours
+err.config.scheduleFrequencyInvalid = invalid schedule frequency: "{value}"
+err.config.runAsInvalid = invalid run-as account: "{value}"
+err.config.templateEmpty = file name template cannot be empty
+err.config.templateNoDb = file name template must contain {db}
+err.config.templateInvalidChars = file name template cannot contain \\ / : * ? " < > |
+err.config.mkdir = could not create folder {path}: {err}
+err.config.jobRead = could not read job file: {err}
+err.config.jobParse = could not parse job file ({path}): {err}
+err.config.jobVersion = job file belongs to a newer version (v{version}); please update the program
+err.config.settingsRead = could not read settings file: {err}
+err.config.settingsParse = could not parse settings file ({path}): {err}
+err.config.encrypt = could not encrypt password: {err}
+err.config.decryptBase64 = encrypted value is invalid (not base64)
+err.config.decrypt = could not decrypt password (was it created on another machine?): {err}
+
+# ---------- SQL Server (mssql) ----------
+err.mssql.connect = could not connect to server: {err}
+err.mssql.connInvalid = invalid connection settings: {err}
+err.mssql.serverInfo = could not read server information: {err}
+err.mssql.listDatabases = could not list databases: {err}
+err.mssql.backup = could not back up {db}: {err}
+err.mssql.verify = could not verify backup ({file}): {err}
+err.mssql.backupSet = could not read backup information ({db}): {err}
+err.mssql.canceled = operation canceled or timed out: {err}
+
+# ---------- File name template ----------
+err.template.unmatchedClose = file name template has an unmatched '}'
+err.template.unclosed = file name template has an unclosed '{'
+err.template.unknown = unknown placeholder in file name template: {{name}}
+
+# ---------- Backup runner ----------
+err.backup.invalidJob = invalid job settings: {err}
+err.backup.alreadyRunning = job "{job}" is already running; this run was not started
+err.backup.lockHeld = job is already running
+err.backup.lock = could not acquire job lock: {err}
+err.backup.password = could not decrypt the saved password; if the job file was copied from another machine, enter the password again: {err}
+err.backup.noDatabases = no databases to back up
+err.backup.canceled = operation canceled
+err.backup.deleteBak = zip created but .bak could not be deleted: {err}
+err.backup.access = cannot access backup folder: {msg}. The folder must be readable, writable and deletable by both the SQL Server service account and the account running this program ({account}) (e.g. D:\\SqlBackups); for a remote server the access path must be a UNC path
+warn.backup.noCompression = server edition ({edition}) does not support backup compression; compression disabled
+
+reason.notFound = not found on server
+reason.systemExcluded = system databases are excluded
+reason.tempdb = tempdb cannot be backed up
+reason.state = database is not in a state that can be backed up ({state})
+
+# ---------- Retention ----------
+err.retention.readDir = could not read backup folder: {err}
+err.retention.delete = some old backups could not be deleted: {err}
+warn.retention.noDate = retention not applied because the file name template has no date (year, month and day)
+warn.retention.canceled = operation canceled; retention not applied
+
+# ---------- ZIP (archive) ----------
+err.archive.dirNotFound = folder not found: {path}
+err.archive.dirNoPermission = no permission to access folder: {path}
+err.archive.dirAccess = cannot access folder: {err}
+err.archive.notDir = path is not a folder: {path}
+err.archive.noWrite = no write permission on folder ({path}): {err}
+err.archive.write = cannot write to folder ({path}): {err}
+err.archive.noRead = no read permission on folder ({path}): {err}
+err.archive.noDelete = no delete permission on folder ({path}): {err}
+err.archive.noFiles = no files to zip
+err.archive.readBak = could not read backup file: {err}
+err.archive.duplicateName = a zip cannot contain two files with the same name: {name}
+err.archive.rename = could not rename zip file: {err}
+err.archive.create = could not create zip file: {err}
+err.archive.writeZip = could not write zip file: {err}
+err.archive.entry = could not create zip entry: {err}
+err.archive.canceled = zip canceled: {err}
+err.archive.compress = could not zip {name}: {err}
+err.archive.verify = zip verification failed: {err}
+err.archive.verifyEntry = zip verification failed ({name}): {err}
+err.archive.verifyCount = zip verification failed: expected {want} entries, found {got}
+err.archive.verifyUnexpected = zip verification failed: unexpected entry {name}
+err.archive.verifySize = zip verification failed: size mismatch for {name} ({got} / {want})
+err.archive.verifyReadSize = zip verification failed: read size mismatch for {name}
+
+# ---------- Logging ----------
+err.logging.mkdir = could not create log folder: {err}
+err.logging.open = could not open log file: {err}
+err.logging.runsMkdir = could not create run record folder: {err}
+err.logging.runWrite = could not write run record: {err}
+err.logging.runRead = could not read run record: {err}
+err.logging.runParse = could not parse run record ({path}): {err}
+err.logging.cleanup = some old log files could not be deleted: {err}
+
+# ---------- Log messages ----------
+log.job.started = job started
+log.job.done = job finished
+log.job.failed = job could not run
+log.job.alreadyRunning = job is already running; run not started
+log.access.failed = cannot access backup folder; zip and retention will be skipped
+log.connected = connected to server
+log.targets = target databases resolved
+log.db.cannotBackup = database cannot be backed up
+log.db.skipped = database skipped
+log.backup.started = backup started
+log.backup.done = backup finished
+log.backup.failed = backup failed
+log.backup.sizeUnknown = could not read backup size
+log.zip.started = zip started
+log.zip.done = zip finished
+log.zip.failed = zip failed
+log.retention.done = retention applied
+log.retention.failed = retention could not be applied
+log.retention.noSuccess = retention not applied because there is no successful backup
+log.retention.deleted = old backup deleted
+log.cli.started = started from command line
+log.run.saved = run record written
+log.run.saveFailed = could not write run record
+log.cleanup.done = old logs cleaned up
+log.cleanup.failed = could not clean up old logs
+log.i18n.missing = language files have missing keys
+
+# ---------- Run summary ----------
+summary.header = Job: {job}  Server: {server}  Duration: {elapsed}
+summary.error = ERROR: {msg}
+summary.warning = WARNING: {msg}
+summary.dbOK = [OK]   {db}  {size}  {elapsed}
+summary.dbFailed = [FAIL] {db}  {msg}
+summary.dbSkipped = [SKIP] {db}  {msg}
+summary.verified = verified
+summary.zipOK = [ZIP]  {file}  {source} → {size}  {elapsed}
+summary.zipFailed = [ZIP FAIL] {file}  {msg}
+summary.bakDeleted = .bak deleted
+summary.deleted = [DEL]  {file}  {size}
+summary.retentionFailed = [RETENTION FAIL] {msg}
+summary.result = Result: {ok} succeeded, {failed} failed, {skipped} skipped
+summary.zipErrors = {count} zip error(s)
+summary.retentionError = retention error
+summary.exitCode = (exit code {code})
+
+# ---------- Command line ----------
+cli.usage = SqlBackup {version} – automatic MSSQL backup\n\nUsage:\n  SqlBackup.exe                          opens the user interface\n  SqlBackup.exe run  --job <job> [-v]    runs the job (backup, verify, zip, retention)\n  SqlBackup.exe test --job <job>         tests the connection and backup folder access\n  SqlBackup.exe list --job <job> [--json] lists the databases on the server\n  SqlBackup.exe version                  prints the version\n\n<job>: job name (looked up in {jobsDir}) or path to a .json file\n  -v            also writes log entries to the console\n  --json        writes the list as JSON\n  --lang <code> language (e.g. en, tr); defaults to the language in settings\n\nExit codes: 0 success, 1 partial failure, 2 failure/settings error, 3 job already running
+cli.error = ERROR: {msg}
+cli.warning = WARNING: {msg}
+cli.yes = yes
+cli.no = no
+cli.err.unknownCommand = unknown command: {cmd}
+cli.err.unexpectedArg = unexpected argument: {arg}
+cli.err.noJob = --job not specified
+cli.err.jobNotFound = job file not found: {path}
+cli.err.connect = could not connect: {err}
+cli.warn.language = could not load language ({code}): {err}
+cli.warn.noLogFile = {err}; nothing will be written to the log file
+cli.phase.backup = backup
+cli.phase.verify = verify
+cli.phase.zip = zip
+cli.test.server = Server
+cli.test.version = Version
+cli.test.edition = Edition
+cli.test.protocol = Protocol
+cli.test.login = Login
+cli.test.loginValue = {login} (sysadmin: {sysadmin})
+cli.test.compression = Compression
+cli.test.compressionYes = supported
+cli.test.compressionNo = not supported
+cli.test.defaultBackupDir = Default backup folder
+cli.test.access = Backup folder access
+cli.test.accessOK = OK ({path})
+cli.test.accessFailed = ERROR
+cli.test.success = Connection successful.
+cli.list.header = DATABASE\tSTATE\tRECOVERY\tSIZE (MB)\tSYSTEM\tLAST FULL\tBACKUP
+cli.list.failed = ERROR: {reason}
+cli.list.skipped = no ({reason})
+cli.list.footer = {count} database(s), {backup} will be backed up
+
+# ---------- User interface (frontend) ----------
+gui.app.title = SqlBackup
+gui.app.placeholder = The user interface is under development. Use the command line for now (SqlBackup.exe help).
+gui.settings.language = Language

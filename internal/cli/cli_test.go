@@ -14,6 +14,7 @@ import (
 
 	"sqlbackup/internal/backup"
 	"sqlbackup/internal/config"
+	"sqlbackup/internal/i18n"
 	"sqlbackup/internal/logging"
 	"sqlbackup/internal/mssql"
 )
@@ -280,5 +281,83 @@ func TestProgressPrinterConsole(t *testing.T) {
 	want := "\r[1/2]Satisyedek%50\r[1/2]Satisyedek%100\n\r[1/2]Satisdoğrulama%100\n"
 	if got != want {
 		t.Errorf("çıktı: %q", got)
+	}
+}
+
+func TestExtractLang(t *testing.T) {
+	tests := []struct {
+		in   []string
+		code string
+		rest string
+	}{
+		{[]string{"run", "--job", "gece"}, "", "run --job gece"},
+		{[]string{"--lang", "tr", "run", "--job", "gece"}, "tr", "run --job gece"},
+		{[]string{"run", "--job", "gece", "-lang=en"}, "en", "run --job gece"},
+		{[]string{"run", "--LANG=tr", "-v"}, "tr", "run -v"},
+		{[]string{"run", "--job", "lang"}, "", "run --job lang"},
+	}
+	for _, tt := range tests {
+		code, rest := extractLang(tt.in)
+		if code != tt.code || strings.Join(rest, " ") != tt.rest {
+			t.Errorf("%v: %q %v", tt.in, code, rest)
+		}
+	}
+}
+
+// langEnv, dil seçimini sınar; test sonunda Türkçe'ye döner.
+func langEnv(t *testing.T) (*env, *bytes.Buffer, *bytes.Buffer) {
+	t.Helper()
+	e, out, errb, _ := testEnv(t)
+	t.Cleanup(func() { i18n.SetLanguage("tr") })
+	return e, out, errb
+}
+
+func TestLanguageSelection(t *testing.T) {
+	// Ayar yok, --lang yok → İngilizce.
+	e, out, _ := langEnv(t)
+	e.main(e.setup([]string{"help"}))
+	if !strings.Contains(out.String(), "Usage:") || e.keepDays != config.DefaultLogKeepDays {
+		t.Errorf("varsayılan İngilizce olmalı: %s", out.String())
+	}
+
+	// Ayarlardaki dil ve log saklama süresi kullanılır.
+	e, out, _ = langEnv(t)
+	if err := config.SaveSettings(config.Settings{Language: "tr", LogKeepDays: 7}); err != nil {
+		t.Fatal(err)
+	}
+	e.main(e.setup([]string{"help"}))
+	if !strings.Contains(out.String(), "Kullanım:") || e.keepDays != 7 {
+		t.Errorf("ayarlardaki dil: %s (keepDays=%d)", out.String(), e.keepDays)
+	}
+
+	// --lang ayarı geçersiz kılar.
+	out.Reset()
+	e.main(e.setup([]string{"--lang", "en", "help"}))
+	if !strings.Contains(out.String(), "Usage:") {
+		t.Errorf("--lang en: %s", out.String())
+	}
+
+	// Bilinmeyen dil → İngilizce + uyarı.
+	e, out, errb := langEnv(t)
+	e.main(e.setup([]string{"help", "--lang=zz"}))
+	if !strings.Contains(out.String(), "Usage:") || !strings.Contains(errb.String(), "WARNING: could not load language (zz)") {
+		t.Errorf("bilinmeyen dil:\n%s\n%s", out.String(), errb.String())
+	}
+}
+
+func TestRunEnglish(t *testing.T) {
+	e, out, _ := langEnv(t)
+	saveJob(t, "gece", nil)
+	if code := e.main(e.setup([]string{"run", "--job", "gece", "--lang", "en"})); code != backup.ExitOK {
+		t.Fatalf("kod=%d", code)
+	}
+	for _, want := range []string{"[1/1] Satis  backup  %100", "Job: gece", "[OK]   Satis", "Result: 1 succeeded, 0 failed, 0 skipped (exit code 0)"} {
+		if !strings.Contains(out.String(), want) {
+			t.Errorf("çıktıda %q yok:\n%s", want, out.String())
+		}
+	}
+	data, _ := os.ReadFile(filepath.Join(config.LogsDir(), "gece_20261023.log"))
+	if !strings.Contains(string(data), `msg="backup finished"`) || !strings.Contains(string(data), "lang=en") {
+		t.Errorf("log İngilizce olmalı:\n%s", data)
 	}
 }

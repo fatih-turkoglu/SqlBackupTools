@@ -14,6 +14,8 @@ import (
 	"sqlbackup/internal/archive"
 	"sqlbackup/internal/config"
 	"sqlbackup/internal/mssql"
+
+	"sqlbackup/internal/i18n"
 )
 
 // Exit code sözleşmesi (CLI ve zamanlanmış görev için).
@@ -182,61 +184,67 @@ func (r *Result) exitCode() int {
 	return ExitOK
 }
 
-// Summary, sonucu insan tarafından okunabilir çok satırlı metin olarak döner.
+// Summary, sonucu insan tarafından okunabilir çok satırlı metin olarak
+// (seçili dilde) döner.
 func (r *Result) Summary() string {
 	var b strings.Builder
-	fmt.Fprintf(&b, "İş: %s  Sunucu: %s  Süre: %s\n", r.Job, r.Server, msDuration(r.ElapsedMs))
+	line := func(s string) {
+		b.WriteString(s)
+		b.WriteByte('\n')
+	}
+	line(i18n.T("summary.header", "job", r.Job, "server", r.Server, "elapsed", msDuration(r.ElapsedMs)))
 	if r.AlreadyRunning {
-		fmt.Fprintf(&b, "UYARI: %s\n", r.Error)
+		line(i18n.T("summary.warning", "msg", r.Error))
 	} else if r.Error != "" {
-		fmt.Fprintf(&b, "HATA: %s\n", r.Error)
+		line(i18n.T("summary.error", "msg", r.Error))
 	}
 	for _, w := range r.Warnings {
-		fmt.Fprintf(&b, "UYARI: %s\n", w)
+		line(i18n.T("summary.warning", "msg", w))
 	}
 	for _, d := range r.Databases {
 		switch d.Status {
 		case StatusSuccess:
 			extra := ""
 			if d.Verified {
-				extra = "  doğrulandı"
+				extra = "  " + i18n.T("summary.verified")
 			}
-			fmt.Fprintf(&b, "  [OK]   %s  %s  %s%s\n", d.Database, formatBytes(d.FileBytes), msDuration(d.ElapsedMs), extra)
+			line("  " + i18n.T("summary.dbOK", "db", d.Database, "size", formatBytes(d.FileBytes),
+				"elapsed", msDuration(d.ElapsedMs)) + extra)
 		case StatusFailed:
-			fmt.Fprintf(&b, "  [HATA] %s  %s\n", d.Database, d.Error)
+			line("  " + i18n.T("summary.dbFailed", "db", d.Database, "msg", d.Error))
 		case StatusSkipped:
-			fmt.Fprintf(&b, "  [ATLA] %s  %s\n", d.Database, d.Error)
+			line("  " + i18n.T("summary.dbSkipped", "db", d.Database, "msg", d.Error))
 		}
 	}
 	for _, a := range r.Archives {
 		if a.Error != "" {
-			fmt.Fprintf(&b, "  [ZIP HATA] %s  %s\n", a.File, a.Error)
+			line("  " + i18n.T("summary.zipFailed", "file", a.File, "msg", a.Error))
 			continue
 		}
 		extra := ""
 		if a.BakDeleted {
-			extra = "  .bak silindi"
+			extra = "  " + i18n.T("summary.bakDeleted")
 		}
-		fmt.Fprintf(&b, "  [ZIP]  %s  %s → %s  %s%s\n", a.File, formatBytes(a.SourceBytes),
-			formatBytes(a.SizeBytes), msDuration(a.ElapsedMs), extra)
+		line("  " + i18n.T("summary.zipOK", "file", a.File, "source", formatBytes(a.SourceBytes),
+			"size", formatBytes(a.SizeBytes), "elapsed", msDuration(a.ElapsedMs)) + extra)
 	}
 	if rt := r.Retention; rt != nil {
 		for _, d := range rt.Deleted {
-			fmt.Fprintf(&b, "  [SİL]  %s  %s\n", d.File, formatBytes(d.Bytes))
+			line("  " + i18n.T("summary.deleted", "file", d.File, "size", formatBytes(d.Bytes)))
 		}
 		if rt.Error != "" {
-			fmt.Fprintf(&b, "  [SAKLAMA HATA] %s\n", rt.Error)
+			line("  " + i18n.T("summary.retentionFailed", "msg", rt.Error))
 		}
 	}
 	ok, failed, skipped := r.Counts()
-	fmt.Fprintf(&b, "Sonuç: %d başarılı, %d hatalı, %d atlandı", ok, failed, skipped)
+	res := i18n.T("summary.result", "ok", ok, "failed", failed, "skipped", skipped)
 	if n := r.archiveErrors(); n > 0 {
-		fmt.Fprintf(&b, ", %d zip hatası", n)
+		res += ", " + i18n.T("summary.zipErrors", "count", n)
 	}
 	if r.Retention != nil && r.Retention.Error != "" {
-		b.WriteString(", saklama hatası")
+		res += ", " + i18n.T("summary.retentionError")
 	}
-	fmt.Fprintf(&b, " (çıkış kodu %d)\n", r.ExitCode)
+	line(res + " " + i18n.T("summary.exitCode", "code", r.ExitCode))
 	return b.String()
 }
 
@@ -251,7 +259,7 @@ func Run(ctx context.Context, j *config.Job, opts Options) *Result {
 	r.End = rn.now()
 	r.ElapsedMs = r.End.Sub(r.Start).Milliseconds()
 	r.ExitCode = r.exitCode()
-	rn.log.Info("iş tamamlandı", "exitCode", r.ExitCode, "elapsed", msDuration(r.ElapsedMs))
+	rn.log.Info(i18n.T("log.job.done"), "exitCode", r.ExitCode, "elapsed", msDuration(r.ElapsedMs))
 	return r
 }
 
@@ -288,7 +296,7 @@ func newRunner(j *config.Job, opts Options) *runner {
 
 func (rn *runner) fail(err error) {
 	rn.res.Error = err.Error()
-	rn.log.Error("iş çalıştırılamadı", "error", err)
+	rn.log.Error(i18n.T("log.job.failed"), "error", err)
 }
 
 func (rn *runner) warn(msg string) {
@@ -299,10 +307,10 @@ func (rn *runner) warn(msg string) {
 func (rn *runner) run(ctx context.Context) {
 	j := rn.job
 	rn.res.Server = configServerName(j.Connection)
-	rn.log.Info("iş başladı", "server", rn.res.Server)
+	rn.log.Info(i18n.T("log.job.started"), "server", rn.res.Server)
 
 	if err := j.Validate(); err != nil {
-		rn.fail(fmt.Errorf("iş ayarları geçersiz: %w", err))
+		rn.fail(i18n.Errorf("err.backup.invalidJob", "err", err))
 		return
 	}
 	if err := ValidateTemplate(j.Backup.FileNameTemplate); err != nil {
@@ -314,8 +322,8 @@ func (rn *runner) run(ctx context.Context) {
 	lock, err := acquireJobLock(j.Name)
 	if errors.Is(err, ErrAlreadyRunning) {
 		rn.res.AlreadyRunning = true
-		rn.res.Error = fmt.Sprintf("%q işi zaten çalışıyor; bu çalışma başlatılmadı", j.Name)
-		rn.log.Warn("iş zaten çalışıyor; çalışma başlatılmadı")
+		rn.res.Error = i18n.T("err.backup.alreadyRunning", "job", j.Name)
+		rn.log.Warn(i18n.T("log.job.alreadyRunning"))
 		return
 	}
 	if err != nil {
@@ -329,7 +337,7 @@ func (rn *runner) run(ctx context.Context) {
 	// adımı hata verir. Kontrol başta yapılır ki sorun uzun yedeklerden önce loglansın.
 	if j.Archive.ZipEnabled || j.Retention.Mode != config.RetentionNone {
 		if rn.accessErr = CheckAccess(j.Backup.EffectiveAccessPath()); rn.accessErr != nil {
-			rn.log.Error("yedek klasörüne erişilemiyor; zip ve saklama yapılmayacak", "error", rn.accessErr)
+			rn.log.Error(i18n.T("log.access.failed"), "error", rn.accessErr)
 		}
 	}
 
@@ -337,7 +345,7 @@ func (rn *runner) run(ctx context.Context) {
 	if j.Connection.Auth == config.AuthSQL {
 		var err error
 		if password, err = config.Unprotect(j.Connection.PasswordEnc); err != nil {
-			rn.fail(fmt.Errorf("kayıtlı şifre çözülemedi; iş dosyası başka bir makineden kopyalandıysa şifreyi yeniden girin: %w", err))
+			rn.fail(i18n.Errorf("err.backup.password", "err", err))
 			return
 		}
 	}
@@ -355,7 +363,7 @@ func (rn *runner) run(ctx context.Context) {
 		rn.res.Server = info.ServerName
 	}
 	rn.res.Edition, rn.res.Protocol = info.Edition, info.Protocol
-	rn.log.Info("sunucuya bağlanıldı", "server", rn.res.Server, "edition", info.Edition,
+	rn.log.Info(i18n.T("log.connected"), "server", rn.res.Server, "edition", info.Edition,
 		"version", info.ProductVersion, "protocol", info.Protocol, "login", info.LoginName)
 
 	rn.bopts = mssql.BackupOptions{
@@ -365,7 +373,7 @@ func (rn *runner) run(ctx context.Context) {
 		Description: "SqlBackup: " + j.Name,
 	}
 	if rn.bopts.Compression && !info.SupportsCompression() {
-		rn.warn(fmt.Sprintf("sunucu sürümü (%s) yedek sıkıştırmayı desteklemiyor; sıkıştırma kapatıldı", info.Edition))
+		rn.warn(i18n.T("warn.backup.noCompression", "edition", info.Edition))
 		rn.bopts.Compression = false
 	}
 
@@ -376,7 +384,7 @@ func (rn *runner) run(ctx context.Context) {
 	}
 	targets := ResolveDatabases(j, dbs)
 	if len(targets) == 0 {
-		rn.fail(errors.New("yedeklenecek veritabanı bulunamadı"))
+		rn.fail(i18n.Errorf("err.backup.noDatabases"))
 		return
 	}
 
@@ -386,7 +394,7 @@ func (rn *runner) run(ctx context.Context) {
 			total++
 		}
 	}
-	rn.log.Info("hedef veritabanları belirlendi", "count", total, "listed", len(targets))
+	rn.log.Info(i18n.T("log.targets"), "count", total, "listed", len(targets))
 
 	index := 0
 	for _, t := range targets {
@@ -398,7 +406,7 @@ func (rn *runner) run(ctx context.Context) {
 		if ctx.Err() != nil {
 			at := rn.now()
 			rn.res.Databases = append(rn.res.Databases, DBResult{Database: t.Name, Status: StatusFailed,
-				Start: at, End: at, Error: "işlem iptal edildi"})
+				Start: at, End: at, Error: i18n.T("err.backup.canceled")})
 			continue
 		}
 		rn.res.Databases = append(rn.res.Databases, rn.backupOne(ctx, t.Name, index, total))
@@ -437,9 +445,9 @@ func (rn *runner) archive(ctx context.Context) {
 		a, err := rn.zipGroup(ctx, dir, g, label, gi+1, len(groups))
 		if err != nil {
 			a.Error = err.Error()
-			rn.log.Error("zip başarısız", "file", a.File, "error", err)
+			rn.log.Error(i18n.T("log.zip.failed"), "file", a.File, "error", err)
 		} else {
-			rn.log.Info("zip tamamlandı", "file", a.File, "size", formatBytes(a.SizeBytes),
+			rn.log.Info(i18n.T("log.zip.done"), "file", a.File, "size", formatBytes(a.SizeBytes),
 				"source", formatBytes(a.SourceBytes), "bakDeleted", a.BakDeleted, "elapsed", msDuration(a.ElapsedMs))
 		}
 		rn.res.Archives = append(rn.res.Archives, a)
@@ -471,7 +479,7 @@ func (rn *runner) zipGroup(ctx context.Context, dir string, g []DBResult, label 
 		return a, rn.accessErr
 	}
 	if err := ctx.Err(); err != nil {
-		return a, errors.New("işlem iptal edildi")
+		return a, i18n.Errorf("err.backup.canceled")
 	}
 	for _, f := range files {
 		if st, err := os.Stat(f); err == nil {
@@ -479,7 +487,7 @@ func (rn *runner) zipGroup(ctx context.Context, dir string, g []DBResult, label 
 		}
 	}
 
-	rn.log.Info("zip başlıyor", "file", a.File, "files", len(files))
+	rn.log.Info(i18n.T("log.zip.started"), "file", a.File, "files", len(files))
 	lastPct := -1
 	a.SizeBytes, err = archive.Create(ctx, a.File, files, func(done, size int64) {
 		if rn.opts.Progress == nil {
@@ -506,7 +514,7 @@ func (rn *runner) zipGroup(ctx context.Context, dir string, g []DBResult, label 
 			}
 		}
 		if len(errs) > 0 {
-			return a, fmt.Errorf("zip oluşturuldu ancak .bak silinemedi: %w", errors.Join(errs...))
+			return a, i18n.Errorf("err.backup.deleteBak", "err", errors.Join(errs...))
 		}
 		a.BakDeleted = true
 	}
@@ -520,15 +528,13 @@ func CheckAccess(dir string) error {
 	if err == nil {
 		return nil
 	}
-	account := "bilinmiyor"
+	account := i18n.T("common.unknown")
 	if u, uerr := user.Current(); uerr == nil {
 		account = u.Username
 	}
 	// Windows hata metinleri noktayla biter ("Access is denied."); çift nokta olmasın.
 	msg := strings.TrimRight(err.Error(), ". ")
-	return fmt.Errorf("yedek klasörüne erişilemiyor: %s. Klasör hem SQL Server servis hesabının "+
-		"hem de bu programı çalıştıran hesabın (%s) okuma/yazma/silme izni olan bir yer olmalı "+
-		"(ör. D:\\SqlBackups); uzak sunucuda erişim yolu bir UNC yolu olmalı", msg, account)
+	return i18n.Errorf("err.backup.access", "msg", msg, "account", account, "cause", err)
 }
 
 // serverBaseName, sunucu tarafındaki yolun dosya adını döner.
@@ -542,9 +548,9 @@ func (rn *runner) addUnplanned(t Target) {
 	d := DBResult{Database: t.Name, Status: StatusSkipped, Start: at, End: at, Error: t.Reason}
 	if t.Failed {
 		d.Status = StatusFailed
-		rn.log.Error("veritabanı yedeklenemiyor", "db", t.Name, "reason", t.Reason)
+		rn.log.Error(i18n.T("log.db.cannotBackup"), "db", t.Name, "reason", t.Reason)
 	} else {
-		rn.log.Warn("veritabanı atlandı", "db", t.Name, "reason", t.Reason)
+		rn.log.Warn(i18n.T("log.db.skipped"), "db", t.Name, "reason", t.Reason)
 	}
 	rn.res.Databases = append(rn.res.Databases, d)
 }
@@ -558,10 +564,10 @@ func (rn *runner) backupOne(ctx context.Context, name string, index, total int) 
 		d.ElapsedMs = d.End.Sub(d.Start).Milliseconds()
 		if d.Error != "" {
 			d.Status = StatusFailed
-			log.Error("yedek başarısız", "error", d.Error, "elapsed", msDuration(d.ElapsedMs))
+			log.Error(i18n.T("log.backup.failed"), "error", d.Error, "elapsed", msDuration(d.ElapsedMs))
 		} else {
 			d.Status = StatusSuccess
-			log.Info("yedek tamamlandı", "file", d.File, "size", formatBytes(d.FileBytes),
+			log.Info(i18n.T("log.backup.done"), "file", d.File, "size", formatBytes(d.FileBytes),
 				"verified", d.Verified, "elapsed", msDuration(d.ElapsedMs))
 		}
 	}()
@@ -575,7 +581,7 @@ func (rn *runner) backupOne(ctx context.Context, name string, index, total int) 
 		return
 	}
 	d.File = joinServerPath(j.Backup.ServerPath, rn.uniqueFileName(fileName))
-	log.Info("yedek başlıyor", "file", d.File, "index", index, "total", total)
+	log.Info(i18n.T("log.backup.started"), "file", d.File, "index", index, "total", total)
 
 	cctx, cancel := rn.commandContext(ctx)
 	err = rn.srv.BackupDatabase(cctx, name, d.File, rn.bopts, rn.progress(name, index, total, PhaseBackup))
@@ -586,7 +592,7 @@ func (rn *runner) backupOne(ctx context.Context, name string, index, total int) 
 	}
 
 	if info, err := rn.srv.LastBackupSet(ctx, name, d.File); err != nil {
-		log.Warn("yedek boyutu okunamadı", "error", err)
+		log.Warn(i18n.T("log.backup.sizeUnknown"), "error", err)
 	} else if info != nil {
 		d.SizeBytes, d.FileBytes = info.SizeBytes, info.CompressedBytes
 	}

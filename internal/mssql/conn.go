@@ -16,6 +16,8 @@ import (
 	_ "github.com/microsoft/go-mssqldb/sharedmemory"
 
 	"sqlbackup/internal/config"
+
+	"sqlbackup/internal/i18n"
 )
 
 // AppName, SQL Server oturumlarında görünen uygulama adıdır.
@@ -67,7 +69,7 @@ func Open(ctx context.Context, c config.Connection, password string) (*Client, e
 			break
 		}
 	}
-	return nil, fmt.Errorf("sunucuya bağlanılamadı: %s", strings.Join(errs, " | "))
+	return nil, i18n.Errorf("err.mssql.connect", "err", strings.Join(errs, " | "))
 }
 
 func openWith(ctx context.Context, c config.Connection, password string) (*Client, error) {
@@ -77,7 +79,7 @@ func openWith(ctx context.Context, c config.Connection, password string) (*Clien
 	}
 	connector, err := mssqldb.NewConnector(dsn)
 	if err != nil {
-		return nil, fmt.Errorf("bağlantı bilgisi geçersiz: %w", err)
+		return nil, i18n.Errorf("err.mssql.connInvalid", "err", err)
 	}
 	db := sql.OpenDB(connector)
 	db.SetMaxOpenConns(4)
@@ -147,7 +149,7 @@ SELECT
 	err := c.db.QueryRowContext(ctx, q).Scan(&serverName, &i.MachineName, &i.ProductVersion,
 		&i.ProductLevel, &i.Edition, &i.EngineEdition, &sysadmin, &i.LoginName)
 	if err != nil {
-		return i, fmt.Errorf("sunucu bilgisi okunamadı: %w", err)
+		return i, i18n.Errorf("err.mssql.serverInfo", "err", err)
 	}
 	i.ServerName = serverName.String
 	i.IsSysAdmin = sysadmin.Int32 == 1
@@ -166,7 +168,7 @@ SELECT
 func ConnString(c config.Connection, password string) (string, error) {
 	host, instance := splitServer(c.Server, c.Instance)
 	if host == "" {
-		return "", fmt.Errorf("sunucu adı boş")
+		return "", i18n.Errorf("err.config.serverEmpty")
 	}
 
 	u := &url.URL{Scheme: "sqlserver", Host: host}

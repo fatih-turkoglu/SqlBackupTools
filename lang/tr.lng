@@ -1,0 +1,203 @@
+# SqlBackup dil dosyası – Türkçe
+# Biçim: anahtar = değer  (UTF-8). "#" ile başlayan satırlar yorumdur.
+# {ad} biçimindeki yer tutucular çalışma anında doldurulur; çevirirken aynen korunmalı.
+# Kaçışlar: \n satır sonu, \t sekme, \\ ters bölü.
+@code = tr
+@name = Türkçe
+
+# ---------- Ortak ----------
+common.unknown = bilinmiyor
+
+# ---------- İş ayarları (config) ----------
+err.config.nameInvalid = iş adı 1-64 karakter olmalı; yalnızca harf, rakam, '_', '-' ve '.' içerebilir
+err.config.nameDots = iş adı yalnızca noktadan oluşamaz
+err.config.serverEmpty = sunucu adı boş olamaz
+err.config.portRange = port 0-65535 aralığında olmalı
+err.config.portTCPOnly = port yalnızca TCP protokolünde kullanılabilir
+err.config.protocolInvalid = geçersiz protokol: "{value}"
+err.config.userEmpty = SQL kimlik doğrulamasında kullanıcı adı boş olamaz
+err.config.passwordEmpty = SQL kimlik doğrulamasında şifre girilmeli
+err.config.authInvalid = geçersiz kimlik doğrulama tipi: "{value}"
+err.config.timeoutNegative = bağlantı zaman aşımı negatif olamaz
+err.config.noDatabase = en az bir veritabanı seçilmeli
+err.config.serverPathEmpty = yedek klasörü (sunucu yolu) boş olamaz
+err.config.commandTimeoutNegative = komut zaman aşımı negatif olamaz
+err.config.deleteBakNeedsZip = zip sonrası .bak silme için zip seçeneği açık olmalı
+err.config.retentionValue = saklama değeri 0'dan büyük olmalı
+err.config.retentionModeInvalid = geçersiz saklama modu: "{value}"
+err.config.scheduleTime = zamanlama saati SS:DD formatında olmalı (ör. 02:00)
+err.config.scheduleNoDays = haftalık zamanlamada en az bir gün seçilmeli
+err.config.scheduleDayInvalid = geçersiz gün: "{value}"
+err.config.scheduleInterval = saatlik zamanlamada aralık 1-23 saat olmalı
+err.config.scheduleFrequencyInvalid = geçersiz zamanlama sıklığı: "{value}"
+err.config.runAsInvalid = geçersiz çalışma hesabı: "{value}"
+err.config.templateEmpty = dosya adı şablonu boş olamaz
+err.config.templateNoDb = dosya adı şablonu {db} içermeli
+err.config.templateInvalidChars = dosya adı şablonu \\ / : * ? " < > | karakterlerini içeremez
+err.config.mkdir = klasör oluşturulamadı {path}: {err}
+err.config.jobRead = iş dosyası okunamadı: {err}
+err.config.jobParse = iş dosyası çözümlenemedi ({path}): {err}
+err.config.jobVersion = iş dosyası daha yeni bir sürüme ait (v{version}), programı güncelleyin
+err.config.settingsRead = ayarlar dosyası okunamadı: {err}
+err.config.settingsParse = ayarlar dosyası çözümlenemedi ({path}): {err}
+err.config.encrypt = şifre şifrelenemedi: {err}
+err.config.decryptBase64 = şifreli değer geçersiz (base64 değil)
+err.config.decrypt = şifre çözülemedi (başka bir makinede mi oluşturuldu?): {err}
+
+# ---------- SQL Server (mssql) ----------
+err.mssql.connect = sunucuya bağlanılamadı: {err}
+err.mssql.connInvalid = bağlantı bilgisi geçersiz: {err}
+err.mssql.serverInfo = sunucu bilgisi okunamadı: {err}
+err.mssql.listDatabases = veritabanları listelenemedi: {err}
+err.mssql.backup = {db} yedeklenemedi: {err}
+err.mssql.verify = yedek doğrulanamadı ({file}): {err}
+err.mssql.backupSet = yedek bilgisi okunamadı ({db}): {err}
+err.mssql.canceled = işlem iptal edildi veya zaman aşımına uğradı: {err}
+
+# ---------- Dosya adı şablonu ----------
+err.template.unmatchedClose = dosya adı şablonunda eşleşmeyen '}' var
+err.template.unclosed = dosya adı şablonunda kapanmamış '{' var
+err.template.unknown = dosya adı şablonunda bilinmeyen yer tutucu: {{name}}
+
+# ---------- Yedek çalıştırıcı ----------
+err.backup.invalidJob = iş ayarları geçersiz: {err}
+err.backup.alreadyRunning = "{job}" işi zaten çalışıyor; bu çalışma başlatılmadı
+err.backup.lockHeld = iş zaten çalışıyor
+err.backup.lock = iş kilidi alınamadı: {err}
+err.backup.password = kayıtlı şifre çözülemedi; iş dosyası başka bir makineden kopyalandıysa şifreyi yeniden girin: {err}
+err.backup.noDatabases = yedeklenecek veritabanı bulunamadı
+err.backup.canceled = işlem iptal edildi
+err.backup.deleteBak = zip oluşturuldu ancak .bak silinemedi: {err}
+err.backup.access = yedek klasörüne erişilemiyor: {msg}. Klasör hem SQL Server servis hesabının hem de bu programı çalıştıran hesabın ({account}) okuma/yazma/silme izni olan bir yer olmalı (ör. D:\\SqlBackups); uzak sunucuda erişim yolu bir UNC yolu olmalı
+warn.backup.noCompression = sunucu sürümü ({edition}) yedek sıkıştırmayı desteklemiyor; sıkıştırma kapatıldı
+
+reason.notFound = sunucuda bulunamadı
+reason.systemExcluded = sistem veritabanları hariç tutuluyor
+reason.tempdb = tempdb yedeklenemez
+reason.state = veritabanı yedeklenebilir durumda değil ({state})
+
+# ---------- Saklama (retention) ----------
+err.retention.readDir = yedek klasörü okunamadı: {err}
+err.retention.delete = bazı eski yedekler silinemedi: {err}
+warn.retention.noDate = dosya adı şablonunda tarih (yıl, ay ve gün) olmadığı için saklama kuralı uygulanmadı
+warn.retention.canceled = işlem iptal edildi; saklama kuralı uygulanmadı
+
+# ---------- ZIP (archive) ----------
+err.archive.dirNotFound = klasör bulunamadı: {path}
+err.archive.dirNoPermission = klasöre erişim izni yok: {path}
+err.archive.dirAccess = klasöre erişilemiyor: {err}
+err.archive.notDir = yol bir klasör değil: {path}
+err.archive.noWrite = klasöre yazma izni yok ({path}): {err}
+err.archive.write = klasöre yazılamıyor ({path}): {err}
+err.archive.noRead = klasörden okuma izni yok ({path}): {err}
+err.archive.noDelete = klasörde silme izni yok ({path}): {err}
+err.archive.noFiles = zip'lenecek dosya yok
+err.archive.readBak = yedek dosyası okunamadı: {err}
+err.archive.duplicateName = zip içinde aynı adda iki dosya olamaz: {name}
+err.archive.rename = zip dosyası adlandırılamadı: {err}
+err.archive.create = zip dosyası oluşturulamadı: {err}
+err.archive.writeZip = zip dosyası yazılamadı: {err}
+err.archive.entry = zip girdisi oluşturulamadı: {err}
+err.archive.canceled = zip iptal edildi: {err}
+err.archive.compress = {name} zip'lenemedi: {err}
+err.archive.verify = zip doğrulanamadı: {err}
+err.archive.verifyEntry = zip doğrulanamadı ({name}): {err}
+err.archive.verifyCount = zip doğrulanamadı: {want} girdi bekleniyordu, {got} bulundu
+err.archive.verifyUnexpected = zip doğrulanamadı: beklenmeyen girdi {name}
+err.archive.verifySize = zip doğrulanamadı: {name} boyutu uyuşmuyor ({got} / {want})
+err.archive.verifyReadSize = zip doğrulanamadı: {name} okunan boyut uyuşmuyor
+
+# ---------- Loglama ----------
+err.logging.mkdir = log klasörü oluşturulamadı: {err}
+err.logging.open = log dosyası açılamadı: {err}
+err.logging.runsMkdir = çalışma kaydı klasörü oluşturulamadı: {err}
+err.logging.runWrite = çalışma kaydı yazılamadı: {err}
+err.logging.runRead = çalışma kaydı okunamadı: {err}
+err.logging.runParse = çalışma kaydı çözümlenemedi ({path}): {err}
+err.logging.cleanup = bazı eski log dosyaları silinemedi: {err}
+
+# ---------- Log mesajları ----------
+log.job.started = iş başladı
+log.job.done = iş tamamlandı
+log.job.failed = iş çalıştırılamadı
+log.job.alreadyRunning = iş zaten çalışıyor; çalışma başlatılmadı
+log.access.failed = yedek klasörüne erişilemiyor; zip ve saklama yapılmayacak
+log.connected = sunucuya bağlanıldı
+log.targets = hedef veritabanları belirlendi
+log.db.cannotBackup = veritabanı yedeklenemiyor
+log.db.skipped = veritabanı atlandı
+log.backup.started = yedek başlıyor
+log.backup.done = yedek tamamlandı
+log.backup.failed = yedek başarısız
+log.backup.sizeUnknown = yedek boyutu okunamadı
+log.zip.started = zip başlıyor
+log.zip.done = zip tamamlandı
+log.zip.failed = zip başarısız
+log.retention.done = saklama kuralı uygulandı
+log.retention.failed = saklama kuralı uygulanamadı
+log.retention.noSuccess = başarılı yedek olmadığı için saklama kuralı uygulanmadı
+log.retention.deleted = eski yedek silindi
+log.cli.started = komut satırından çalıştırıldı
+log.run.saved = çalışma kaydı yazıldı
+log.run.saveFailed = çalışma kaydı yazılamadı
+log.cleanup.done = eski loglar temizlendi
+log.cleanup.failed = eski loglar temizlenemedi
+log.i18n.missing = dil dosyalarında eksik anahtarlar var
+
+# ---------- Çalışma özeti ----------
+summary.header = İş: {job}  Sunucu: {server}  Süre: {elapsed}
+summary.error = HATA: {msg}
+summary.warning = UYARI: {msg}
+summary.dbOK = [OK]   {db}  {size}  {elapsed}
+summary.dbFailed = [HATA] {db}  {msg}
+summary.dbSkipped = [ATLA] {db}  {msg}
+summary.verified = doğrulandı
+summary.zipOK = [ZIP]  {file}  {source} → {size}  {elapsed}
+summary.zipFailed = [ZIP HATA] {file}  {msg}
+summary.bakDeleted = .bak silindi
+summary.deleted = [SİL]  {file}  {size}
+summary.retentionFailed = [SAKLAMA HATA] {msg}
+summary.result = Sonuç: {ok} başarılı, {failed} hatalı, {skipped} atlandı
+summary.zipErrors = {count} zip hatası
+summary.retentionError = saklama hatası
+summary.exitCode = (çıkış kodu {code})
+
+# ---------- Komut satırı ----------
+cli.usage = SqlBackup {version} – MSSQL otomatik yedekleme\n\nKullanım:\n  SqlBackup.exe                          arayüzü açar\n  SqlBackup.exe run  --job <iş> [-v]     işi çalıştırır (yedek, doğrulama, zip, saklama)\n  SqlBackup.exe test --job <iş>          bağlantıyı ve yedek klasörü erişimini sınar\n  SqlBackup.exe list --job <iş> [--json] sunucudaki veritabanlarını listeler\n  SqlBackup.exe version                  sürümü yazar\n\n<iş>: iş adı ({jobsDir} içinde aranır) veya .json dosya yolu\n  -v           log kayıtlarını konsola da yazar\n  --json       listeyi JSON olarak yazar\n  --lang <kod> dil (ör. en, tr); varsayılan ayarlardaki dil\n\nÇıkış kodları: 0 başarılı, 1 kısmi hata, 2 başarısız/ayar hatası, 3 iş zaten çalışıyor
+cli.error = HATA: {msg}
+cli.warning = UYARI: {msg}
+cli.yes = evet
+cli.no = hayır
+cli.err.unknownCommand = bilinmeyen komut: {cmd}
+cli.err.unexpectedArg = beklenmeyen argüman: {arg}
+cli.err.noJob = --job belirtilmedi
+cli.err.jobNotFound = iş dosyası bulunamadı: {path}
+cli.err.connect = bağlantı kurulamadı: {err}
+cli.warn.language = dil yüklenemedi ({code}): {err}
+cli.warn.noLogFile = {err}; log dosyasına yazılmayacak
+cli.phase.backup = yedek
+cli.phase.verify = doğrulama
+cli.phase.zip = zip
+cli.test.server = Sunucu
+cli.test.version = Sürüm
+cli.test.edition = Edition
+cli.test.protocol = Protokol
+cli.test.login = Oturum
+cli.test.loginValue = {login} (sysadmin: {sysadmin})
+cli.test.compression = Sıkıştırma
+cli.test.compressionYes = destekleniyor
+cli.test.compressionNo = desteklenmiyor
+cli.test.defaultBackupDir = Varsayılan yedek klasörü
+cli.test.access = Yedek klasörü erişimi
+cli.test.accessOK = OK ({path})
+cli.test.accessFailed = HATA
+cli.test.success = Bağlantı başarılı.
+cli.list.header = VERİTABANI\tDURUM\tKURTARMA\tBOYUT (MB)\tSİSTEM\tSON FULL\tYEDEK
+cli.list.failed = HATA: {reason}
+cli.list.skipped = hayır ({reason})
+cli.list.footer = {count} veritabanı, {backup} tanesi yedeklenecek
+
+# ---------- Arayüz (frontend) ----------
+gui.app.title = SqlBackup
+gui.app.placeholder = Arayüz geliştirme aşamasında. Şimdilik komut satırını kullanın (SqlBackup.exe help).
+gui.settings.language = Dil

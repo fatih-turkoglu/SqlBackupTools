@@ -3,13 +3,18 @@ package backup
 import (
 	"errors"
 	"fmt"
+	"hash/fnv"
+	"path/filepath"
 	"strings"
 
 	"golang.org/x/sys/windows"
+
+	"sqlbackup/internal/config"
+	"sqlbackup/internal/i18n"
 )
 
 // ErrAlreadyRunning, aynı işin başka bir çalışması sürerken dönen hatadır.
-var ErrAlreadyRunning = errors.New("iş zaten çalışıyor")
+var ErrAlreadyRunning = i18n.Errorf("err.backup.lockHeld")
 
 // İş kilidi, adlandırılmış bir Windows mutex'idir. Kilidin varlığı mutex
 // nesnesinin varlığıdır (sahiplik kullanılmaz; Go'da goroutine'ler iş
@@ -17,9 +22,14 @@ var ErrAlreadyRunning = errors.New("iş zaten çalışıyor")
 // çökerse tutamaç işletim sistemi tarafından kapatılır, artık kilit kalmaz.
 // "Global\" öneki sayesinde zamanlanmış görev (SYSTEM, oturum 0) ile
 // kullanıcı oturumundaki GUI aynı kilidi görür.
+//
+// Ad veri klasörünün özetini de içerir: farklı veri klasörlerindeki
+// (SQLBACKUP_HOME, taşınabilir kurulum, testler) aynı adlı işler farklı işlerdir.
 func lockName(job string) (*uint16, error) {
+	h := fnv.New32a()
+	h.Write([]byte(strings.ToLower(filepath.Clean(config.DataDir()))))
 	// İş adları dosya adı olarak kullanıldığı için büyük/küçük harf duyarsızdır.
-	return windows.UTF16PtrFromString(`Global\SqlBackup.Job.` + strings.ToLower(job))
+	return windows.UTF16PtrFromString(fmt.Sprintf(`Global\SqlBackup.Job.%08x.%s`, h.Sum32(), strings.ToLower(job)))
 }
 
 // jobLock, tutulan bir iş kilididir.
@@ -41,7 +51,7 @@ func acquireJobLock(job string) (*jobLock, error) {
 		// Mutex başka bir hesapla (ör. SYSTEM) oluşturulmuş ve bize açık değil.
 		return nil, ErrAlreadyRunning
 	case err != nil:
-		return nil, fmt.Errorf("iş kilidi alınamadı: %w", err)
+		return nil, i18n.Errorf("err.backup.lock", "err", err)
 	}
 	return &jobLock{h: h}, nil
 }

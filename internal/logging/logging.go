@@ -12,7 +12,6 @@ package logging
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"log/slog"
 	"os"
 	"path/filepath"
@@ -21,6 +20,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"sqlbackup/internal/i18n"
 )
 
 // DefaultKeepDays, log ve çalışma kayıtlarının varsayılan saklama süresidir.
@@ -50,12 +51,12 @@ type JobLog struct {
 // dosyasına yazmaya devam eder.
 func OpenJobLog(logsDir, job string, start time.Time) (*JobLog, error) {
 	if err := os.MkdirAll(logsDir, 0o755); err != nil {
-		return nil, fmt.Errorf("log klasörü oluşturulamadı: %w", err)
+		return nil, i18n.Errorf("err.logging.mkdir", "err", err)
 	}
 	p := filepath.Join(logsDir, job+"_"+start.Format(logDateLayout)+".log")
 	f, err := os.OpenFile(p, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o644)
 	if err != nil {
-		return nil, fmt.Errorf("log dosyası açılamadı: %w", err)
+		return nil, i18n.Errorf("err.logging.open", "err", err)
 	}
 	return &JobLog{Path: p, f: f}, nil
 }
@@ -116,7 +117,7 @@ func ListLogs(logsDir, job string) ([]LogInfo, error) {
 func SaveRun(logsDir, job string, start time.Time, v any) (string, error) {
 	dir := RunsDir(logsDir)
 	if err := os.MkdirAll(dir, 0o755); err != nil {
-		return "", fmt.Errorf("çalışma kaydı klasörü oluşturulamadı: %w", err)
+		return "", i18n.Errorf("err.logging.runsMkdir", "err", err)
 	}
 	data, err := json.MarshalIndent(v, "", "  ")
 	if err != nil {
@@ -124,16 +125,16 @@ func SaveRun(logsDir, job string, start time.Time, v any) (string, error) {
 	}
 	tmp, err := os.CreateTemp(dir, ".run-*.tmp")
 	if err != nil {
-		return "", fmt.Errorf("çalışma kaydı yazılamadı: %w", err)
+		return "", i18n.Errorf("err.logging.runWrite", "err", err)
 	}
 	tmpName := tmp.Name()
 	defer os.Remove(tmpName) // taşıma başarılıysa dosya zaten yok
 	if _, err := tmp.Write(append(data, '\n')); err != nil {
 		tmp.Close()
-		return "", fmt.Errorf("çalışma kaydı yazılamadı: %w", err)
+		return "", i18n.Errorf("err.logging.runWrite", "err", err)
 	}
 	if err := tmp.Close(); err != nil {
-		return "", fmt.Errorf("çalışma kaydı yazılamadı: %w", err)
+		return "", i18n.Errorf("err.logging.runWrite", "err", err)
 	}
 
 	base := job + "_" + start.Format(runTimeLayout)
@@ -150,12 +151,12 @@ func SaveRun(logsDir, job string, start time.Time, v any) (string, error) {
 			continue
 		}
 		if err != nil {
-			return "", fmt.Errorf("çalışma kaydı yazılamadı: %w", err)
+			return "", i18n.Errorf("err.logging.runWrite", "err", err)
 		}
 		f.Close()
 		if err := os.Rename(tmpName, p); err != nil {
 			os.Remove(p)
-			return "", fmt.Errorf("çalışma kaydı yazılamadı: %w", err)
+			return "", i18n.Errorf("err.logging.runWrite", "err", err)
 		}
 		return p, nil
 	}
@@ -213,10 +214,10 @@ func ListRuns(logsDir, job string) ([]RunInfo, error) {
 func ReadRun(path string, v any) error {
 	data, err := os.ReadFile(path)
 	if err != nil {
-		return fmt.Errorf("çalışma kaydı okunamadı: %w", err)
+		return i18n.Errorf("err.logging.runRead", "err", err)
 	}
 	if err := json.Unmarshal(data, v); err != nil {
-		return fmt.Errorf("çalışma kaydı çözümlenemedi (%s): %w", path, err)
+		return i18n.Errorf("err.logging.runParse", "path", path, "err", err)
 	}
 	return nil
 }
@@ -274,7 +275,7 @@ func Cleanup(logsDir string, keepDays int, now time.Time) (int, error) {
 		}
 	}
 	if len(errs) > 0 {
-		return deleted, fmt.Errorf("bazı eski log dosyaları silinemedi: %w", errors.Join(errs...))
+		return deleted, i18n.Errorf("err.logging.cleanup", "err", errors.Join(errs...))
 	}
 	return deleted, nil
 }

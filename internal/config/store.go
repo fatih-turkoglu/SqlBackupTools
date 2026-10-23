@@ -3,11 +3,12 @@ package config
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"os"
 	"path/filepath"
 	"sort"
 	"strings"
+
+	"sqlbackup/internal/i18n"
 )
 
 // HomeEnv, veri klasörünü değiştirmek için kullanılan ortam değişkenidir
@@ -38,7 +39,7 @@ func LogsDir() string { return filepath.Join(DataDir(), "logs") }
 func EnsureDirs() error {
 	for _, d := range []string{JobsDir(), LogsDir()} {
 		if err := os.MkdirAll(d, 0o755); err != nil {
-			return fmt.Errorf("klasör oluşturulamadı %s: %w", d, err)
+			return i18n.Errorf("err.config.mkdir", "path", d, "err", err)
 		}
 	}
 	return nil
@@ -54,14 +55,14 @@ func JobPath(name string) string {
 func LoadJob(path string) (*Job, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
-		return nil, fmt.Errorf("iş dosyası okunamadı: %w", err)
+		return nil, i18n.Errorf("err.config.jobRead", "err", err)
 	}
 	var j Job
 	if err := json.Unmarshal(data, &j); err != nil {
-		return nil, fmt.Errorf("iş dosyası çözümlenemedi (%s): %w", path, err)
+		return nil, i18n.Errorf("err.config.jobParse", "path", path, "err", err)
 	}
 	if j.Version > CurrentVersion {
-		return nil, fmt.Errorf("iş dosyası daha yeni bir sürüme ait (v%d), programı güncelleyin", j.Version)
+		return nil, i18n.Errorf("err.config.jobVersion", "version", j.Version)
 	}
 	j.ApplyDefaults()
 	return &j, nil
@@ -70,14 +71,19 @@ func LoadJob(path string) (*Job, error) {
 // SaveJob, işi verilen yola atomik olarak (geçici dosya + rename) yazar.
 func SaveJob(path string, j *Job) error {
 	j.ApplyDefaults()
-	data, err := json.MarshalIndent(j, "", "  ")
+	return writeJSONAtomic(path, j)
+}
+
+// writeJSONAtomic, değeri girintili JSON olarak geçici dosya + rename ile yazar.
+func writeJSONAtomic(path string, v any) error {
+	data, err := json.MarshalIndent(v, "", "  ")
 	if err != nil {
 		return err
 	}
 	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
 		return err
 	}
-	tmp, err := os.CreateTemp(filepath.Dir(path), ".job-*.tmp")
+	tmp, err := os.CreateTemp(filepath.Dir(path), ".tmp-*.json")
 	if err != nil {
 		return err
 	}

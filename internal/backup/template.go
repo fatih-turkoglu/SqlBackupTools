@@ -1,10 +1,10 @@
 package backup
 
 import (
-	"errors"
-	"fmt"
 	"strings"
 	"time"
+
+	"sqlbackup/internal/i18n"
 )
 
 // TemplateVars, dosya adı şablonundaki yer tutucuların değerleridir.
@@ -73,18 +73,18 @@ func walkTemplate(tmpl string, literal func(string), ph func(name string) error)
 		open := strings.IndexByte(rest, '{')
 		if open < 0 {
 			if strings.IndexByte(rest, '}') >= 0 {
-				return errors.New("dosya adı şablonunda eşleşmeyen '}' var")
+				return i18n.Errorf("err.template.unmatchedClose")
 			}
 			literal(rest)
 			return nil
 		}
 		if strings.IndexByte(rest[:open], '}') >= 0 {
-			return errors.New("dosya adı şablonunda eşleşmeyen '}' var")
+			return i18n.Errorf("err.template.unmatchedClose")
 		}
 		literal(rest[:open])
 		end := strings.IndexByte(rest[open:], '}')
 		if end < 0 {
-			return errors.New("dosya adı şablonunda kapanmamış '{' var")
+			return i18n.Errorf("err.template.unclosed")
 		}
 		if err := ph(rest[open+1 : open+end]); err != nil {
 			return err
@@ -104,7 +104,7 @@ func placeholder(name string, v TemplateVars) (string, error) {
 	}
 	val, ok := formatDate(name, v.Time)
 	if !ok {
-		return "", fmt.Errorf("dosya adı şablonunda bilinmeyen yer tutucu: {%s}", name)
+		return "", i18n.Errorf("err.template.unknown", "name", name)
 	}
 	return val, nil
 }

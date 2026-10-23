@@ -5,11 +5,12 @@ import (
 	"archive/zip"
 	"context"
 	"errors"
-	"fmt"
 	"io"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"sqlbackup/internal/i18n"
 )
 
 // ProgressFunc, zip ilerlemesini bayt cinsinden bildirir.
@@ -22,32 +23,32 @@ func CheckAccess(dir string) error {
 	st, err := os.Stat(dir)
 	switch {
 	case errors.Is(err, os.ErrNotExist):
-		return fmt.Errorf("klasör bulunamadı: %s", dir)
+		return i18n.Errorf("err.archive.dirNotFound", "path", dir)
 	case errors.Is(err, os.ErrPermission):
-		return fmt.Errorf("klasöre erişim izni yok: %s", dir)
+		return i18n.Errorf("err.archive.dirNoPermission", "path", dir)
 	case err != nil:
-		return fmt.Errorf("klasöre erişilemiyor: %w", err)
+		return i18n.Errorf("err.archive.dirAccess", "err", err)
 	case !st.IsDir():
-		return fmt.Errorf("yol bir klasör değil: %s", dir)
+		return i18n.Errorf("err.archive.notDir", "path", dir)
 	}
 
 	f, err := os.CreateTemp(dir, ".sqlbackup-access-*.tmp")
 	if err != nil {
-		return fmt.Errorf("klasöre yazma izni yok (%s): %w", dir, unwrapPath(err))
+		return i18n.Errorf("err.archive.noWrite", "path", dir, "err", unwrapPath(err))
 	}
 	name := f.Name()
 	_, werr := f.WriteString("SqlBackup erişim testi")
 	f.Close()
 	if werr != nil {
 		os.Remove(name)
-		return fmt.Errorf("klasöre yazılamıyor (%s): %w", dir, unwrapPath(werr))
+		return i18n.Errorf("err.archive.write", "path", dir, "err", unwrapPath(werr))
 	}
 	if _, err := os.ReadFile(name); err != nil {
 		os.Remove(name)
-		return fmt.Errorf("klasörden okuma izni yok (%s): %w", dir, unwrapPath(err))
+		return i18n.Errorf("err.archive.noRead", "path", dir, "err", unwrapPath(err))
 	}
 	if err := os.Remove(name); err != nil {
-		return fmt.Errorf("klasörde silme izni yok (%s): %w", dir, unwrapPath(err))
+		return i18n.Errorf("err.archive.noDelete", "path", dir, "err", unwrapPath(err))
 	}
 	return nil
 }
@@ -59,18 +60,18 @@ func CheckAccess(dir string) error {
 // dosyasının boyutudur.
 func Create(ctx context.Context, zipPath string, files []string, progress ProgressFunc) (int64, error) {
 	if len(files) == 0 {
-		return 0, errors.New("zip'lenecek dosya yok")
+		return 0, i18n.Errorf("err.archive.noFiles")
 	}
 	var total int64
 	seen := map[string]bool{}
 	for _, f := range files {
 		st, err := os.Stat(f)
 		if err != nil {
-			return 0, fmt.Errorf("yedek dosyası okunamadı: %w", err)
+			return 0, i18n.Errorf("err.archive.readBak", "err", err)
 		}
 		key := strings.ToLower(filepath.Base(f))
 		if seen[key] {
-			return 0, fmt.Errorf("zip içinde aynı adda iki dosya olamaz: %s", filepath.Base(f))
+			return 0, i18n.Errorf("err.archive.duplicateName", "name", filepath.Base(f))
 		}
 		seen[key] = true
 		total += st.Size()
@@ -87,7 +88,7 @@ func Create(ctx context.Context, zipPath string, files []string, progress Progre
 	}
 	if err := os.Rename(tmp, zipPath); err != nil {
 		os.Remove(tmp)
-		return 0, fmt.Errorf("zip dosyası adlandırılamadı: %w", err)
+		return 0, i18n.Errorf("err.archive.rename", "err", err)
 	}
 	st, err := os.Stat(zipPath)
 	if err != nil {
@@ -99,11 +100,11 @@ func Create(ctx context.Context, zipPath string, files []string, progress Progre
 func writeZip(ctx context.Context, path string, files []string, total int64, progress ProgressFunc) (err error) {
 	out, err := os.Create(path)
 	if err != nil {
-		return fmt.Errorf("zip dosyası oluşturulamadı: %w", err)
+		return i18n.Errorf("err.archive.create", "err", err)
 	}
 	defer func() {
 		if cerr := out.Close(); err == nil && cerr != nil {
-			err = fmt.Errorf("zip dosyası yazılamadı: %w", cerr)
+			err = i18n.Errorf("err.archive.writeZip", "err", cerr)
 		}
 	}()
 
@@ -120,7 +121,7 @@ func writeZip(ctx context.Context, path string, files []string, total int64, pro
 		}
 	}
 	if err := zw.Close(); err != nil {
-		return fmt.Errorf("zip dosyası yazılamadı: %w", err)
+		return i18n.Errorf("err.archive.writeZip", "err", err)
 	}
 	return nil
 }
@@ -128,7 +129,7 @@ func writeZip(ctx context.Context, path string, files []string, total int64, pro
 func addFile(ctx context.Context, zw *zip.Writer, path string, onWrite func(int64)) error {
 	in, err := os.Open(path)
 	if err != nil {
-		return fmt.Errorf("yedek dosyası okunamadı: %w", err)
+		return i18n.Errorf("err.archive.readBak", "err", err)
 	}
 	defer in.Close()
 	st, err := in.Stat()
@@ -143,14 +144,14 @@ func addFile(ctx context.Context, zw *zip.Writer, path string, onWrite func(int6
 	h.Method = zip.Deflate
 	w, err := zw.CreateHeader(h)
 	if err != nil {
-		return fmt.Errorf("zip girdisi oluşturulamadı: %w", err)
+		return i18n.Errorf("err.archive.entry", "err", err)
 	}
 	r := &ctxReader{ctx: ctx, r: in, onRead: onWrite}
 	if _, err := io.Copy(w, r); err != nil {
 		if ctx.Err() != nil {
-			return fmt.Errorf("zip iptal edildi: %w", ctx.Err())
+			return i18n.Errorf("err.archive.canceled", "err", ctx.Err())
 		}
-		return fmt.Errorf("%s zip'lenemedi: %w", h.Name, err)
+		return i18n.Errorf("err.archive.compress", "name", h.Name, "err", err)
 	}
 	return nil
 }
@@ -161,7 +162,7 @@ func addFile(ctx context.Context, zw *zip.Writer, path string, onWrite func(int6
 func Verify(ctx context.Context, zipPath string, files []string) error {
 	zr, err := zip.OpenReader(zipPath)
 	if err != nil {
-		return fmt.Errorf("zip doğrulanamadı: %w", err)
+		return i18n.Errorf("err.archive.verify", "err", err)
 	}
 	defer zr.Close()
 
@@ -169,32 +170,32 @@ func Verify(ctx context.Context, zipPath string, files []string) error {
 	for _, f := range files {
 		st, err := os.Stat(f)
 		if err != nil {
-			return fmt.Errorf("zip doğrulanamadı: %w", err)
+			return i18n.Errorf("err.archive.verify", "err", err)
 		}
 		want[filepath.Base(f)] = st.Size()
 	}
 	if len(zr.File) != len(want) {
-		return fmt.Errorf("zip doğrulanamadı: %d girdi bekleniyordu, %d bulundu", len(want), len(zr.File))
+		return i18n.Errorf("err.archive.verifyCount", "want", len(want), "got", len(zr.File))
 	}
 	for _, zf := range zr.File {
 		size, ok := want[zf.Name]
 		if !ok {
-			return fmt.Errorf("zip doğrulanamadı: beklenmeyen girdi %s", zf.Name)
+			return i18n.Errorf("err.archive.verifyUnexpected", "name", zf.Name)
 		}
 		if int64(zf.UncompressedSize64) != size {
-			return fmt.Errorf("zip doğrulanamadı: %s boyutu uyuşmuyor (%d / %d)", zf.Name, zf.UncompressedSize64, size)
+			return i18n.Errorf("err.archive.verifySize", "name", zf.Name, "got", zf.UncompressedSize64, "want", size)
 		}
 		rc, err := zf.Open()
 		if err != nil {
-			return fmt.Errorf("zip doğrulanamadı (%s): %w", zf.Name, err)
+			return i18n.Errorf("err.archive.verifyEntry", "name", zf.Name, "err", err)
 		}
 		n, err := io.Copy(io.Discard, &ctxReader{ctx: ctx, r: rc})
 		rc.Close()
 		if err != nil {
-			return fmt.Errorf("zip doğrulanamadı (%s): %w", zf.Name, err)
+			return i18n.Errorf("err.archive.verifyEntry", "name", zf.Name, "err", err)
 		}
 		if n != size {
-			return fmt.Errorf("zip doğrulanamadı: %s okunan boyut uyuşmuyor", zf.Name)
+			return i18n.Errorf("err.archive.verifyReadSize", "name", zf.Name)
 		}
 	}
 	return nil

@@ -74,11 +74,13 @@ ZIP, `.bak` silme ve retention işlemleri `accessPath` üzerinden yapılır.
 - [x] Exit code: `0` tümü başarılı, `1` kısmi hata, `2` tamamen başarısız/config hatası (hiçbir DB yedeklenmediyse de `2`)
 
 ### 1.5 ZIP (`internal/archive`)
-- [ ] `accessPath` erişilebilirlik kontrolü (yoksa anlaşılır hata)
-- [ ] `.bak` → `.zip` (archive/zip, Deflate; büyük dosyalar için stream ile)
-- [ ] Mod: DB başına ayrı zip / tüm DB'ler tek zip
-- [ ] ZIP bütünlük kontrolü (zip'i açıp CRC doğrulama) sonrası, seçenek açıksa `.bak` silme
-- [ ] ZIP başarısızsa `.bak` asla silinmez
+- [x] `accessPath` erişilebilirlik kontrolü (yoksa anlaşılır hata) – okuma/yazma/silme gerçekten denenir; iş başında yapılır
+  - Erişim yoksa yedekler **yine alınır**, yalnızca ZIP adımı hata verir (exit `1`)
+- [x] `.bak` → `.zip` (archive/zip, Deflate; büyük dosyalar için stream ile, iptal destekli, zip64 otomatik)
+- [x] Mod: DB başına ayrı zip (`.bak` adı → `.zip`) / tüm DB'ler tek zip (şablonda `{db}` yerine iş adı)
+- [x] ZIP bütünlük kontrolü (zip'i açıp CRC + boyut doğrulama) sonrası, seçenek açıksa `.bak` silme
+  - Önce `.zip.tmp`'ye yazılır, doğrulanınca asıl ada taşınır
+- [x] ZIP başarısızsa `.bak` asla silinmez; doğrulaması (VERIFYONLY) başarısız yedek zip'lenmez
 
 ### 1.6 Retention
 - [ ] `accessPath` içinde iş adına ait dosyaları bulma (şablona uyan `.bak` / `.zip`)

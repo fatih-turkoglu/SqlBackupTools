@@ -5,9 +5,13 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"os"
+	"os/user"
+	"path/filepath"
 	"strings"
 	"time"
 
+	"sqlbackup/internal/archive"
 	"sqlbackup/internal/config"
 	"sqlbackup/internal/mssql"
 )
@@ -47,9 +51,12 @@ type Phase string
 const (
 	PhaseBackup Phase = "backup"
 	PhaseVerify Phase = "verify"
+	PhaseZip    Phase = "zip"
 )
 
-// Progress, bir veritabanının yedek/doğrulama ilerlemesidir.
+// Progress, bir veritabanının yedek/doğrulama ilerlemesidir. Zip aşamasında
+// Database, DB başına zip'te veritabanı adı, tek zip'te iş adıdır; Index ve
+// Total zip dosyalarını sayar.
 type Progress struct {
 	Database string `json:"database"`
 	Index    int    `json:"index"` // 1'den başlar
@@ -95,17 +102,30 @@ type DBResult struct {
 	Error      string    `json:"error,omitempty"`
 }
 
+// ArchiveResult, oluşturulan (veya oluşturulamayan) bir zip dosyasının sonucudur.
+type ArchiveResult struct {
+	// File, zip dosyasının erişim yolu (accessPath) üzerindeki yoludur.
+	File        string   `json:"file"`
+	Databases   []string `json:"databases"`
+	SizeBytes   int64    `json:"sizeBytes"`
+	SourceBytes int64    `json:"sourceBytes"`
+	BakDeleted  bool     `json:"bakDeleted"`
+	ElapsedMs   int64    `json:"elapsedMs"`
+	Error       string   `json:"error,omitempty"`
+}
+
 // Result, bir iş çalışmasının özetidir.
 type Result struct {
-	Job       string     `json:"job"`
-	Server    string     `json:"server"`
-	Edition   string     `json:"edition,omitempty"`
-	Protocol  string     `json:"protocol,omitempty"`
-	Start     time.Time  `json:"start"`
-	End       time.Time  `json:"end"`
-	ElapsedMs int64      `json:"elapsedMs"`
-	Databases []DBResult `json:"databases"`
-	Warnings  []string   `json:"warnings"`
+	Job       string          `json:"job"`
+	Server    string          `json:"server"`
+	Edition   string          `json:"edition,omitempty"`
+	Protocol  string          `json:"protocol,omitempty"`
+	Start     time.Time       `json:"start"`
+	End       time.Time       `json:"end"`
+	ElapsedMs int64           `json:"elapsedMs"`
+	Databases []DBResult      `json:"databases"`
+	Archives  []ArchiveResult `json:"archives"`
+	Warnings  []string        `json:"warnings"`
 	// Error, işin hiç başlayamamasına yol açan hatadır (config, şifre,
 	// bağlantı, listeleme). Doluysa Databases genelde boştur.
 	Error    string `json:"error,omitempty"`
@@ -127,11 +147,21 @@ func (r *Result) Counts() (ok, failed, skipped int) {
 	return
 }
 
+func (r *Result) archiveErrors() (n int) {
+	for _, a := range r.Archives {
+		if a.Error != "" {
+			n++
+		}
+	}
+	return
+}
+
 func (r *Result) exitCode() int {
 	if r.Error != "" {
 		return ExitFailed
 	}
 	ok, failed, _ := r.Counts()
+	failed += r.archiveErrors()
 	switch {
 	case ok == 0:
 		return ExitFailed
@@ -165,8 +195,24 @@ func (r *Result) Summary() string {
 			fmt.Fprintf(&b, "  [ATLA] %s  %s\n", d.Database, d.Error)
 		}
 	}
+	for _, a := range r.Archives {
+		if a.Error != "" {
+			fmt.Fprintf(&b, "  [ZIP HATA] %s  %s\n", a.File, a.Error)
+			continue
+		}
+		extra := ""
+		if a.BakDeleted {
+			extra = "  .bak silindi"
+		}
+		fmt.Fprintf(&b, "  [ZIP]  %s  %s → %s  %s%s\n", a.File, formatBytes(a.SourceBytes),
+			formatBytes(a.SizeBytes), msDuration(a.ElapsedMs), extra)
+	}
 	ok, failed, skipped := r.Counts()
-	fmt.Fprintf(&b, "Sonuç: %d başarılı, %d hatalı, %d atlandı (çıkış kodu %d)\n", ok, failed, skipped, r.ExitCode)
+	fmt.Fprintf(&b, "Sonuç: %d başarılı, %d hatalı, %d atlandı", ok, failed, skipped)
+	if n := r.archiveErrors(); n > 0 {
+		fmt.Fprintf(&b, ", %d zip hatası", n)
+	}
+	fmt.Fprintf(&b, " (çıkış kodu %d)\n", r.ExitCode)
 	return b.String()
 }
 
@@ -193,6 +239,8 @@ type runner struct {
 	srv      Server
 	bopts    mssql.BackupOptions
 	usedFile map[string]bool
+	// accessErr, iş başında yapılan erişim yolu kontrolünün sonucudur.
+	accessErr error
 }
 
 func newRunner(j *config.Job, opts Options) *runner {
@@ -209,7 +257,7 @@ func newRunner(j *config.Job, opts Options) *runner {
 	if rn.opts.Connect == nil {
 		rn.opts.Connect = connectMSSQL
 	}
-	rn.res = &Result{Job: j.Name, Start: rn.now(), Databases: []DBResult{}, Warnings: []string{}}
+	rn.res = &Result{Job: j.Name, Start: rn.now(), Databases: []DBResult{}, Archives: []ArchiveResult{}, Warnings: []string{}}
 	return rn
 }
 
@@ -235,6 +283,15 @@ func (rn *runner) run(ctx context.Context) {
 	if err := ValidateTemplate(j.Backup.FileNameTemplate); err != nil {
 		rn.fail(err)
 		return
+	}
+
+	// Erişim yolu yalnızca zip için gerekir; yedeği sunucu yazar. Bu yüzden
+	// erişim yoksa yedekler yine alınır, yalnızca zip adımı hata verir.
+	// Kontrol başta yapılır ki sorun uzun yedeklerden önce loglansın.
+	if j.Archive.ZipEnabled {
+		if rn.accessErr = checkAccess(j.Backup.EffectiveAccessPath()); rn.accessErr != nil {
+			rn.log.Error("yedek klasörüne erişilemiyor; zip yapılmayacak", "error", rn.accessErr)
+		}
 	}
 
 	var password string
@@ -307,6 +364,134 @@ func (rn *runner) run(ctx context.Context) {
 		}
 		rn.res.Databases = append(rn.res.Databases, rn.backupOne(ctx, t.Name, index, total))
 	}
+
+	if j.Archive.ZipEnabled {
+		rn.archive(ctx)
+	}
+}
+
+// archive, başarılı yedekleri zip'ler; seçenek açıksa doğrulanmış zip
+// sonrası .bak dosyalarını siler. Zip başarısızsa .bak'a dokunulmaz.
+// Doğrulaması başarısız olan yedekler başarılı sayılmadığı için zip'lenmez.
+func (rn *runner) archive(ctx context.Context) {
+	j := rn.job
+	var groups [][]DBResult
+	for _, d := range rn.res.Databases {
+		if d.Status != StatusSuccess {
+			continue
+		}
+		if j.Archive.ZipPerDatabase || len(groups) == 0 {
+			groups = append(groups, nil)
+		}
+		groups[len(groups)-1] = append(groups[len(groups)-1], d)
+	}
+
+	dir := j.Backup.EffectiveAccessPath()
+	for gi, g := range groups {
+		label := j.Name
+		if j.Archive.ZipPerDatabase {
+			label = g[0].Database
+		}
+		a, err := rn.zipGroup(ctx, dir, g, label, gi+1, len(groups))
+		if err != nil {
+			a.Error = err.Error()
+			rn.log.Error("zip başarısız", "file", a.File, "error", err)
+		} else {
+			rn.log.Info("zip tamamlandı", "file", a.File, "size", formatBytes(a.SizeBytes),
+				"source", formatBytes(a.SourceBytes), "bakDeleted", a.BakDeleted, "elapsed", msDuration(a.ElapsedMs))
+		}
+		rn.res.Archives = append(rn.res.Archives, a)
+	}
+}
+
+func (rn *runner) zipGroup(ctx context.Context, dir string, g []DBResult, label string, index, total int) (a ArchiveResult, err error) {
+	j := rn.job
+	start := rn.now()
+	defer func() { a.ElapsedMs = rn.now().Sub(start).Milliseconds() }()
+
+	var files []string
+	for _, d := range g {
+		a.Databases = append(a.Databases, d.Database)
+		files = append(files, filepath.Join(dir, serverBaseName(d.File)))
+	}
+	// DB başına zip'te .bak adı kullanılır; tek zip'te şablondaki {db}
+	// yerine iş adı yazılır.
+	name := serverBaseName(g[0].File)
+	if !j.Archive.ZipPerDatabase {
+		if name, err = ExpandTemplate(j.Backup.FileNameTemplate, TemplateVars{
+			Server: rn.res.Server, Database: j.Name, Job: j.Name, Time: rn.res.Start}); err != nil {
+			return a, err
+		}
+	}
+	a.File = filepath.Join(dir, name[:len(name)-len(".bak")]+".zip")
+
+	if rn.accessErr != nil {
+		return a, rn.accessErr
+	}
+	if err := ctx.Err(); err != nil {
+		return a, errors.New("işlem iptal edildi")
+	}
+	for _, f := range files {
+		if st, err := os.Stat(f); err == nil {
+			a.SourceBytes += st.Size()
+		}
+	}
+
+	rn.log.Info("zip başlıyor", "file", a.File, "files", len(files))
+	lastPct := -1
+	a.SizeBytes, err = archive.Create(ctx, a.File, files, func(done, size int64) {
+		if rn.opts.Progress == nil {
+			return
+		}
+		pct := 100
+		if size > 0 {
+			pct = int(done * 100 / size)
+		}
+		if pct != lastPct {
+			lastPct = pct
+			rn.opts.Progress(Progress{Database: label, Index: index, Total: total, Phase: PhaseZip, Percent: pct})
+		}
+	})
+	if err != nil {
+		return a, err
+	}
+
+	if j.Archive.DeleteBakAfterZip {
+		var errs []error
+		for _, f := range files {
+			if err := os.Remove(f); err != nil {
+				errs = append(errs, err)
+			}
+		}
+		if len(errs) > 0 {
+			return a, fmt.Errorf("zip oluşturuldu ancak .bak silinemedi: %w", errors.Join(errs...))
+		}
+		a.BakDeleted = true
+	}
+	return a, nil
+}
+
+// checkAccess, archive.CheckAccess hatasını yapılması gerekene dair bir
+// açıklamayla zenginleştirir.
+func checkAccess(dir string) error {
+	err := archive.CheckAccess(dir)
+	if err == nil {
+		return nil
+	}
+	account := "bilinmiyor"
+	if u, uerr := user.Current(); uerr == nil {
+		account = u.Username
+	}
+	// Windows hata metinleri noktayla biter ("Access is denied."); çift nokta olmasın.
+	msg := strings.TrimRight(err.Error(), ". ")
+	return fmt.Errorf("yedek klasörüne erişilemiyor, zip yapılamadı: %s. Klasör hem SQL Server servis hesabının "+
+		"hem de bu programı çalıştıran hesabın (%s) okuma/yazma/silme izni olan bir yer olmalı "+
+		"(ör. D:\\SqlBackups); uzak sunucuda erişim yolu bir UNC yolu olmalı", msg, account)
+}
+
+// serverBaseName, sunucu tarafındaki yolun dosya adını döner.
+func serverBaseName(p string) string {
+	return p[strings.LastIndexAny(p, `\/`)+1:]
 }
 
 // addUnplanned, çözümleme aşamasında elenen veritabanını sonuca ekler.

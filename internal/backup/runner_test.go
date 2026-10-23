@@ -3,6 +3,8 @@ package backup
 import (
 	"context"
 	"errors"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -17,6 +19,10 @@ type fakeServer struct {
 	failBackup map[string]bool // veritabanı adı
 	failVerify map[string]bool // dosya yolu
 	onBackup   func(db string)
+	// writeFiles açıksa yedek dosyası diske yazılır (zip testleri için);
+	// noFile içindeki veritabanları için yazılmaz.
+	writeFiles bool
+	noFile     map[string]bool
 
 	backups []string // "db=file"
 	opts    []mssql.BackupOptions
@@ -39,6 +45,12 @@ func (f *fakeServer) BackupDatabase(ctx context.Context, db, file string, o mssq
 	f.opts = append(f.opts, o)
 	if f.failBackup[db] {
 		return errors.New("[3201] yazılamadı")
+	}
+	if f.writeFiles && !f.noFile[db] {
+		data := []byte(strings.Repeat("yedek "+db+" ", 5000))
+		if err := os.WriteFile(file, data, 0o644); err != nil {
+			return err
+		}
 	}
 	if p != nil {
 		p(50)
@@ -240,5 +252,116 @@ func TestFormatBytes(t *testing.T) {
 		if got := formatBytes(n); got != want {
 			t.Errorf("%d: %s, want %s", n, got, want)
 		}
+	}
+}
+
+func zipJob(t *testing.T) (*config.Job, string) {
+	t.Helper()
+	dir := t.TempDir()
+	j := testJob()
+	j.Backup.ServerPath = dir
+	j.Archive.ZipEnabled = true
+	return j, dir
+}
+
+func dirNames(t *testing.T, dir string) string {
+	t.Helper()
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var names []string
+	for _, e := range entries {
+		names = append(names, e.Name())
+	}
+	return strings.Join(names, ",")
+}
+
+func TestRunZipPerDatabase(t *testing.T) {
+	j, dir := zipJob(t)
+	j.Archive.ZipPerDatabase = true
+	j.Archive.DeleteBakAfterZip = true
+	f := newFake()
+	f.writeFiles = true
+	var zipProg []Progress
+	r := runWith(t, j, f, func(p Progress) {
+		if p.Phase == PhaseZip {
+			zipProg = append(zipProg, p)
+		}
+	})
+	if r.ExitCode != ExitOK || len(r.Archives) != 2 {
+		t.Fatalf("exit=%d archives=%+v", r.ExitCode, r.Archives)
+	}
+	if got := dirNames(t, dir); got != "Satis_FULL_20261023_020000.zip,Yeni_FULL_20261023_020000.zip" {
+		t.Errorf("klasör içeriği: %s", got)
+	}
+	a := r.Archives[1]
+	if a.File != filepath.Join(dir, "Yeni_FULL_20261023_020000.zip") || !a.BakDeleted ||
+		a.SizeBytes <= 0 || a.SourceBytes <= a.SizeBytes || a.Databases[0] != "Yeni" {
+		t.Errorf("zip sonucu: %+v", a)
+	}
+	if len(zipProg) == 0 || zipProg[len(zipProg)-1] != (Progress{Database: "Yeni", Index: 2, Total: 2, Phase: PhaseZip, Percent: 100}) {
+		t.Errorf("zip ilerlemesi: %+v", zipProg)
+	}
+}
+
+func TestRunZipSingle(t *testing.T) {
+	j, dir := zipJob(t)
+	f := newFake()
+	f.writeFiles = true
+	r := runWith(t, j, f, nil)
+	if r.ExitCode != ExitOK || len(r.Archives) != 1 || r.Archives[0].BakDeleted {
+		t.Fatalf("exit=%d archives=%+v", r.ExitCode, r.Archives)
+	}
+	want := "Satis_FULL_20261023_020000.bak,Yeni_FULL_20261023_020000.bak,gece_FULL_20261023_020000.zip"
+	if got := dirNames(t, dir); got != want {
+		t.Errorf("klasör içeriği: %s", got)
+	}
+}
+
+func TestRunZipFailureKeepsBak(t *testing.T) {
+	// Tek zip'te bir .bak okunamazsa zip oluşmaz ve hiçbir .bak silinmez.
+	j, dir := zipJob(t)
+	j.Archive.DeleteBakAfterZip = true
+	f := newFake()
+	f.writeFiles = true
+	f.noFile = map[string]bool{"Yeni": true}
+	r := runWith(t, j, f, nil)
+	if r.ExitCode != ExitPartial || r.Archives[0].Error == "" || r.Archives[0].BakDeleted {
+		t.Fatalf("exit=%d archives=%+v", r.ExitCode, r.Archives)
+	}
+	if got := dirNames(t, dir); got != "Satis_FULL_20261023_020000.bak" {
+		t.Errorf("klasör içeriği: %s", got)
+	}
+}
+
+func TestRunZipSkipsFailedVerify(t *testing.T) {
+	j, dir := zipJob(t)
+	j.Archive.ZipPerDatabase = true
+	j.Archive.DeleteBakAfterZip = true
+	f := newFake()
+	f.writeFiles = true
+	f.failVerify = map[string]bool{filepath.Join(dir, "Yeni_FULL_20261023_020000.bak"): true}
+	r := runWith(t, j, f, nil)
+	if r.ExitCode != ExitPartial || len(r.Archives) != 1 || r.Archives[0].Databases[0] != "Satis" {
+		t.Fatalf("exit=%d archives=%+v", r.ExitCode, r.Archives)
+	}
+	// Doğrulanamayan yedek zip'lenmez ve silinmez.
+	if got := dirNames(t, dir); got != "Satis_FULL_20261023_020000.zip,Yeni_FULL_20261023_020000.bak" {
+		t.Errorf("klasör içeriği: %s", got)
+	}
+}
+
+func TestRunZipNoAccess(t *testing.T) {
+	j, dir := zipJob(t)
+	j.Backup.AccessPath = filepath.Join(dir, "yok")
+	f := newFake()
+	r := runWith(t, j, f, nil)
+	// Yedekler yine alınmalı; yalnızca zip hata vermeli.
+	if r.ExitCode != ExitPartial || len(f.backups) != 2 || len(r.Archives) != 1 {
+		t.Fatalf("exit=%d backups=%v archives=%+v", r.ExitCode, f.backups, r.Archives)
+	}
+	if e := r.Archives[0].Error; !strings.Contains(e, "erişilemiyor") || !strings.Contains(e, "bulunamadı") {
+		t.Errorf("anlaşılır hata bekleniyordu: %s", e)
 	}
 }

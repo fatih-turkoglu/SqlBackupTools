@@ -4,15 +4,19 @@ package backup
 // SQLBACKUP_TEST_SERVER tanımlıysa çalışır (bkz. internal/mssql/integration_test.go).
 
 import (
+	"archive/zip"
 	"context"
 	"database/sql"
 	"fmt"
 	"os"
+	"os/exec"
+	"strings"
 	"testing"
 	"time"
 
 	mssqldb "github.com/microsoft/go-mssqldb"
 
+	"sqlbackup/internal/archive"
 	"sqlbackup/internal/config"
 	"sqlbackup/internal/mssql"
 )
@@ -40,21 +44,16 @@ func testConnection(t *testing.T) config.Connection {
 	return c
 }
 
-func TestIntegrationRun(t *testing.T) {
+// integrationEnv, sunucu bilgisi ve DDL için doğrudan bir bağlantı hazırlar.
+func integrationEnv(t *testing.T, ctx context.Context) (config.Connection, mssql.ServerInfo, *sql.DB) {
+	t.Helper()
 	conn := testConnection(t)
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
-	defer cancel()
-
-	// Bilgi ve test DB'si için ayrı, doğrudan bir bağlantı açılır.
 	cl, err := mssql.Open(ctx, conn, os.Getenv("SQLBACKUP_TEST_PASSWORD"))
 	if err != nil {
 		t.Fatal(err)
 	}
 	info := cl.Info()
 	cl.Close()
-	if info.DefaultBackup == "" {
-		t.Skip("varsayılan yedek klasörü okunamadı")
-	}
 	dc := conn
 	dc.Protocol = info.Protocol
 	dsn, err := mssql.ConnString(dc, os.Getenv("SQLBACKUP_TEST_PASSWORD"))
@@ -67,11 +66,43 @@ func TestIntegrationRun(t *testing.T) {
 	}
 	db := sql.OpenDB(connector)
 	t.Cleanup(func() { db.Close() })
+	return conn, info, db
+}
 
+// tempDatabase, test DB'si oluşturur; test sonunda DB'yi ve yedek geçmişini siler.
+func tempDatabase(t *testing.T, ctx context.Context, db *sql.DB) string {
+	t.Helper()
 	name := fmt.Sprintf("SqlBackupTest_%d", time.Now().UnixNano())
 	if _, err := db.ExecContext(ctx, "CREATE DATABASE ["+name+"]"); err != nil {
 		t.Fatal(err)
 	}
+	t.Cleanup(func() {
+		bg := context.Background()
+		db.ExecContext(bg, "ALTER DATABASE ["+name+"] SET SINGLE_USER WITH ROLLBACK IMMEDIATE; DROP DATABASE ["+name+"]")
+		db.ExecContext(bg, "EXEC msdb.dbo.sp_delete_database_backuphistory @database_name = @p1", name)
+	})
+	return name
+}
+
+// deleteServerFiles, yedek dosyalarını sunucu tarafında tam yol ile siler.
+func deleteServerFiles(t *testing.T, db *sql.DB, r *Result) {
+	for _, d := range r.Databases {
+		if d.Status == StatusSuccess && d.File != "" {
+			if _, err := db.ExecContext(context.Background(), "EXEC master.dbo.xp_delete_file 0, @p1", d.File); err != nil {
+				t.Logf("yedek dosyası silinemedi: %v", err)
+			}
+		}
+	}
+}
+
+func TestIntegrationRun(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+	defer cancel()
+	conn, info, db := integrationEnv(t, ctx)
+	if info.DefaultBackup == "" {
+		t.Skip("varsayılan yedek klasörü okunamadı")
+	}
+	name := tempDatabase(t, ctx, db)
 
 	j := config.NewJob("entegrasyon")
 	j.Connection = conn
@@ -85,20 +116,7 @@ func TestIntegrationRun(t *testing.T) {
 	var last Progress
 	r := Run(ctx, j, Options{Progress: func(p Progress) { last = p }})
 	t.Log("\n" + r.Summary())
-
-	// Temizlik: yedek dosyası sunucu tarafında, tam yol ile silinir.
-	t.Cleanup(func() {
-		bg := context.Background()
-		for _, d := range r.Databases {
-			if d.Database == name && d.File != "" {
-				if _, err := db.ExecContext(bg, "EXEC master.dbo.xp_delete_file 0, @p1", d.File); err != nil {
-					t.Logf("yedek dosyası silinemedi: %v", err)
-				}
-			}
-		}
-		db.ExecContext(bg, "ALTER DATABASE ["+name+"] SET SINGLE_USER WITH ROLLBACK IMMEDIATE; DROP DATABASE ["+name+"]")
-		db.ExecContext(bg, "EXEC msdb.dbo.sp_delete_database_backuphistory @database_name = @p1", name)
-	})
+	t.Cleanup(func() { deleteServerFiles(t, db, r) })
 
 	if r.ExitCode != ExitPartial {
 		t.Fatalf("kısmi sonuç (1) bekleniyordu: %d", r.ExitCode)
@@ -116,4 +134,89 @@ func TestIntegrationRun(t *testing.T) {
 	if last.Phase != PhaseVerify || last.Percent != 100 {
 		t.Errorf("son ilerleme doğrulama %%100 olmalı: %+v", last)
 	}
+}
+
+// TestIntegrationZipNoAccess: varsayılan yedek klasörüne (Program Files
+// altında) genelde yalnızca SQL servis hesabı yazabilir. Bu durumda yedek
+// alınmalı, zip anlaşılır bir hatayla atlanmalıdır.
+func TestIntegrationZipNoAccess(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+	defer cancel()
+	conn, info, db := integrationEnv(t, ctx)
+	if info.DefaultBackup == "" {
+		t.Skip("varsayılan yedek klasörü okunamadı")
+	}
+	if archive.CheckAccess(info.DefaultBackup) == nil {
+		t.Skip("varsayılan yedek klasörüne erişim var; senaryo uygulanamaz")
+	}
+	name := tempDatabase(t, ctx, db)
+
+	j := config.NewJob("entegrasyon")
+	j.Connection = conn
+	j.Databases = []string{name}
+	j.Backup.ServerPath = info.DefaultBackup
+	j.Archive.ZipEnabled = true
+	j.Archive.DeleteBakAfterZip = true
+	r := Run(ctx, j, Options{})
+	t.Log("\n" + r.Summary())
+	t.Cleanup(func() { deleteServerFiles(t, db, r) })
+
+	if r.ExitCode != ExitPartial || r.Databases[0].Status != StatusSuccess ||
+		len(r.Archives) != 1 || !strings.Contains(r.Archives[0].Error, "erişilemiyor") {
+		t.Fatalf("yedek alınmalı, zip hata vermeli: %+v", r)
+	}
+}
+
+// TestIntegrationZip: geçici bir klasöre SQL Server servis hesabı için
+// değiştirme izni verilir; yedek + zip + .bak silme uçtan uca denenir.
+// Yalnızca yerel sunucuda çalışır.
+func TestIntegrationZip(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+	defer cancel()
+	conn, info, db := integrationEnv(t, ctx)
+	if !strings.EqualFold(info.MachineName, hostname()) {
+		t.Skip("uzak sunucu; geçici klasör paylaşılamaz")
+	}
+	dir := t.TempDir()
+	account := `NT Service\MSSQLSERVER`
+	if _, inst, ok := strings.Cut(info.ServerName, `\`); ok {
+		account = `NT Service\MSSQL$` + inst
+	}
+	if out, err := exec.Command("icacls", dir, "/grant", account+":(OI)(CI)M").CombinedOutput(); err != nil {
+		t.Skipf("klasöre servis hesabı izni verilemedi (%s): %v %s", account, err, out)
+	}
+	name := tempDatabase(t, ctx, db)
+
+	j := config.NewJob("entegrasyon")
+	j.Connection = conn
+	j.Databases = []string{name}
+	j.Backup.ServerPath = dir
+	j.Backup.Verify = true
+	j.Archive.ZipEnabled = true
+	j.Archive.ZipPerDatabase = true
+	j.Archive.DeleteBakAfterZip = true
+	r := Run(ctx, j, Options{})
+	t.Log("\n" + r.Summary())
+
+	if r.ExitCode != ExitOK || len(r.Archives) != 1 || !r.Archives[0].BakDeleted {
+		t.Fatalf("zip başarılı olmalı: %+v", r)
+	}
+	zr, err := zip.OpenReader(r.Archives[0].File)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer zr.Close()
+	// msdb'deki boyut yaklaşıktır; diskteki gerçek boyutla (SourceBytes) karşılaştırılır.
+	if len(zr.File) != 1 || zr.File[0].UncompressedSize64 != uint64(r.Archives[0].SourceBytes) {
+		t.Errorf("zip içeriği hatalı: %d girdi, %d bayt", len(zr.File), zr.File[0].UncompressedSize64)
+	}
+	entries, _ := os.ReadDir(dir)
+	if len(entries) != 1 || !strings.HasSuffix(entries[0].Name(), ".zip") {
+		t.Errorf("klasörde yalnızca zip kalmalı: %v", entries)
+	}
+}
+
+func hostname() string {
+	h, _ := os.Hostname()
+	return h
 }

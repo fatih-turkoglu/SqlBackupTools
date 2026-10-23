@@ -284,7 +284,7 @@ func TestProgressPrinterConsole(t *testing.T) {
 	}
 }
 
-func TestExtractLang(t *testing.T) {
+func TestExtractFlag(t *testing.T) {
 	tests := []struct {
 		in   []string
 		code string
@@ -297,7 +297,7 @@ func TestExtractLang(t *testing.T) {
 		{[]string{"run", "--job", "lang"}, "", "run --job lang"},
 	}
 	for _, tt := range tests {
-		code, rest := extractLang(tt.in)
+		code, rest := extractFlag(tt.in, "lang")
 		if code != tt.code || strings.Join(rest, " ") != tt.rest {
 			t.Errorf("%v: %q %v", tt.in, code, rest)
 		}

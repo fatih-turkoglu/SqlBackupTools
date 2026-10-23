@@ -35,11 +35,23 @@ func JobsDir() string { return filepath.Join(DataDir(), "jobs") }
 // LogsDir, log dosyalarının klasörüdür.
 func LogsDir() string { return filepath.Join(DataDir(), "logs") }
 
-// EnsureDirs, veri klasörlerini oluşturur.
+// EnsureDirs, veri klasörlerini oluşturur. Log klasörü ilk oluşturulduğunda
+// tüm kullanıcılara değiştirme izni verilir (bkz. grantUsersModify); böylece
+// zamanlanmış görev (SYSTEM) ile arayüzü kullanan kullanıcı aynı log
+// dosyalarına yazabilir. İzin yalnızca oluşturmada verilir: sonradan
+// yalnızca klasörün sahibi değiştirebilir ve değişiklik tüm dosyalara yayılır.
+// Log klasörü çalışma sırasında logging paketince de oluşturulabildiği için
+// iş çalıştıranlar log açmadan önce bunu çağırmalıdır.
 func EnsureDirs() error {
 	for _, d := range []string{JobsDir(), LogsDir()} {
+		_, statErr := os.Stat(d)
 		if err := os.MkdirAll(d, 0o755); err != nil {
 			return i18n.Errorf("err.config.mkdir", "path", d, "err", err)
+		}
+		if d == LogsDir() && errors.Is(statErr, os.ErrNotExist) {
+			if err := grantUsersModify(d); err != nil {
+				return i18n.Errorf("err.config.dirPermission", "path", d, "err", err)
+			}
 		}
 	}
 	return nil

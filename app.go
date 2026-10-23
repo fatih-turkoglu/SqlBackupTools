@@ -17,10 +17,11 @@ func NewApp() *App {
 	return &App{}
 }
 
-// startup, uygulama açılırken çağrılır. Dil ayarlar dosyasından yüklenir;
-// sorun olursa İngilizce ile devam edilir.
+// startup, uygulama açılırken çağrılır. Veri klasörleri oluşturulur, dil
+// ayarlar dosyasından yüklenir; sorun olursa İngilizce ile devam edilir.
 func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
+	_ = config.EnsureDirs() // TODO(Faz 4): hata arayüzde gösterilmeli
 	s, _ := config.LoadSettings()
 	_ = i18n.SetLanguage(s.Language)
 }

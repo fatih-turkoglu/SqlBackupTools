@@ -167,17 +167,29 @@ Faz 1'den sonra yapılır (CLI metinleri de hazır olur), GUI'den (Faz 4) önce 
 ## Faz 3 – Batch ve Zamanlanmış Görev (`internal/scheduler`)
 
 ### 3.1 Batch dosyası
-- [ ] Şablondan `.bat` üretimi (exe yolu + `run --job "..."`, `exit /b %ERRORLEVEL%`)
-- [ ] Türkçe karakter / boşluk içeren yollar için doğru tırnaklama ve kod sayfası (`chcp 65001`)
-- [ ] Kaydetme konumu: varsayılan `jobs\<job>.bat`, kullanıcı farklı yer seçebilir
+- [x] Şablondan `.bat` üretimi (exe yolu + `run --job "<tam json yolu>" [--home "<veri klasörü>"]`, `exit /b`) – `scheduler.Batch`
+- [x] Türkçe karakter / boşluk içeren yollar için doğru tırnaklama ve kod sayfası (`chcp 65001`)
+  - BOM'suz UTF-8 + CRLF; `chcp` öncesi satırlar yalnızca ASCII; yollardaki `%` → `%%`; sondaki `\` ikilenir (`"D:\\"`)
+  - Önceki kod sayfası geri yüklenir (açık konsoldan çalıştırılınca konsol bozulmaz); çıkış kodu programınki
+  - Test gerçek `cmd.exe` ile çalıştırır (Türkçe + boşluk + `%PATH%` içeren yollar, kod sayfası geri yükleme)
+- [x] Kaydetme konumu: varsayılan `jobs\<job>.bat`, `batch --job <iş> --path <dosya>` ile farklı yer
 
 ### 3.2 Zamanlanmış görev
-- [ ] Zamanlama modeli: günlük / haftalık (gün seçimi) / N saatte bir, başlangıç saati
-- [ ] `schtasks /Create` komutu üretimi (`/TN "SqlBackup\<job>"`, `/RU SYSTEM` veya kullanıcı, `/RL HIGHEST`, `/F`)
-- [ ] Görev sorgulama (`schtasks /Query /XML`) → var mı, sonraki çalışma, son sonuç
-- [ ] Görev silme ve "Şimdi çalıştır" (`schtasks /Run`)
-- [ ] Yönetici yetkisi yoksa UAC ile yükseltme (`ShellExecute runas`)
-- [ ] Uyarı: SYSTEM + Windows Auth seçiminde SQL tarafında yetki gereksinimi
+**Karar:** `schtasks.exe` yerine Görev Zamanlayıcı **COM API'si** (`Schedule.Service`, go-ole). `schtasks /Query` çıktısı yerelleştirilmiş (Türkçe başlıklar, tarih biçimi) ve `/TR` 261 karakterle sınırlı; COM'da durum/tarih/sonuç tipli, hata kodları (`E_ACCESSDENIED`) ayırt edilebilir. Görev, XML tanımıyla kaydedilir.
+**Karar:** Görev eylemi `.bat` değil, doğrudan exe (`run --job ... [--home ...]`): GUI alt sistemli exe pencere açmaz, kod sayfası sorunu olmaz. `.bat` elle/başka zamanlayıcı için ayrı üretilir.
+- [x] Zamanlama modeli: günlük / haftalık (gün seçimi) / N saatte bir (başlangıç saatinden itibaren süresiz tekrar), başlangıç saati
+- [x] Görev XML üretimi (`scheduler.TaskXML`): `\SqlBackup\<job>`; SYSTEM → `S-1-5-18` + `HighestAvailable`; geçerli kullanıcı → `InteractiveToken` (şifre saklanmaz, yalnızca oturum açıkken) + `LeastPrivilege`
+  - Ayarlar: önceki çalışma sürerken yenisi başlamaz (`IgnoreNew`), kaçırılan çalışma sonra yapılır, pilde de çalışır, süre sınırı yok (`PT0S`; komut zaman aşımı işin ayarı)
+  - Görev Zamanlayıcı eylemdeki `%AD%` kalıplarını genişletir ve kaçışı yok → iki+ `%` içeren yollar reddedilir
+- [x] Görev sorgulama (`QueryTask`) → var mı, durum, son çalışma + sonuç (programın 0-3 kodları), sonraki çalışma, hesap (SID → ad), komut
+- [x] Görev silme (boş kalan klasör de silinir) ve "Şimdi çalıştır" (`RunTask`)
+- [x] Yönetici yetkisi yoksa UAC ile yükseltme (`ShellExecuteEx runas` + bekleme + çıkış kodu)
+  - CLI: `task create|delete|run|status --job <iş> [--elevate] [--json]`; erişim reddinde `--elevate` exe'yi `--lang --home --output <geçici dosya>` ile yükseltilmiş başlatır, çıktıyı geri aktarır. GUI (Faz 4) aynı yolu kullanacak.
+  - Denendi: yalnızca **SYSTEM görevi oluşturma/güncelleme** yükseltme ister; geçerli kullanıcı görevi, SYSTEM görevini çalıştırma/sorgulama/silme (kaydeden kullanıcı) istemez
+- [x] Uyarılar (`scheduler.Warnings`): SYSTEM + Windows Auth → SQL'de `NT AUTHORITY\SYSTEM` login/yetki; SYSTEM + UNC erişim yolu → makine hesabı izni; geçerli kullanıcı → yalnızca oturum açıkken
+- [x] Gerçek görevle denendi: Görev Zamanlayıcı üzerinden çalıştırma (Türkçe yollar), SYSTEM ↔ kullanıcı iş kilidi her iki yönde (exit 3), SYSTEM'in yetkisiz yedeği (262 → exit 2, kayıt yazıldı)
+- [x] `%ProgramData%`'da SYSTEM'in oluşturduğu log dosyasına kullanıcı yazamıyordu (Users yalnızca RX) → `config.EnsureDirs` log klasörünü ilk oluştururken `Users:(OI)(CI)M` verir; `run` ve GUI açılışı log açmadan önce çağırır
+- Entegrasyon testi: `SQLBACKUP_TEST_TASKS=1` (geçici `\SqlBackupTest_<nano>` klasörü, yönetici gerekmez, sonunda silinir)
 
 ---
 
@@ -187,7 +199,7 @@ Faz 1'den sonra yapılır (CLI metinleri de hazır olur), GUI'den (Faz 4) önce 
 - [ ] Job CRUD: `ListJobs`, `GetJob`, `SaveJob`, `DeleteJob`, `DuplicateJob`
 - [ ] `TestConnection(conn, password)`, `ListDatabases(conn, password)`
 - [ ] `RunJobNow(name)` + ilerleme için Wails event'leri (`backup:progress`, `backup:done`); iş zaten çalışıyorsa (`IsRunning` / `AlreadyRunning`) uyarı gösterilip başlatılmaz
-- [ ] `SaveBatch`, `CreateTask`, `DeleteTask`, `GetTaskStatus`
+- [ ] `SaveBatch`, `CreateTask`, `DeleteTask`, `GetTaskStatus` (`scheduler` paketi; `ErrAccessDenied` → CLI `task ... --elevate` ile yükseltilmiş çalıştırma, `EnsureDirs` hatası arayüzde gösterilmeli)
 - [ ] `ListRuns`, `ReadLog`
 - [ ] Klasör seçme diyaloğu (`runtime.OpenDirectoryDialog`)
 

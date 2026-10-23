@@ -7,6 +7,7 @@
 
 # ---------- Ortak ----------
 common.unknown = bilinmiyor
+common.taskDescription = SqlBackup "{job}" işini çalıştırır (SqlBackup tarafından oluşturuldu).
 
 # ---------- İş ayarları (config) ----------
 err.config.nameInvalid = iş adı 1-64 karakter olmalı; yalnızca harf, rakam, '_', '-' ve '.' içerebilir
@@ -35,6 +36,7 @@ err.config.templateEmpty = dosya adı şablonu boş olamaz
 err.config.templateNoDb = dosya adı şablonu {db} içermeli
 err.config.templateInvalidChars = dosya adı şablonu \\ / : * ? " < > | karakterlerini içeremez
 err.config.mkdir = klasör oluşturulamadı {path}: {err}
+err.config.dirPermission = {path} klasörünün izinleri ayarlanamadı: {err}
 err.config.jobRead = iş dosyası okunamadı: {err}
 err.config.jobParse = iş dosyası çözümlenemedi ({path}): {err}
 err.config.jobVersion = iş dosyası daha yeni bir sürüme ait (v{version}), programı güncelleyin
@@ -116,6 +118,26 @@ err.logging.runRead = çalışma kaydı okunamadı: {err}
 err.logging.runParse = çalışma kaydı çözümlenemedi ({path}): {err}
 err.logging.cleanup = bazı eski log dosyaları silinemedi: {err}
 
+# ---------- Batch dosyası ve zamanlanmış görev (scheduler) ----------
+err.scheduler.exePath = program yolu belirlenemedi: {err}
+err.scheduler.path = geçersiz yol {path}: {err}
+err.scheduler.badPath = yol komut satırında kullanılamaz: "{path}"
+err.scheduler.percentPath = yol "%" karakterleri içeriyor; Görev Zamanlayıcı bunları ortam değişkeni olarak genişletir: {path}
+err.scheduler.batchWrite = batch dosyası yazılamadı {path}: {err}
+err.scheduler.noUser = görevin kullanıcı hesabı belirlenemedi
+err.scheduler.accessDenied = Görev Zamanlayıcı erişimi reddetti (yönetici yetkisi gerekiyor)
+err.scheduler.notFound = zamanlanmış görev bulunamadı
+err.scheduler.connect = Görev Zamanlayıcı'ya bağlanılamadı: {err}
+err.scheduler.create = zamanlanmış görev oluşturulamadı: {err}
+err.scheduler.delete = zamanlanmış görev silinemedi: {err}
+err.scheduler.run = zamanlanmış görev başlatılamadı: {err}
+err.scheduler.query = zamanlanmış görev okunamadı: {err}
+err.scheduler.elevate = yönetici yetkisiyle başlatılamadı: {err}
+err.scheduler.elevateCancelled = yönetici yetkisi verilmedi (UAC isteği iptal edildi)
+warn.scheduler.systemWindowsAuth = görev SYSTEM hesabıyla ve Windows kimlik doğrulamasıyla çalışır: SQL Server'da NT AUTHORITY\\SYSTEM (uzak sunucuda DOMAIN\\BILGISAYAR$) için yedek yetkisi olan bir login gerekir
+warn.scheduler.systemNetworkPath = görev SYSTEM hesabıyla çalışır: {path} ağ klasörüne bilgisayar hesabıyla (DOMAIN\\BILGISAYAR$) erişilir; bu hesabın okuma, yazma ve silme izni olmalı
+warn.scheduler.currentUser = görev yalnızca {user} oturum açmışken çalışır
+
 # ---------- Log mesajları ----------
 log.job.started = iş başladı
 log.job.done = iş tamamlandı
@@ -163,7 +185,7 @@ summary.retentionError = saklama hatası
 summary.exitCode = (çıkış kodu {code})
 
 # ---------- Komut satırı ----------
-cli.usage = SqlBackup {version} – MSSQL otomatik yedekleme\n\nKullanım:\n  SqlBackup.exe                          arayüzü açar\n  SqlBackup.exe run  --job <iş> [-v]     işi çalıştırır (yedek, doğrulama, zip, saklama)\n  SqlBackup.exe test --job <iş>          bağlantıyı ve yedek klasörü erişimini sınar\n  SqlBackup.exe list --job <iş> [--json] sunucudaki veritabanlarını listeler\n  SqlBackup.exe version                  sürümü yazar\n\n<iş>: iş adı ({jobsDir} içinde aranır) veya .json dosya yolu\n  -v           log kayıtlarını konsola da yazar\n  --json       listeyi JSON olarak yazar\n  --lang <kod> dil (ör. en, tr); varsayılan ayarlardaki dil\n\nÇıkış kodları: 0 başarılı, 1 kısmi hata, 2 başarısız/ayar hatası, 3 iş zaten çalışıyor
+cli.usage = SqlBackup {version} – MSSQL otomatik yedekleme\n\nKullanım:\n  SqlBackup.exe                            arayüzü açar\n  SqlBackup.exe run   --job <iş> [-v]      işi çalıştırır (yedek, doğrulama, zip, saklama)\n  SqlBackup.exe test  --job <iş>           bağlantıyı ve yedek klasörü erişimini sınar\n  SqlBackup.exe list  --job <iş> [--json]  sunucudaki veritabanlarını listeler\n  SqlBackup.exe batch --job <iş> [--path <dosya.bat>]\n                                           işi çalıştıran batch dosyasını yazar (varsayılan: jobs\\<iş>.bat)\n  SqlBackup.exe task create|delete|run|status --job <iş> [--elevate] [--json]\n                                           zamanlanmış görevi yönetir (\\SqlBackup\\<iş>)\n  SqlBackup.exe version                    sürümü yazar\n\n<iş>: iş adı ({jobsDir} içinde aranır) veya .json dosya yolu\n  -v               log kayıtlarını konsola da yazar\n  --json           çıktıyı JSON olarak yazar\n  --elevate        gerektiğinde yönetici yetkisi ister (UAC)\n  --lang <kod>     dil (ör. en, tr); varsayılan ayarlardaki dil\n  --home <klasör>  veri klasörü (varsayılan %ProgramData%\\SqlBackup)\n  --output <dosya> tüm çıktıyı dosyaya yazar\n\nÇıkış kodları: 0 başarılı, 1 kısmi hata (task status: görev yok), 2 başarısız/ayar hatası, 3 iş zaten çalışıyor
 cli.error = HATA: {msg}
 cli.warning = UYARI: {msg}
 cli.yes = evet
@@ -196,6 +218,37 @@ cli.list.header = VERİTABANI\tDURUM\tKURTARMA\tBOYUT (MB)\tSİSTEM\tSON FULL\tY
 cli.list.failed = HATA: {reason}
 cli.list.skipped = hayır ({reason})
 cli.list.footer = {count} veritabanı, {backup} tanesi yedeklenecek
+
+cli.warn.jobInvalid = işin ayarlarında hata var, çalıştırıldığında başarısız olur: {err}
+cli.batch.saved = Batch dosyası kaydedildi: {path}
+cli.err.noTaskCommand = görev komutu belirtilmedi (create, delete, run, status)
+cli.err.unknownTaskCommand = bilinmeyen görev komutu: {cmd} (create, delete, run, status)
+cli.err.needAdmin = {err}; yönetici olarak açılmış komut isteminden çalıştırın veya --elevate ekleyin
+cli.warn.taskExeMismatch = görev farklı bir program dosyasını çalıştırıyor: {exe}
+cli.task.created = Zamanlanmış görev oluşturuldu: {path}
+cli.task.deleted = Zamanlanmış görev silindi: {path}
+cli.task.started = Zamanlanmış görev başlatıldı: {path}
+cli.task.notFound = Zamanlanmış görev bulunamadı: {path}
+cli.task.nextRunAt = Sonraki çalışma: {time}
+cli.task.path = Görev
+cli.task.state = Durum
+cli.task.account = Hesap
+cli.task.lastRun = Son çalışma
+cli.task.lastResult = Son sonuç
+cli.task.nextRun = Sonraki çalışma
+cli.task.command = Komut
+cli.task.never = hiç
+cli.task.state.ready = hazır
+cli.task.state.running = çalışıyor
+cli.task.state.queued = sırada
+cli.task.state.disabled = devre dışı
+cli.task.result.code = {code} ({text})
+cli.task.result.ok = başarılı
+cli.task.result.partial = kısmi hata
+cli.task.result.failed = başarısız
+cli.task.result.alreadyRunning = iş zaten çalışıyordu
+cli.task.result.running = şu anda çalışıyor
+cli.task.result.other = Görev Zamanlayıcı hatası {code}
 
 # ---------- Arayüz (frontend) ----------
 gui.app.title = SqlBackup

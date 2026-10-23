@@ -8,6 +8,7 @@
 
 # ---------- Common ----------
 common.unknown = unknown
+common.taskDescription = Runs the SqlBackup job "{job}" (created by SqlBackup).
 
 # ---------- Job settings (config) ----------
 err.config.nameInvalid = job name must be 1-64 characters and may only contain letters, digits, '_', '-' and '.'
@@ -36,6 +37,7 @@ err.config.templateEmpty = file name template cannot be empty
 err.config.templateNoDb = file name template must contain {db}
 err.config.templateInvalidChars = file name template cannot contain \\ / : * ? " < > |
 err.config.mkdir = could not create folder {path}: {err}
+err.config.dirPermission = could not set permissions on folder {path}: {err}
 err.config.jobRead = could not read job file: {err}
 err.config.jobParse = could not parse job file ({path}): {err}
 err.config.jobVersion = job file belongs to a newer version (v{version}); please update the program
@@ -117,6 +119,26 @@ err.logging.runRead = could not read run record: {err}
 err.logging.runParse = could not parse run record ({path}): {err}
 err.logging.cleanup = some old log files could not be deleted: {err}
 
+# ---------- Batch file and scheduled task (scheduler) ----------
+err.scheduler.exePath = could not determine the program path: {err}
+err.scheduler.path = invalid path {path}: {err}
+err.scheduler.badPath = path cannot be used on a command line: "{path}"
+err.scheduler.percentPath = path contains "%" characters, which Task Scheduler expands as environment variables: {path}
+err.scheduler.batchWrite = could not write batch file {path}: {err}
+err.scheduler.noUser = could not determine the user account for the task
+err.scheduler.accessDenied = Task Scheduler denied access (administrator rights are required)
+err.scheduler.notFound = scheduled task not found
+err.scheduler.connect = could not connect to Task Scheduler: {err}
+err.scheduler.create = could not create the scheduled task: {err}
+err.scheduler.delete = could not delete the scheduled task: {err}
+err.scheduler.run = could not start the scheduled task: {err}
+err.scheduler.query = could not read the scheduled task: {err}
+err.scheduler.elevate = could not start with administrator rights: {err}
+err.scheduler.elevateCancelled = administrator rights were not granted (UAC prompt cancelled)
+warn.scheduler.systemWindowsAuth = the task runs as SYSTEM with Windows authentication: SQL Server needs a login for NT AUTHORITY\\SYSTEM (DOMAIN\\COMPUTER$ for a remote server) with backup permission
+warn.scheduler.systemNetworkPath = the task runs as SYSTEM: the network folder {path} is accessed with the computer account (DOMAIN\\COMPUTER$), which needs read, write and delete permission
+warn.scheduler.currentUser = the task runs only while {user} is logged on
+
 # ---------- Log messages ----------
 log.job.started = job started
 log.job.done = job finished
@@ -164,7 +186,7 @@ summary.retentionError = retention error
 summary.exitCode = (exit code {code})
 
 # ---------- Command line ----------
-cli.usage = SqlBackup {version} – automatic MSSQL backup\n\nUsage:\n  SqlBackup.exe                          opens the user interface\n  SqlBackup.exe run  --job <job> [-v]    runs the job (backup, verify, zip, retention)\n  SqlBackup.exe test --job <job>         tests the connection and backup folder access\n  SqlBackup.exe list --job <job> [--json] lists the databases on the server\n  SqlBackup.exe version                  prints the version\n\n<job>: job name (looked up in {jobsDir}) or path to a .json file\n  -v            also writes log entries to the console\n  --json        writes the list as JSON\n  --lang <code> language (e.g. en, tr); defaults to the language in settings\n\nExit codes: 0 success, 1 partial failure, 2 failure/settings error, 3 job already running
+cli.usage = SqlBackup {version} – automatic MSSQL backup\n\nUsage:\n  SqlBackup.exe                            opens the user interface\n  SqlBackup.exe run   --job <job> [-v]     runs the job (backup, verify, zip, retention)\n  SqlBackup.exe test  --job <job>          tests the connection and backup folder access\n  SqlBackup.exe list  --job <job> [--json] lists the databases on the server\n  SqlBackup.exe batch --job <job> [--path <file.bat>]\n                                           writes a batch file that runs the job (default: jobs\\<job>.bat)\n  SqlBackup.exe task create|delete|run|status --job <job> [--elevate] [--json]\n                                           manages the scheduled task (\\SqlBackup\\<job>)\n  SqlBackup.exe version                    prints the version\n\n<job>: job name (looked up in {jobsDir}) or path to a .json file\n  -v              also writes log entries to the console\n  --json          writes the output as JSON\n  --elevate       asks for administrator rights (UAC) when needed\n  --lang <code>   language (e.g. en, tr); defaults to the language in settings\n  --home <folder> data folder (default %ProgramData%\\SqlBackup)\n  --output <file> writes all output to a file\n\nExit codes: 0 success, 1 partial failure (task status: task not found), 2 failure/settings error, 3 job already running
 cli.error = ERROR: {msg}
 cli.warning = WARNING: {msg}
 cli.yes = yes
@@ -197,6 +219,37 @@ cli.list.header = DATABASE\tSTATE\tRECOVERY\tSIZE (MB)\tSYSTEM\tLAST FULL\tBACKU
 cli.list.failed = ERROR: {reason}
 cli.list.skipped = no ({reason})
 cli.list.footer = {count} database(s), {backup} will be backed up
+
+cli.warn.jobInvalid = the job has invalid settings and will fail when run: {err}
+cli.batch.saved = Batch file saved: {path}
+cli.err.noTaskCommand = task command not specified (create, delete, run, status)
+cli.err.unknownTaskCommand = unknown task command: {cmd} (create, delete, run, status)
+cli.err.needAdmin = {err}; run from an administrator command prompt or add --elevate
+cli.warn.taskExeMismatch = the task runs a different program file: {exe}
+cli.task.created = Scheduled task created: {path}
+cli.task.deleted = Scheduled task deleted: {path}
+cli.task.started = Scheduled task started: {path}
+cli.task.notFound = Scheduled task not found: {path}
+cli.task.nextRunAt = Next run: {time}
+cli.task.path = Task
+cli.task.state = State
+cli.task.account = Account
+cli.task.lastRun = Last run
+cli.task.lastResult = Last result
+cli.task.nextRun = Next run
+cli.task.command = Command
+cli.task.never = never
+cli.task.state.ready = ready
+cli.task.state.running = running
+cli.task.state.queued = queued
+cli.task.state.disabled = disabled
+cli.task.result.code = {code} ({text})
+cli.task.result.ok = success
+cli.task.result.partial = partial failure
+cli.task.result.failed = failed
+cli.task.result.alreadyRunning = job was already running
+cli.task.result.running = running now
+cli.task.result.other = Task Scheduler error {code}
 
 # ---------- User interface (frontend) ----------
 gui.app.title = SqlBackup

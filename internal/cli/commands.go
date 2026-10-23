@@ -34,6 +34,11 @@ func (e *env) cmdRun(args []string) int {
 		return backup.ExitFailed
 	}
 
+	// Klasörler log açılmadan önce oluşturulmalı: log klasörünün izinleri
+	// yalnızca EnsureDirs ile ilk oluşturmada verilir.
+	if err := config.EnsureDirs(); err != nil {
+		e.warnf(err)
+	}
 	logsDir := config.LogsDir()
 	start := e.now()
 	var handlers []slog.Handler

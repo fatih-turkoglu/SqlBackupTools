@@ -3,6 +3,7 @@ module sqlbackup
 go 1.26.0
 
 require (
+	github.com/go-ole/go-ole v1.3.0
 	github.com/golang-sql/sqlexp v0.1.0
 	github.com/microsoft/go-mssqldb v1.11.2
 	github.com/wailsapp/wails/v2 v2.17.0
@@ -13,7 +14,6 @@ require (
 	git.sr.ht/~jackmordaunt/go-toast/v2 v2.0.3 // indirect
 	github.com/bep/debounce v1.2.1 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.16 // indirect
-	github.com/go-ole/go-ole v1.3.0 // indirect
 	github.com/godbus/dbus/v5 v5.1.0 // indirect
 	github.com/golang-sql/civil v0.0.0-20220223132316-b832511892a9 // indirect
 	github.com/google/uuid v1.6.0 // indirect

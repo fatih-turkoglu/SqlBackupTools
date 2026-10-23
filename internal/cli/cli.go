@@ -3,10 +3,12 @@
 //	SqlBackup.exe run  --job <iş adı | dosya yolu> [-v]
 //	SqlBackup.exe test --job <iş adı | dosya yolu>
 //	SqlBackup.exe list --job <iş adı | dosya yolu> [--json]
+//	SqlBackup.exe batch --job <iş adı | dosya yolu> [--path <dosya.bat>]
+//	SqlBackup.exe task create|delete|run|status --job <iş> [--elevate] [--json]
 //	SqlBackup.exe version | help
 //
-// Tüm komutlar --lang <kod> alabilir; verilmezse dil ayarlar dosyasından,
-// orada da yoksa İngilizce seçilir. Çıkış kodları backup paketindeki
+// Tüm komutlar --lang <kod>, --home <veri klasörü> ve --output <dosya>
+// alabilir. Dil verilmezse ayarlar dosyasından, orada da yoksa İngilizce seçilir. Çıkış kodları backup paketindeki
 // sözleşmeye uyar (0, 1, 2, 3); kullanım ve iş dosyası hataları 2 döner.
 package cli
 
@@ -40,6 +42,12 @@ type env struct {
 	now     func() time.Time
 	// keepDays, log ve çalışma kayıtlarının saklama süresidir (ayarlardan).
 	keepDays int
+
+	// Zamanlanmış görev komutları için; nil ise gerçek sistem kullanılır.
+	tasks      taskService
+	user       string // "current" görev hesabı (boşsa oturumdaki kullanıcı)
+	isElevated func() bool
+	runAsAdmin func(exe string, args []string) (int, error)
 }
 
 // Main, komut satırı argümanlarını (program adı hariç) işler ve çıkış
@@ -55,14 +63,30 @@ func Main(args []string, version string) int {
 		console: isConsole(os.Stdout),
 		now:     time.Now,
 	}
+	// --output: tüm çıktı dosyaya yazılır (yükseltilmiş süreç çıktısını
+	// çağırana böyle iletir; konsolu yoktur).
+	output, args := extractFlag(args, "output")
+	if output != "" {
+		if f, err := os.Create(output); err == nil {
+			defer f.Close()
+			e.stdout, e.stderr, e.console = f, f, false
+		}
+	}
 	args = e.setup(args)
 	return e.main(args)
 }
 
-// setup, dili (--lang → ayarlar → İngilizce) ve ayarları yükler; --lang
-// argümanını listeden çıkarır. Sorunlar uyarı olarak yazılır, çalışmayı durdurmaz.
+// setup, veri klasörünü (--home), dili (--lang → ayarlar → İngilizce) ve
+// ayarları yükler; bu argümanları listeden çıkarır. Sorunlar uyarı olarak
+// yazılır, çalışmayı durdurmaz.
 func (e *env) setup(args []string) []string {
-	langArg, args := extractLang(args)
+	// --home, SQLBACKUP_HOME'un karşılığıdır: zamanlanmış görev ve
+	// yükseltilmiş süreç ortam değişkenini devralmaz.
+	home, args := extractFlag(args, "home")
+	if home != "" {
+		os.Setenv(config.HomeEnv, home)
+	}
+	langArg, args := extractFlag(args, "lang")
 	settings, serr := config.LoadSettings()
 	e.keepDays = settings.EffectiveLogKeepDays()
 	code := langArg
@@ -79,15 +103,15 @@ func (e *env) setup(args []string) []string {
 	return args
 }
 
-// extractLang, argümanlardan "--lang kod" / "--lang=kod" (tek tire de olur)
-// değerini çıkarır ve kalan argümanları döner.
-func extractLang(args []string) (string, []string) {
-	var code string
+// extractFlag, argümanlardan her komutta geçerli "--ad değer" / "--ad=değer"
+// (tek tire de olur) bayrağını çıkarır ve kalan argümanları döner.
+func extractFlag(args []string, flagName string) (string, []string) {
+	var value string
 	rest := make([]string, 0, len(args))
 	for i := 0; i < len(args); i++ {
 		a := args[i]
 		name, val, hasVal := strings.Cut(strings.TrimLeft(a, "-"), "=")
-		if !strings.HasPrefix(a, "-") || !strings.EqualFold(name, "lang") {
+		if !strings.HasPrefix(a, "-") || !strings.EqualFold(name, flagName) {
 			rest = append(rest, a)
 			continue
 		}
@@ -95,9 +119,9 @@ func extractLang(args []string) (string, []string) {
 			i++
 			val = args[i]
 		}
-		code = val
+		value = val
 	}
-	return code, rest
+	return value, rest
 }
 
 func (e *env) main(args []string) int {
@@ -116,6 +140,10 @@ func (e *env) main(args []string) int {
 		return e.cmdTest(rest)
 	case "list":
 		return e.cmdList(rest)
+	case "batch":
+		return e.cmdBatch(rest)
+	case "task":
+		return e.cmdTask(rest)
 	case "version", "--version", "-version":
 		fmt.Fprintf(e.stdout, "SqlBackup %s\n", e.version)
 		return backup.ExitOK

@@ -41,7 +41,7 @@ ZIP, `.bak` silme ve retention işlemleri `accessPath` üzerinden yapılır.
 
 ### 1.1 Config modeli (`internal/config`)
 - [x] `Job` struct: `name`, `connection`, `databases`, `excludedDatabases`, `includeNewDatabases`, `excludeSystemDatabases`, `backup`, `archive`, `retention`, `schedule`
-- [x] `Connection`: `server`, `port`, `instance`, `auth (sql|windows)`, `user`, `passwordEnc`, `encrypt`, `trustServerCert`, `timeoutSec`
+- [x] `Connection`: `server`, `port`, `protocol`, `instance`, `auth (sql|windows)`, `user`, `passwordEnc`, `encrypt`, `trustServerCert`, `timeoutSec`
 - [x] `Backup`: `serverPath`, `accessPath`, `fileNameTemplate`, `compression`, `checksum`, `copyOnly`, `verify`
 - [x] `Archive`: `zipEnabled`, `deleteBakAfterZip`, `zipPerDatabase (tek zip / DB başına zip)`
 - [x] `Retention`: `mode (days|count|none)`, `value`
@@ -54,16 +54,18 @@ ZIP, `.bak` silme ve retention işlemleri `accessPath` üzerinden yapılır.
 - [x] Birim testi: şifrele → çöz eşitliği
 
 ### 1.3 MSSQL katmanı (`internal/mssql`)
-- [ ] Bağlantı dizesi üretimi (SQL Auth + Windows Auth/SSPI, instance/port, encrypt seçenekleri)
-- [ ] `TestConnection()` → sunucu sürümü ve edition bilgisi döner
-- [ ] `ListDatabases()` → ad, durum, recovery model, boyut (MB), sistem DB mi
-- [ ] `BackupDatabase(db, file, opts)` → `BACKUP DATABASE ... TO DISK ... WITH INIT, FORMAT, COMPRESSION?, CHECKSUM?, COPY_ONLY?, STATS=5`
-- [ ] `STATS` mesajlarını yakalayıp ilerleme callback'i (`func(db string, pct int)`)
-- [ ] `VerifyBackup(file)` → `RESTORE VERIFYONLY FROM DISK ...`
-- [ ] COMPRESSION desteklenmeyen edition (Express) tespiti ve uyarı
-- [ ] Uzun süreli komutlar için context + timeout yönetimi
+- [x] Bağlantı dizesi üretimi (SQL Auth + Windows Auth/SSPI, instance/port, encrypt seçenekleri)
+- [x] Protokol seçimi: otomatik (yerel: Shared Memory → Named Pipes → TCP, uzak: TCP → Named Pipes) veya zorunlu `tcp|np|lpc`; SQL Browser kapalıyken de bağlanır
+- [x] `TestConnection()` → sunucu sürümü ve edition bilgisi döner
+- [x] `ListDatabases()` → ad, durum, recovery model, boyut (MB), sistem DB mi
+- [x] `BackupDatabase(db, file, opts)` → `BACKUP DATABASE ... TO DISK ... WITH INIT, FORMAT, COMPRESSION?, CHECKSUM?, COPY_ONLY?, STATS=5`
+- [x] `STATS` mesajlarını yakalayıp ilerleme callback'i (`func(db string, pct int)`)
+- [x] `VerifyBackup(file)` → `RESTORE VERIFYONLY FROM DISK ...`
+- [x] COMPRESSION desteklenmeyen edition (Express) tespiti ve uyarı
+- [x] Uzun süreli komutlar için context + timeout yönetimi
 
 ### 1.4 Yedek çalıştırıcı (`internal/backup`)
+- [ ] Sıkıştırma desteklenmiyorsa (Express/Web) COMPRESSION kapatılıp uyarı loglanması
 - [ ] Dosya adı şablonu: `{server}`, `{db}`, `{yyyyMMdd}`, `{HHmmss}` gibi yer tutucular
 - [ ] Hedef DB listesinin çözümlenmesi (seçili / tümü / yeni eklenenler, sistem DB hariç, OFFLINE olanları atla)
 - [ ] DB'leri sırayla yedekleme; biri hata verse de diğerlerine devam etme

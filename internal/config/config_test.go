@@ -35,6 +35,11 @@ func TestValidateErrors(t *testing.T) {
 		{"sadece nokta", func(j *Job) { j.Name = ".." }, "noktadan"},
 		{"sunucu yok", func(j *Job) { j.Connection.Server = " " }, "sunucu adı"},
 		{"port", func(j *Job) { j.Connection.Port = 70000 }, "port"},
+		{"protokol", func(j *Job) { j.Connection.Protocol = "udp" }, "protokol"},
+		{"np port", func(j *Job) {
+			j.Connection.Protocol = ProtocolNP
+			j.Connection.Port = 1433
+		}, "yalnızca TCP"},
 		{"sql kullanıcı", func(j *Job) { j.Connection.User = "" }, "kullanıcı adı"},
 		{"sql şifre", func(j *Job) { j.Connection.PasswordEnc = "" }, "şifre"},
 		{"auth", func(j *Job) { j.Connection.Auth = "x" }, "kimlik doğrulama"},

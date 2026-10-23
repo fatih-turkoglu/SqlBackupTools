@@ -18,6 +18,15 @@ const (
 	AuthWindows = "windows"
 )
 
+// Bağlantı protokolleri. Boş değer (ProtocolAuto) sürücünün sırayla
+// denemesi anlamına gelir.
+const (
+	ProtocolAuto = ""
+	ProtocolTCP  = "tcp"
+	ProtocolNP   = "np"  // Named Pipes
+	ProtocolLPC  = "lpc" // Shared Memory (yalnızca yerel)
+)
+
 // Retention modları.
 const (
 	RetentionNone  = "none"
@@ -66,7 +75,8 @@ type Job struct {
 type Connection struct {
 	Server          string `json:"server"`
 	Instance        string `json:"instance"`
-	Port            int    `json:"port"` // 0 = varsayılan / instance üzerinden
+	Port            int    `json:"port"`     // 0 = varsayılan / instance üzerinden
+	Protocol        string `json:"protocol"` // "", tcp, np, lpc
 	Auth            string `json:"auth"`
 	User            string `json:"user"`
 	PasswordEnc     string `json:"passwordEnc"`
@@ -203,6 +213,15 @@ func (j *Job) Validate() error {
 	}
 	if c.Port < 0 || c.Port > 65535 {
 		add("port 0-65535 aralığında olmalı")
+	}
+	switch c.Protocol {
+	case ProtocolAuto, ProtocolTCP:
+	case ProtocolNP, ProtocolLPC:
+		if c.Port > 0 {
+			add("port yalnızca TCP protokolünde kullanılabilir")
+		}
+	default:
+		add("geçersiz protokol: %q", c.Protocol)
 	}
 	switch c.Auth {
 	case AuthSQL:

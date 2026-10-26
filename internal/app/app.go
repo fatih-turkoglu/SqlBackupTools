@@ -149,6 +149,9 @@ func (a *App) SaveSettings(s config.Settings) error {
 	if s.LogKeepDays < 0 {
 		return i18n.Errorf("err.app.keepDays")
 	}
+	if s.Theme != "" && s.Theme != config.ThemeDark && s.Theme != config.ThemeLight {
+		return i18n.Errorf("err.app.theme", "theme", s.Theme)
+	}
 	if s.Language != "" && s.Language != i18n.Language() {
 		if err := i18n.SetLanguage(s.Language); err != nil {
 			return err

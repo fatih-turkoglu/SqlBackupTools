@@ -1,33 +1,35 @@
-import './style.css';
-import './app.css';
+import './styles/theme.css';
+import './styles/base.css';
+import './styles/layout.css';
+import './styles/components.css';
 
-import {applyI18n, changeLanguage, languages, loadTranslations, onLanguageChange} from './i18n';
+import {GetAppInfo, GetSettings} from '../wailsjs/go/app/App';
+import {loadTranslations, onLanguageChange, t} from './i18n';
+import {initLayout, Page, refresh} from './layout';
+import {placeholderPage} from './pages/placeholder';
+import {settingsPage} from './pages/settings';
+import {applyCachedTheme, applyTheme} from './theme';
+import {errorText} from './ui/dom';
+import {toast} from './ui/toast';
 
-// Geçici başlangıç ekranı: asıl arayüz Faz 4'te yazılacak. Şimdilik çoklu
-// dil altyapısını (dil seçimi + yeniden çizim) göstermek için kullanılır.
-async function render(): Promise<void> {
-    const state = await languages();
-    const options = state.languages
-        .map((l) => `<option value="${l.code}"${l.code === state.current ? ' selected' : ''}>${l.name}</option>`)
-        .join('');
-    document.querySelector('#app')!.innerHTML = `
-        <h1 data-i18n="gui.app.title"></h1>
-        <p data-i18n="gui.app.placeholder"></p>
-        <label>
-            <span data-i18n="gui.settings.language"></span>
-            <select id="language">${options}</select>
-        </label>
-    `;
-    applyI18n();
-    document.getElementById('language')!.addEventListener('change', (ev) => {
-        changeLanguage((ev.target as HTMLSelectElement).value).catch(console.error);
-    });
+const pages: Page[] = [
+    {id: 'jobs', label: () => t('gui.menu.jobs'), icon: 'jobs', render: placeholderPage(() => t('gui.menu.jobs'))},
+    {id: 'logs', label: () => t('gui.menu.logs'), icon: 'logs', render: placeholderPage(() => t('gui.menu.logs'))},
+    {id: 'settings', label: () => t('gui.menu.settings'), icon: 'settings', render: settingsPage},
+];
+
+async function start(): Promise<void> {
+    applyCachedTheme();
+    const [info, settings] = await Promise.all([GetAppInfo(), GetSettings().catch(() => null), loadTranslations()]);
+    applyTheme(settings?.theme ?? '');
+    initLayout(document.getElementById('app')!, pages, info.version);
+    onLanguageChange(refresh);
+    // Veri klasörü/ayarlar sorunu (ör. bozuk settings.json): uygulama
+    // varsayılanlarla çalışır, kullanıcı bilgilendirilir.
+    if (info.startupError) toast(info.startupError, 'error');
 }
 
-onLanguageChange(() => {
-    render().catch(console.error);
+start().catch((err) => {
+    console.error(err);
+    toast(errorText(err), 'error');
 });
-
-loadTranslations()
-    .then(render)
-    .catch(console.error);

@@ -1,0 +1,59 @@
+/* Tema değişkenleri. Koyu tema varsayılandır; <html data-theme="light">
+   açık temayı seçer. --bg değişirse internal/app/window.go'daki pencere
+   arka planı da güncellenmeli. */
+:root,
+:root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #0f1115;
+    --panel: #171a21;
+    --panel-2: #1d212a;
+    --hover: #222733;
+    --border: #262b36;
+    --border-strong: #353b49;
+    --text: #e6e8ee;
+    --muted: #8b93a7;
+    --accent: #4f8cff;
+    --accent-hover: #6a9dff;
+    --accent-soft: rgba(79, 140, 255, 0.14);
+    --on-accent: #ffffff;
+    --success: #3ecf8e;
+    --success-soft: rgba(62, 207, 142, 0.14);
+    --warning: #f5b74f;
+    --warning-soft: rgba(245, 183, 79, 0.14);
+    --error: #ff5c5c;
+    --error-soft: rgba(255, 92, 92, 0.14);
+    --shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+    --overlay: rgba(0, 0, 0, 0.55);
+}
+
+:root[data-theme="light"] {
+    color-scheme: light;
+    --bg: #f4f5f8;
+    --panel: #ffffff;
+    --panel-2: #f8f9fb;
+    --hover: #eef0f4;
+    --border: #dfe3ea;
+    --border-strong: #c9cfd9;
+    --text: #1b1f27;
+    --muted: #5d6576;
+    --accent: #2f6fec;
+    --accent-hover: #1f5ed8;
+    --accent-soft: rgba(47, 111, 236, 0.10);
+    --on-accent: #ffffff;
+    --success: #13995f;
+    --success-soft: rgba(19, 153, 95, 0.10);
+    --warning: #b7790a;
+    --warning-soft: rgba(183, 121, 10, 0.12);
+    --error: #d63b3b;
+    --error-soft: rgba(214, 59, 59, 0.10);
+    --shadow: 0 12px 32px rgba(20, 28, 45, 0.16);
+    --overlay: rgba(20, 24, 33, 0.35);
+}
+
+:root {
+    --radius: 6px;
+    --radius-lg: 10px;
+    --font: "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+    --mono: "Cascadia Mono", Consolas, monospace;
+    --sidebar-width: 220px;
+}

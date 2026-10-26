@@ -27,14 +27,18 @@ func main() {
 
 	// Arayüz: app paketinin dışa açık yöntemleri frontend'e bağlanır.
 	a := app.New(version)
+	background, windowsOptions := app.WindowTheme()
 	err := wails.Run(&options.App{
-		Title:  "SqlBackup",
-		Width:  1024,
-		Height: 768,
+		Title:     "SqlBackup",
+		Width:     1100,
+		Height:    760,
+		MinWidth:  900,
+		MinHeight: 600,
 		AssetServer: &assetserver.Options{
 			Assets: assets,
 		},
-		BackgroundColour: &options.RGBA{R: 27, G: 38, B: 54, A: 1},
+		BackgroundColour: background,
+		Windows:          windowsOptions,
 		OnStartup:        app.Startup(a),
 		OnShutdown:       app.Shutdown(a),
 		Bind:             []interface{}{a},

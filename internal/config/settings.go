@@ -12,6 +12,12 @@ import (
 // DefaultLogKeepDays, log ve çalışma kayıtlarının varsayılan saklama süresidir.
 const DefaultLogKeepDays = 30
 
+// Arayüz temaları; boş tema koyu sayılır.
+const (
+	ThemeDark  = "dark"
+	ThemeLight = "light"
+)
+
 // Settings, işlerden bağımsız uygulama ayarlarıdır (settings.json). CLI
 // (zamanlanmış görev) ve GUI aynı dosyayı kullanır.
 type Settings struct {
@@ -19,6 +25,8 @@ type Settings struct {
 	Language string `json:"language"`
 	// LogKeepDays, log ve çalışma kayıtlarının saklama süresi (gün); 0 = varsayılan.
 	LogKeepDays int `json:"logKeepDays"`
+	// Theme, arayüz teması (ThemeDark/ThemeLight); boşsa koyu. CLI kullanmaz.
+	Theme string `json:"theme"`
 }
 
 // SettingsPath, ayarlar dosyasının yoludur.
@@ -30,6 +38,14 @@ func (s Settings) EffectiveLogKeepDays() int {
 		return s.LogKeepDays
 	}
 	return DefaultLogKeepDays
+}
+
+// EffectiveTheme, ayarlanmamış veya bilinmeyen temada koyu temayı döner.
+func (s Settings) EffectiveTheme() string {
+	if s.Theme == ThemeLight {
+		return ThemeLight
+	}
+	return ThemeDark
 }
 
 // LoadSettings, ayarları okur. Dosya yoksa varsayılan ayarlar döner (hata

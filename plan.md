@@ -154,7 +154,7 @@ Faz 1'den sonra yapılır (CLI metinleri de hazır olur), GUI'den (Faz 4) önce 
 ### 2.5 GUI entegrasyonu (Faz 4 ile birlikte kullanılır)
 - [x] Backend: `GetLanguages()`, `GetTranslations()`, `SetLanguage(code)` (ayarlara kaydeder)
 - [x] Frontend (`frontend/src/i18n.ts`): `t('key', {param})` yardımcısı + `data-i18n` öznitelikli statik metinler; dil değişince yeniden çizim (yeniden başlatma gerekmez)
-- [ ] Ayarlar ekranında dil seçimi (liste `lang\` klasöründeki dosyalardan) – **Faz 4**; şimdilik geçici başlangıç ekranında dil seçici var
+- [x] Ayarlar ekranında dil seçimi (liste `lang\` klasöründeki dosyalardan) – Faz 4.2'de Ayarlar sayfasına taşındı
 
 ### 2.6 Build ve tutarlılık
 - [x] Kaynak dosyalar repo kökünde `lang\`; `wails build` sonrası `build\bin\lang\` içine kopyalanması (`wails.json` `postBuildHooks`, PowerShell ile)
@@ -209,10 +209,12 @@ Faz 1'den sonra yapılır (CLI metinleri de hazır olur), GUI'den (Faz 4) önce 
 - [x] Klasör seçme (`SelectFolder`) ve .bat kaydetme (`SelectBatchFile`) diyalogları; `GetAppInfo` (sürüm, klasörler, açılış hatası), `GetSettings` / `SaveSettings`
 
 ### 4.2 Tema ve layout
-- [ ] CSS değişkenleri ile koyu tema (varsayılan) + açık tema
+**Karar:** Framework yok (vanilla TS); arayüz `ui/dom.ts`'deki `h()` ile `createElement` üzerinden kurulur, dış veri asla `innerHTML`'e girmez. Tema `settings.json`'da (`theme`); açılış rengi ve başlık çubuğu `app.WindowTheme()` ile kayıtlı temaya göre (renk sıçraması olmasın).
+- [x] CSS değişkenleri ile koyu tema (varsayılan) + açık tema (`styles/theme.css`, `<html data-theme>`; `Settings.Theme`, başlık çubuğu `WindowSetDark/LightTheme`)
   - bg `#0f1115`, panel `#171a21`, border `#262b36`, text `#e6e8ee`, accent `#4f8cff`, success `#3ecf8e`, error `#ff5c5c`
-- [ ] Sol menü + içerik alanı layout'u, pencere başlığı ve ikon
-- [ ] Ortak bileşenler: buton, input, switch, checkbox, tablo, toast bildirim, modal, ilerleme çubuğu
+- [x] Sol menü + içerik alanı layout'u (`layout.ts`: sayfa listesi, `navigate`, `PageHandle{canLeave, dispose}`), pencere başlığı ve ikon (`build/appicon.png` → `icon.ico`, menüde aynı SVG logo), min. pencere 900×600
+- [x] Ortak bileşenler (`ui/components.ts`, `toast.ts`, `modal.ts`): buton (Promise dönen tıklamada otomatik meşgul), input/select/field (ipucu + hata), switch, checkbox, tablo, rozet, uyarı kutusu, toast bildirim, modal (`confirmDialog`, `messageDialog`), ilerleme çubuğu (yüzde/belirsiz), spinner
+- [x] Ayarlar sayfasında dil + tema + sürüm/veri klasörü; İşler ve Loglar şimdilik yer tutucu (`pages/placeholder.ts`); `startupError` toast ile gösterilir
 
 ### 4.3 Ekranlar
 - [ ] **İşler (Dashboard):** iş kartları/tablosu, son çalışma durumu ("çalışıyor" dahil), sonraki çalışma, Yeni/Düzenle/Kopyala/Sil/Şimdi Çalıştır
@@ -222,7 +224,7 @@ Faz 1'den sonra yapılır (CLI metinleri de hazır olur), GUI'den (Faz 4) önce 
 - [ ] **ZIP ve Saklama:** ZIP aç/kapa, mod, ZIP sonrası `.bak` sil, retention modu ve değeri
 - [ ] **Zamanlama:** sıklık, gün, saat, çalışacak hesap; `.bat Kaydet`, `Görev Oluştur`, `Görevi Sil`, görev durumu
 - [ ] **Loglar:** çalışma geçmişi tablosu, detay ve log görüntüleyici
-- [ ] **Ayarlar:** dil (`i18n.ts` + `SetLanguage`), tema, varsayılan klasörler, log saklama süresi
+- [ ] **Ayarlar:** dil ve tema (4.2'de yapıldı), varsayılan klasörler, log saklama süresi
 
 ### 4.4 UX detayları
 - [ ] Form doğrulama ve anlaşılır hata mesajları

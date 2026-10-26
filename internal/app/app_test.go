@@ -611,10 +611,13 @@ func TestSettings(t *testing.T) {
 	if err := ta.SaveSettings(config.Settings{LogKeepDays: -1}); err == nil {
 		t.Error("negatif süre")
 	}
-	if err := ta.SaveSettings(config.Settings{LogKeepDays: 7}); err != nil {
+	if err := ta.SaveSettings(config.Settings{Theme: "blue"}); err == nil {
+		t.Error("bilinmeyen tema")
+	}
+	if err := ta.SaveSettings(config.Settings{LogKeepDays: 7, Theme: config.ThemeLight}); err != nil {
 		t.Fatal(err)
 	}
-	if s, _ := ta.GetSettings(); s.LogKeepDays != 7 || s.Language != "tr" {
+	if s, _ := ta.GetSettings(); s.LogKeepDays != 7 || s.Language != "tr" || s.EffectiveTheme() != config.ThemeLight {
 		t.Errorf("%+v", s)
 	}
 	if info := ta.GetAppInfo(); info.Version != "1.0.0-test" || info.DataDir != config.DataDir() || info.StartupError != "" {

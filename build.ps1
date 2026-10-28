@@ -15,7 +15,15 @@ if (-not $version) { throw 'wails.json info.productVersion tanımlı değil' }
 
 $wails = Join-Path (go env GOPATH) 'bin\wails.exe'
 $buildArgs = @('build', '-clean', '-platform', 'windows/amd64', '-ldflags', "-X main.version=$version")
-if ($Nsis) { $buildArgs += '-nsis' }
+if ($Nsis) {
+    $buildArgs += '-nsis'
+    # NSIS kurulumu PATH'e eklemez; wails makensis'i PATH'te arar.
+    if (-not (Get-Command makensis -ErrorAction SilentlyContinue)) {
+        $nsisDir = Join-Path ${env:ProgramFiles(x86)} 'NSIS'
+        if (-not (Test-Path (Join-Path $nsisDir 'makensis.exe'))) { throw 'makensis bulunamadı (NSIS kurulu değil)' }
+        $env:PATH = "$nsisDir;$env:PATH"
+    }
+}
 
 Write-Host "SqlBackup $version derleniyor..."
 & $wails @buildArgs

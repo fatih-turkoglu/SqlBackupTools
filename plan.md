@@ -256,6 +256,8 @@ Faz 1'den sonra yapılır (CLI metinleri de hazır olur), GUI'den (Faz 4) önce 
   - Tek kaynak `wails.json` `info.productVersion`; `build.ps1` bunu `-X main.version` ile verir ve exe'nin bildirdiği sürümü doğrular
   - `build/windows/info.json` dil anahtarı `0000` → `0409` (yoksa Windows dosya özelliklerinde sürüm boş görünüyordu)
 - [x] `wails build -clean -platform windows/amd64` (`.\build.ps1`; `lang\` post-build hook ile kopyalanır)
-- [ ] (Opsiyonel) NSIS installer (`wails build -nsis`) – `lang\` klasörü pakete dahil
-  - `project.nsi` hazır: `lang\*.lng` kopyalanır, kurulum `Program Files\SqlBackup`, Türkçe kurulum dili. makensis kurulu değil → derlenip denenmedi
+- [x] (Opsiyonel) NSIS installer (`wails build -nsis`) – `lang\` klasörü pakete dahil
+  - `.\build.ps1 -Nsis` → `build\bin\SqlBackup-amd64-installer.exe` (makensis PATH'te yoksa `Program Files (x86)\NSIS`'ten alınır; post-build hook NSIS'ten önce çalışır)
+  - `project.nsi`: `lang\*.lng` kopyalanır, kurulum `Program Files\SqlBackup`, Türkçe kurulum dili
+  - Sessiz kurulum/kaldırma denendi (`/S /D=...`): exe + lang + kısayollar + kaldırma kaydı (0.5.0); kaldırma hepsini siler, `%ProgramData%\SqlBackup` ve görevler kalır (README'de yazılı)
 - [x] README: kurulum, kullanım, uzak sunucu yol açıklaması, SQL yetki gereksinimleri

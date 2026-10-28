@@ -27,6 +27,10 @@ type Settings struct {
 	LogKeepDays int `json:"logKeepDays"`
 	// Theme, arayüz teması (ThemeDark/ThemeLight); boşsa koyu. CLI kullanmaz.
 	Theme string `json:"theme"`
+	// DefaultServerPath / DefaultAccessPath, yeni işlerde önerilen yedek
+	// klasörleridir (Backup.ServerPath / AccessPath). CLI kullanmaz.
+	DefaultServerPath string `json:"defaultServerPath"`
+	DefaultAccessPath string `json:"defaultAccessPath"`
 }
 
 // SettingsPath, ayarlar dosyasının yoludur.

@@ -72,9 +72,14 @@ type JobDetail struct {
 	PasswordError string `json:"passwordError"`
 }
 
-// NewJob, varsayılan değerlerle yeni (kaydedilmemiş) bir iş döner.
+// NewJob, varsayılan değerlerle yeni (kaydedilmemiş) bir iş döner. Yedek
+// klasörleri ayarlardaki varsayılanlardan gelir (ayarlar okunamazsa boş).
 func (a *App) NewJob() *config.Job {
-	return config.NewJob("")
+	j := config.NewJob("")
+	s, _ := config.LoadSettings()
+	j.Backup.ServerPath = strings.TrimSpace(s.DefaultServerPath)
+	j.Backup.AccessPath = strings.TrimSpace(s.DefaultAccessPath)
+	return j
 }
 
 // loadJob, iş adını doğrular ve iş dosyasını okur.

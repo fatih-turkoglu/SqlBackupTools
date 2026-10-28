@@ -1,12 +1,13 @@
-// Ayarlar ekranı. Şimdilik görünüm (dil, tema) ve uygulama bilgileri; diğer
-// ayarlar (log saklama süresi, varsayılan klasörler) Faz 4.3'te eklenecek.
+// Ayarlar ekranı: görünüm (dil, tema), varsayılanlar (yeni işlerin yedek
+// klasörleri, log saklama süresi) ve uygulama bilgileri.
 import {GetAppInfo, GetSettings, SaveSettings} from '../../wailsjs/go/app/App';
 import {changeLanguage, languages, t} from '../i18n';
 import {pageHeader} from '../layout';
 import {applyTheme, normalizeTheme} from '../theme';
-import {field, loading, select} from '../ui/components';
+import {button, field, input, loading, select} from '../ui/components';
 import {errorText, h, replace} from '../ui/dom';
 import {toast} from '../ui/toast';
+import {folderInput} from './common';
 
 export async function settingsPage(el: HTMLElement): Promise<void> {
     el.append(pageHeader(t('gui.menu.settings')));
@@ -38,12 +39,46 @@ export async function settingsPage(el: HTMLElement): Promise<void> {
         }
     });
 
+    // Varsayılanlar ayrı "Kaydet" ile yazılır (dil ve tema anında kaydedilir).
+    const defaults = {
+        logKeepDays: settings.logKeepDays,
+        defaultServerPath: settings.defaultServerPath ?? '',
+        defaultAccessPath: settings.defaultAccessPath ?? '',
+    };
+    const serverPath = folderInput(defaults.defaultServerPath, (v) => defaults.defaultServerPath = v.trim());
+    const accessPath = folderInput(defaults.defaultAccessPath, (v) => defaults.defaultAccessPath = v.trim());
+    const keepDays = input({
+        type: 'number',
+        value: settings.logKeepDays || '',
+        min: 0,
+        placeholder: '30',
+        onInput: (v) => defaults.logKeepDays = Math.max(0, parseInt(v, 10) || 0),
+    });
+    const saveDefaults = async () => {
+        try {
+            const current = await GetSettings();
+            await SaveSettings({...current, ...defaults});
+            toast(t('gui.settings.saved'), 'success');
+        } catch (err) {
+            toast(errorText(err), 'error');
+        }
+    };
+
     replace(body,
         h('section', {class: 'card'},
             h('h2', null, t('gui.settings.appearance')),
             h('div', {class: 'grid-2'},
                 field(t('gui.settings.language'), langSelect),
                 field(t('gui.settings.theme'), themeSelect))),
+        h('section', {class: 'card'},
+            h('h2', null, t('gui.settings.defaults')),
+            h('div', {class: 'stack'},
+                field(t('gui.settings.defaultServerPath'), serverPath.el, {hint: t('gui.settings.defaultServerPathHint')}),
+                field(t('gui.settings.defaultAccessPath'), accessPath.el, {hint: t('gui.settings.defaultAccessPathHint')}),
+                h('div', {class: 'grid-2'},
+                    field(t('gui.settings.logKeepDays'), keepDays, {hint: t('gui.settings.logKeepDaysHint')})),
+                h('div', {class: 'row'},
+                    button(t('gui.settings.saveDefaults'), {variant: 'primary', icon: 'check', onClick: saveDefaults})))),
         h('section', {class: 'card'},
             h('h2', null, t('gui.settings.about')),
             h('div', {class: 'grid-2'},

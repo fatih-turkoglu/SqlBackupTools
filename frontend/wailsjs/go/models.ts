@@ -802,6 +802,8 @@ export namespace config {
 	    language: string;
 	    logKeepDays: number;
 	    theme: string;
+	    defaultServerPath: string;
+	    defaultAccessPath: string;
 	
 	    static createFrom(source: any = {}) {
 	        return new Settings(source);
@@ -812,6 +814,8 @@ export namespace config {
 	        this.language = source["language"];
 	        this.logKeepDays = source["logKeepDays"];
 	        this.theme = source["theme"];
+	        this.defaultServerPath = source["defaultServerPath"];
+	        this.defaultAccessPath = source["defaultAccessPath"];
 	    }
 	}
 

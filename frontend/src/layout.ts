@@ -1,7 +1,7 @@
 // Uygulama iskeleti: sol menü + içerik alanı ve basit sayfa yönlendirici.
 // Dil değişince iskelet ve açık sayfa yeniden çizilir.
 import {t} from './i18n';
-import {h, replace} from './ui/dom';
+import {Child, h, replace} from './ui/dom';
 import {icon, IconName, logo} from './ui/icons';
 
 // PageHandle, sayfanın isteğe bağlı yaşam döngüsü kancalarıdır.
@@ -81,6 +81,6 @@ function renderCurrent(): void {
 }
 
 // pageHeader, sayfa başlığı + sağda eylem düğmeleridir.
-export function pageHeader(title: string, ...actions: HTMLElement[]): HTMLElement {
+export function pageHeader(title: Child, ...actions: HTMLElement[]): HTMLElement {
     return h('div', {class: 'page-header'}, h('h1', null, title), h('div', {class: 'actions'}, actions));
 }

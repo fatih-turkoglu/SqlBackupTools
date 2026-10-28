@@ -620,6 +620,12 @@ func TestSettings(t *testing.T) {
 	if s, _ := ta.GetSettings(); s.LogKeepDays != 7 || s.Language != "tr" || s.EffectiveTheme() != config.ThemeLight {
 		t.Errorf("%+v", s)
 	}
+	if err := ta.SaveSettings(config.Settings{DefaultServerPath: ` D:\Yedek `, DefaultAccessPath: `\\srv\Yedek`}); err != nil {
+		t.Fatal(err)
+	}
+	if j := ta.NewJob(); j.Backup.ServerPath != `D:\Yedek` || j.Backup.AccessPath != `\\srv\Yedek` || j.Schedule.Time != "02:00" {
+		t.Errorf("%+v", j.Backup)
+	}
 	if info := ta.GetAppInfo(); info.Version != "1.0.0-test" || info.DataDir != config.DataDir() || info.StartupError != "" {
 		t.Errorf("%+v", info)
 	}

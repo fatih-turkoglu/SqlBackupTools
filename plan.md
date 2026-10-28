@@ -217,19 +217,21 @@ Faz 1'den sonra yapılır (CLI metinleri de hazır olur), GUI'den (Faz 4) önce 
 - [x] Ayarlar sayfasında dil + tema + sürüm/veri klasörü; İşler ve Loglar şimdilik yer tutucu (`pages/placeholder.ts`); `startupError` toast ile gösterilir
 
 ### 4.3 Ekranlar
-- [ ] **İşler (Dashboard):** iş kartları/tablosu, son çalışma durumu ("çalışıyor" dahil), sonraki çalışma, Yeni/Düzenle/Kopyala/Sil/Şimdi Çalıştır
-- [ ] **Bağlantı:** sunucu, port/instance, kimlik tipi, kullanıcı/şifre, encrypt/trust, Test Et
-- [ ] **Veritabanları:** liste + çoklu seçim, boyut/durum, "tümü", "sistem DB hariç", "yeni DB'leri dahil et"
-- [ ] **Yedek Ayarları:** `serverPath`, `accessPath` (+ yerel/uzak açıklaması), dosya adı şablonu + önizleme, compression/checksum/copy_only/verify
-- [ ] **ZIP ve Saklama:** ZIP aç/kapa, mod, ZIP sonrası `.bak` sil, retention modu ve değeri
-- [ ] **Zamanlama:** sıklık, gün, saat, çalışacak hesap; `.bat Kaydet`, `Görev Oluştur`, `Görevi Sil`, görev durumu
-- [ ] **Loglar:** çalışma geçmişi tablosu, detay ve log görüntüleyici
-- [ ] **Ayarlar:** dil ve tema (4.2'de yapıldı), varsayılan klasörler, log saklama süresi
+**Karar:** İş düzenleyici ayrı menü sayfası değil, İşler sayfasının alt görünümü (`pages/editor/`); sekmeler (Bağlantı, Veritabanları, Yedek, ZIP/Saklama, Zamanlama) tek `EditorState` üzerinde çalışır ve birlikte kaydedilir. Görev/.bat işlemleri kayıtlı işi kullandığından önce kaydetme önerilir (`ensureSaved`).
+**Karar:** `backup:*` olayları uygulama boyunca tek yerde (`runs.ts`) dinlenir; iş bitince hangi sayfa açık olursa olsun bildirim gösterilir.
+- [x] **İşler (Dashboard):** iş kartları, son çalışma durumu ("çalışıyor" + ilerleme çubuğu, başka süreçte çalışan dahil), sonraki çalışma, görev güncel değil / geçersiz ayar rozetleri, Yeni/Düzenle/Kopyala/Geçmiş/Sil/Şimdi Çalıştır/Durdur; 30 sn'de bir yenilenir
+- [x] **Bağlantı:** sunucu, instance, port, protokol, kimlik tipi, kullanıcı/şifre (kayıtlı şifre gösterilmez; çözülemiyorsa uyarı), encrypt/trust, zaman aşımı, Test Et (sunucu bilgileri + sıkıştırma desteği)
+- [x] **Veritabanları:** liste + çoklu seçim (tümünü seç), boyut/durum/kurtarma modeli/son yedek, "sistem DB hariç", "yeni DB'leri dahil et"; `excludedDatabases` seçimle birlikte doldurulur; sunucuda olmayan seçili DB uyarısı
+- [x] **Yedek Ayarları:** `serverPath` (+ Gözat, sunucu varsayılanı), `accessPath` (+ erişimi sına), yerel/uzak açıklaması, dosya adı şablonu + canlı önizleme, compression/checksum/copy_only/verify, komut zaman aşımı
+- [x] **ZIP ve Saklama:** ZIP aç/kapa, tek/DB başına ZIP, ZIP sonrası `.bak` sil, retention modu ve değeri, erişim uyarısı
+- [x] **Zamanlama:** sıklık, gün, saat, aralık, çalışacak hesap, canlı görev uyarıları; görev durumu (son/sonraki çalışma, sonuç, güncel değil), `Görev Oluştur/Güncelle`, `Çalıştır`, `Sil`, `.bat Kaydet`
+- [x] **Loglar:** iş filtresi, çalışma geçmişi tablosu + ayrıntı penceresi (DB/ZIP/saklama sonuçları), log dosyaları + görüntüleyici (büyük dosyada son 2 MB); İşler'den "Geçmiş" ile işe filtreli açılır
+- [x] **Ayarlar:** dil ve tema (4.2), varsayılan klasörler (`Settings.DefaultServerPath/DefaultAccessPath` → `NewJob`), log saklama süresi
 
 ### 4.4 UX detayları
-- [ ] Form doğrulama ve anlaşılır hata mesajları
-- [ ] Kaydedilmemiş değişiklik uyarısı
-- [ ] Uzun işlemlerde kilitlenmeyen arayüz (async + spinner)
+- [ ] Form doğrulama ve anlaşılır hata mesajları (şimdilik kaydetmede `SaveJob` hata listesi düzenleyicinin üstünde; alan düzeyinde gösterim yok)
+- [ ] Kaydedilmemiş değişiklik uyarısı (düzenleyicide yapıldı: menü/geri dönüşte sorulur, Ctrl+S kaydeder; pencere kapanışı ve çalışan iş uyarısı kaldı)
+- [ ] Uzun işlemlerde kilitlenmeyen arayüz (async + spinner) (düğmeler ve yüklemeler meşgul gösteriyor; gözden geçirilecek)
 
 ---
 

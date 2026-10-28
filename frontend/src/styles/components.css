@@ -516,7 +516,7 @@
 }
 
 .modal.wide {
-    width: 760px;
+    width: 960px;
 }
 
 .modal::backdrop {
@@ -538,4 +538,152 @@
     justify-content: flex-end;
     gap: 8px;
     padding: 12px 20px 16px;
+}
+
+/* ---------- Kart başlığı (başlık + sağda eylemler) ---------- */
+.card-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+}
+
+.card-head > h2 {
+    margin-right: auto;
+}
+
+.card-head > h2 + .badge {
+    margin-left: -4px;
+}
+
+/* ---------- Sekmeler ---------- */
+.tabs {
+    display: flex;
+    gap: 2px;
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+}
+
+.tab {
+    padding: 8px 14px;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    background: transparent;
+    color: var(--muted);
+    font: inherit;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.tab:hover {
+    color: var(--text);
+}
+
+.tab.active {
+    border-bottom-color: var(--accent);
+    color: var(--accent);
+    font-weight: 600;
+}
+
+/* ---------- Giriş + düğmeler aynı satırda ---------- */
+.input-row {
+    display: flex;
+    gap: 8px;
+}
+
+.input-row .input {
+    flex: 1;
+    min-width: 0;
+}
+
+.input-row .btn {
+    flex: none;
+}
+
+/* ---------- Etiket/değer listesi ---------- */
+.kv {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    gap: 6px 16px;
+    margin: 0;
+}
+
+.kv dt {
+    color: var(--muted);
+}
+
+.kv dd {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    min-width: 0;
+    margin: 0;
+    overflow-wrap: anywhere;
+}
+
+/* ---------- İş kartları ---------- */
+.job-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.job-card {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.job-card > .card-head {
+    margin-bottom: 0;
+}
+
+.job-actions {
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+}
+
+/* ---------- Yardımcılar ---------- */
+.ellipsis {
+    display: inline-block;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    vertical-align: bottom;
+}
+
+.table td .ellipsis {
+    max-width: 320px;
+}
+
+.text-error {
+    color: var(--error);
+}
+
+.filter .select {
+    min-width: 180px;
+}
+
+.days {
+    gap: 14px;
+}
+
+.result-view h3 {
+    margin-top: 4px;
+}
+
+/* ---------- Log görüntüleyici ---------- */
+.log-view {
+    max-height: 60vh;
+    margin: 0;
+    padding: 12px;
+    overflow: auto;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--bg);
+    white-space: pre-wrap;
+    word-break: break-all;
 }

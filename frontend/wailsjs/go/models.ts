@@ -378,6 +378,7 @@ export namespace app {
 	export class SaveJobResult {
 	    saved: boolean;
 	    errors: string[];
+	    fieldErrors: Record<string, Array<string>>;
 	    warnings: string[];
 	
 	    static createFrom(source: any = {}) {
@@ -388,6 +389,7 @@ export namespace app {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.saved = source["saved"];
 	        this.errors = source["errors"];
+	        this.fieldErrors = source["fieldErrors"];
 	        this.warnings = source["warnings"];
 	    }
 	}

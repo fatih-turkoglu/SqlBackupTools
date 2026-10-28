@@ -47,7 +47,7 @@ export function scheduleTab(ed: Editor): HTMLElement {
             weekDays.map((d) => checkbox(dayName(d), sc.days.includes(d), (on) => {
                 sc.days = weekDays.filter((x) => x === d ? on : sc.days.includes(x));
                 changed();
-            })))));
+            }))), {name: 'schedule.days'}));
     }
     if (sc.frequency === 'hourly') {
         frequencyFields.push(field(t('gui.schedule.interval'), input({
@@ -59,7 +59,7 @@ export function scheduleTab(ed: Editor): HTMLElement {
                 sc.intervalHours = parseInt(v, 10) || 0;
                 changed();
             },
-        }), {hint: t('gui.schedule.intervalHint')}));
+        }), {hint: t('gui.schedule.intervalHint'), name: 'schedule.intervalHours'}));
     }
 
     const renderTask = (info: app.TaskInfo | null) => {
@@ -157,15 +157,16 @@ export function scheduleTab(ed: Editor): HTMLElement {
                         if (v === 'hourly' && !sc.intervalHours) sc.intervalHours = 4;
                         changed();
                         ed.rerenderTab();
-                    })),
-                    field(sc.frequency === 'hourly' ? t('gui.schedule.startTime') : t('gui.schedule.time'), timeInput),
+                    }), {name: 'schedule.frequency'}),
+                    field(sc.frequency === 'hourly' ? t('gui.schedule.startTime') : t('gui.schedule.time'), timeInput,
+                        {name: 'schedule.time'}),
                     field(t('gui.schedule.runAs'), select([
                         {value: 'system', label: t('gui.schedule.runAsSystem')},
                         {value: 'current', label: t('gui.schedule.runAsCurrent')},
                     ], sc.runAs, (v) => {
                         sc.runAs = v;
                         changed();
-                    }), {hint: t('gui.schedule.runAsHint')})),
+                    }), {hint: t('gui.schedule.runAsHint'), name: 'schedule.runAs'})),
                 frequencyFields,
                 warnings)),
 

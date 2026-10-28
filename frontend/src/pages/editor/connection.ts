@@ -55,7 +55,7 @@ export function connectionTab(ed: Editor): HTMLElement {
                         c.server = v;
                         ed.changed();
                     },
-                }), {hint: t('gui.conn.serverHint')}),
+                }), {hint: t('gui.conn.serverHint'), name: 'connection.server'}),
                 field(t('gui.conn.instance'), input({
                     value: c.instance,
                     placeholder: 'SQLEXPRESS',
@@ -73,7 +73,7 @@ export function connectionTab(ed: Editor): HTMLElement {
                         c.port = parseInt(v, 10) || 0;
                         ed.changed();
                     },
-                }), {hint: t('gui.conn.portHint')}),
+                }), {hint: t('gui.conn.portHint'), name: 'connection.port'}),
                 field(t('gui.conn.protocol'), select([
                     {value: '', label: t('gui.conn.protocolAuto')},
                     {value: 'tcp', label: 'TCP/IP'},
@@ -82,7 +82,7 @@ export function connectionTab(ed: Editor): HTMLElement {
                 ], c.protocol, (v) => {
                     c.protocol = v;
                     ed.changed();
-                }), {hint: t('gui.conn.protocolHint')}))),
+                }), {hint: t('gui.conn.protocolHint'), name: 'connection.protocol'}))),
 
         h('section', {class: 'card'},
             h('h2', null, t('gui.conn.auth')),
@@ -94,7 +94,7 @@ export function connectionTab(ed: Editor): HTMLElement {
                     c.auth = v;
                     ed.changed();
                     ed.rerenderTab();
-                })),
+                }), {name: 'connection.auth'}),
                 h('div'),
                 sqlAuth && field(t('gui.conn.user'), input({
                     value: c.user,
@@ -102,9 +102,9 @@ export function connectionTab(ed: Editor): HTMLElement {
                         c.user = v;
                         ed.changed();
                     },
-                })),
+                }), {name: 'connection.user'}),
                 sqlAuth && field(t('gui.conn.password'), password,
-                    {hint: s.hasPassword ? t('gui.conn.passwordHint') : ''})),
+                    {hint: s.hasPassword ? t('gui.conn.passwordHint') : '', name: 'connection.password'})),
             sqlAuth && s.passwordError && !s.passwordChanged &&
                 alert('warning', t('gui.conn.passwordUnreadable', {error: s.passwordError})),
             !sqlAuth && alert('info', t('gui.conn.windowsAuthInfo'))),
@@ -128,7 +128,7 @@ export function connectionTab(ed: Editor): HTMLElement {
                         c.timeoutSec = parseInt(v, 10) || 0;
                         ed.changed();
                     },
-                })))),
+                }), {name: 'connection.timeoutSec'}))),
 
         h('section', {class: 'card'},
             h('div', {class: 'card-head'},

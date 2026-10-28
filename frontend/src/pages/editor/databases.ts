@@ -9,7 +9,7 @@ import {ListDatabases} from '../../../wailsjs/go/app/App';
 import {mssql} from '../../../wailsjs/go/models';
 import {fmtDate, fmtMB} from '../../format';
 import {t} from '../../i18n';
-import {alert, badge, button, loading, table, toggle} from '../../ui/components';
+import {alert, badge, button, errorSlot, loading, table, toggle} from '../../ui/components';
 import {errorText, h, replace} from '../../ui/dom';
 import {Editor} from './editor';
 
@@ -163,6 +163,7 @@ export function databasesTab(ed: Editor): HTMLElement {
                 h('h2', null, t('gui.db.list')),
                 summary,
                 button(t('gui.db.refresh'), {icon: 'refresh', onClick: load})),
+            errorSlot('databases'),
             listArea));
 
     renderList();

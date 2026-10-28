@@ -68,6 +68,10 @@ export function SelectFolder(arg1:string,arg2:string):Promise<string>;
 
 export function SetLanguage(arg1:string):Promise<void>;
 
+export function SetUnsavedChanges(arg1:boolean):Promise<void>;
+
 export function TaskWarnings(arg1:config.Job):Promise<Array<string>>;
 
 export function TestConnection(arg1:app.ConnectionRequest):Promise<app.ConnectionInfo>;
+
+export function ValidateJob(arg1:app.SaveJobRequest):Promise<app.SaveJobResult>;

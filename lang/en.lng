@@ -385,7 +385,7 @@ gui.editor.unsaved = Unsaved changes
 gui.editor.back = Jobs
 gui.editor.save = Save
 gui.editor.saved = Job "{job}" saved.
-gui.editor.saveFailed = The job was not saved. Fix the errors shown at the top.
+gui.editor.saveFailed = The job was not saved. Fix the marked fields.
 gui.editor.saveErrors = The job could not be saved:
 gui.editor.saveWarnings = Saved with warnings:
 gui.editor.saveFirstTitle = Save job
@@ -401,6 +401,12 @@ gui.editor.tabDatabases = Databases
 gui.editor.tabBackup = Backup
 gui.editor.tabArchive = ZIP & Retention
 gui.editor.tabSchedule = Schedule
+gui.editor.tabErrors = {count} error(s) on this tab
+
+gui.close.title = Close SqlBackup
+gui.close.unsaved = The job editor has unsaved changes; they will be lost.
+gui.close.running = Running backups will be cancelled: {jobs}
+gui.close.confirm = Close anyway?
 
 # ---------- GUI: Bağlantı ----------
 gui.conn.server = Server

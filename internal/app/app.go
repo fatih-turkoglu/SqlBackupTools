@@ -1,6 +1,6 @@
 // Package app, arayüzün (Wails) backend köprüsüdür. App'in dışa açık
 // yöntemleri frontend'e bağlanır (frontend/wailsjs/go/app/App). Yaşam
-// döngüsü işlevleri (Startup, Shutdown) paket düzeyindedir; App'in yöntemi
+// döngüsü işlevleri (Startup, BeforeClose, Shutdown) paket düzeyindedir; App'in yöntemi
 // olsalardı frontend'e de açılırlardı.
 //
 // Hatalar Wails üzerinden frontend'e metin olarak gider (Promise reddi);
@@ -13,6 +13,7 @@ import (
 	"errors"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/wailsapp/wails/v2/pkg/runtime"
@@ -37,6 +38,9 @@ type App struct {
 	tasks   scheduler.Service
 	elevate func(args []string) (code int, output string, err error)
 	user    string // "current" görev hesabı; boşsa oturumdaki kullanıcı
+	confirm func(title, message string) bool
+
+	unsaved atomic.Bool // iş düzenleyicide kaydedilmemiş değişiklik (SetUnsavedChanges)
 
 	mu      sync.Mutex
 	running map[string]runningJob // küçük harf iş adı → çalışma
@@ -45,7 +49,7 @@ type App struct {
 
 // New, App oluşturur. version, CLI ile aynı sürüm bilgisidir.
 func New(version string) *App {
-	return &App{
+	a := &App{
 		version: version,
 		emit:    func(string, any) {},
 		now:     time.Now,
@@ -53,6 +57,8 @@ func New(version string) *App {
 		elevate: func(args []string) (int, string, error) { return cli.RunElevated(args, nil) },
 		running: map[string]runningJob{},
 	}
+	a.confirm = a.confirmDialog
+	return a
 }
 
 // Startup, Wails OnStartup işlevidir: olayları bağlar, veri klasörlerini

@@ -126,10 +126,18 @@ export function SetLanguage(arg1) {
   return window['go']['app']['App']['SetLanguage'](arg1);
 }
 
+export function SetUnsavedChanges(arg1) {
+  return window['go']['app']['App']['SetUnsavedChanges'](arg1);
+}
+
 export function TaskWarnings(arg1) {
   return window['go']['app']['App']['TaskWarnings'](arg1);
 }
 
 export function TestConnection(arg1) {
   return window['go']['app']['App']['TestConnection'](arg1);
+}
+
+export function ValidateJob(arg1) {
+  return window['go']['app']['App']['ValidateJob'](arg1);
 }

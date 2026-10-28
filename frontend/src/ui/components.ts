@@ -47,11 +47,14 @@ export function setBusy(btn: HTMLButtonElement, busy: boolean): void {
 export type FieldOptions = {
     hint?: string;
     error?: string;
+    // name, alanın doğrulama anahtarıdır (data-field; ör. "connection.server");
+    // hata metni sonradan setFieldErrors ile yerleştirilir.
+    name?: string;
 };
 
 // field, etiket + kontrol + açıklama/hata satırından oluşan alan sarmalayıcısıdır.
 export function field(label: string, control: Child, opts: FieldOptions = {}): HTMLLabelElement {
-    const el = h('label', {class: 'field'},
+    const el = h('label', {class: 'field', dataset: opts.name ? {field: opts.name} : undefined},
         label && h('span', {class: 'field-label'}, label),
         control,
         h('span', {class: 'field-hint', hidden: !opts.hint}, opts.hint ?? ''),
@@ -63,10 +66,24 @@ export function field(label: string, control: Child, opts: FieldOptions = {}): H
 
 // setFieldError, alanın hata metnini gösterir; boş metin hatayı kaldırır.
 export function setFieldError(fieldEl: Element, error?: string): void {
-    const errEl = fieldEl.querySelector<HTMLElement>('.field-error')!;
+    const errEl = fieldEl.querySelector<HTMLElement>(':scope > .field-error')!;
     errEl.textContent = error ?? '';
     errEl.hidden = !error;
     fieldEl.classList.toggle('invalid', !!error);
+}
+
+// errorSlot, field() ile sarılmayan kontroller (liste, anahtar) için yalnızca
+// hata satırından oluşan doğrulama yeridir.
+export function errorSlot(name: string): HTMLDivElement {
+    return h('div', {class: 'error-slot', dataset: {field: name}}, h('span', {class: 'field-error', hidden: true}));
+}
+
+// setFieldErrors, root içindeki data-field taşıyan alanlara hataları yazar;
+// listede olmayan alanların hatası kaldırılır.
+export function setFieldErrors(root: Element, errors: Record<string, string[]>): void {
+    root.querySelectorAll<HTMLElement>('[data-field]').forEach((el) => {
+        setFieldError(el, (errors[el.dataset.field!] ?? []).join(' '));
+    });
 }
 
 export type InputOptions = {
@@ -134,7 +151,9 @@ export type Column<T> = {
 
 export type TableOptions<T> = {
     empty?: string;
-    onRowClick?: (row: T) => void;
+    // onRowClick Promise dönerse satır iş bitene kadar meşgul gösterilir ve
+    // yeniden tıklanamaz (ör. dosya okunurken).
+    onRowClick?: (row: T) => void | Promise<unknown>;
 };
 
 export function table<T>(columns: Column<T>[], rows: T[], opts: TableOptions<T> = {}): HTMLElement {
@@ -149,7 +168,12 @@ export function table<T>(columns: Column<T>[], rows: T[], opts: TableOptions<T> 
         if (opts.onRowClick) {
             tr.addEventListener('click', (ev) => {
                 // Satırdaki buton/giriş tıklamaları satır tıklaması sayılmaz.
-                if (!(ev.target as Element).closest('button, input, select, a, label')) opts.onRowClick!(row);
+                if ((ev.target as Element).closest('button, input, select, a, label') || tr.classList.contains('busy')) return;
+                const r = opts.onRowClick!(row);
+                if (r instanceof Promise) {
+                    tr.classList.add('busy');
+                    r.finally(() => tr.classList.remove('busy'));
+                }
             });
         }
         return tr;

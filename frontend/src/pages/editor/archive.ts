@@ -1,7 +1,7 @@
 // ZIP ve Saklama sekmesi: yedek sonrası zip, zip sonrası .bak silme ve eski
 // yedeklerin temizlenmesi (retention).
 import {t} from '../../i18n';
-import {alert, field, input, select, toggle} from '../../ui/components';
+import {alert, errorSlot, field, input, select, toggle} from '../../ui/components';
 import {h} from '../../ui/dom';
 import {Editor} from './editor';
 
@@ -34,7 +34,10 @@ export function archiveTab(ed: Editor): HTMLElement {
                 r.value = parseInt(v, 10) || 0;
                 ed.changed();
             },
-        }), {hint: r.mode === 'days' ? t('gui.archive.retentionDaysHint') : t('gui.archive.retentionCountHint')});
+        }), {
+            hint: r.mode === 'days' ? t('gui.archive.retentionDaysHint') : t('gui.archive.retentionCountHint'),
+            name: 'retention.value',
+        });
     }
 
     return h('div', {class: 'stack'},
@@ -49,6 +52,7 @@ export function archiveTab(ed: Editor): HTMLElement {
                 }),
                 h('div', {class: 'grid-2'}, field(t('gui.archive.mode'), zipMode)),
                 deleteBak,
+                errorSlot('archive.deleteBakAfterZip'),
                 h('p', {class: 'field-hint'}, t('gui.archive.zipHint')))),
 
         h('section', {class: 'card'},
@@ -65,7 +69,7 @@ export function archiveTab(ed: Editor): HTMLElement {
                         else if (r.value <= 0) r.value = v === 'days' ? 14 : 7;
                         ed.changed();
                         ed.rerenderTab();
-                    })),
+                    }), {name: 'retention.mode'}),
                     valueField),
                 r.mode !== 'none' && alert('info', t('gui.archive.retentionInfo')))),
 

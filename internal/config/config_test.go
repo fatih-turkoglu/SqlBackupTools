@@ -1,6 +1,7 @@
 package config
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -58,6 +59,16 @@ func TestValidateErrors(t *testing.T) {
 		{"saatlik", func(j *Job) { j.Schedule.Frequency = FrequencyHourly }, "1-23"},
 		{"runas", func(j *Job) { j.Schedule.RunAs = "x" }, "çalışma hesabı"},
 	}
+	fields := map[string]string{
+		"boş ad": "name", "geçersiz ad": "name", "sadece nokta": "name",
+		"sunucu yok": "connection.server", "port": "connection.port", "protokol": "connection.protocol",
+		"np port": "connection.port", "sql kullanıcı": "connection.user", "sql şifre": "connection.password",
+		"auth": "connection.auth", "db yok": "databases", "yol yok": "backup.serverPath",
+		"şablon db": "backup.fileNameTemplate", "şablon karakter": "backup.fileNameTemplate",
+		"zip sil": "archive.deleteBakAfterZip", "retention": "retention.value", "saat": "schedule.time",
+		"haftalık gün": "schedule.days", "geçersiz gün": "schedule.days", "saatlik": "schedule.intervalHours",
+		"runas": "schedule.runAs",
+	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			j := validJob()
@@ -65,6 +76,13 @@ func TestValidateErrors(t *testing.T) {
 			err := j.Validate()
 			if err == nil || !strings.Contains(err.Error(), tc.want) {
 				t.Fatalf("beklenen %q içeren hata, gelen: %v", tc.want, err)
+			}
+			// Her hata arayüzün gösterebileceği bir alana bağlıdır.
+			for _, e := range err.(interface{ Unwrap() []error }).Unwrap() {
+				var fe *FieldError
+				if !errors.As(e, &fe) || fe.Field != fields[tc.name] || fe.Error() != fe.Err.Error() {
+					t.Errorf("alan %q bekleniyordu: %#v", fields[tc.name], e)
+				}
 			}
 		})
 	}

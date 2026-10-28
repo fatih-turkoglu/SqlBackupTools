@@ -120,27 +120,69 @@ type SaveJobRequest struct {
 	PasswordChanged bool       `json:"passwordChanged"`
 }
 
-// SaveJobResult, kaydetme sonucudur. Errors doluysa iş kaydedilmemiştir.
+// SaveJobResult, kaydetme (veya yalnızca doğrulama) sonucudur. Errors doluysa
+// iş kaydedilmemiştir.
 type SaveJobResult struct {
-	Saved    bool     `json:"saved"`
-	Errors   []string `json:"errors"`
-	Warnings []string `json:"warnings"`
+	Saved  bool     `json:"saved"`
+	Errors []string `json:"errors"`
+	// FieldErrors, bir alana bağlanabilen hatalardır (alanın JSON yolu, ör.
+	// "connection.server" → metinler); bunlar Errors'ta da yer alır.
+	FieldErrors map[string][]string `json:"fieldErrors"`
+	Warnings    []string            `json:"warnings"`
 }
 
-// SaveJob, işi doğrular ve kaydeder. Geçersiz iş kaydedilmez (Errors).
-// Yeniden adlandırmada eski dosya silinir; eski adın görevi ve .bat'ı
-// taşınmaz, uyarı verilir.
-func (a *App) SaveJob(req SaveJobRequest) (SaveJobResult, error) {
-	res := SaveJobResult{Errors: []string{}, Warnings: []string{}}
-	j := req.Job
+func newSaveJobResult() SaveJobResult {
+	return SaveJobResult{Errors: []string{}, FieldErrors: map[string][]string{}, Warnings: []string{}}
+}
+
+// addError, hatayı ekler; field boş değilse alana da bağlar.
+func (r *SaveJobResult) addError(field, msg string) {
+	r.Errors = append(r.Errors, msg)
+	if field != "" {
+		r.FieldErrors[field] = append(r.FieldErrors[field], msg)
+	}
+}
+
+// addErrors, errors.Join ile birleştirilmiş hataları açar; *config.FieldError
+// olanları alanlarına bağlar.
+func (r *SaveJobResult) addErrors(field string, err error) {
+	if fe, ok := err.(*config.FieldError); ok {
+		r.addErrors(fe.Field, fe.Err)
+		return
+	}
+	if j, ok := err.(interface{ Unwrap() []error }); ok {
+		if _, isText := err.(*i18n.Error); !isText {
+			for _, e := range j.Unwrap() {
+				r.addErrors(field, e)
+			}
+			return
+		}
+	}
+	for _, msg := range errorList(err) {
+		r.addError(field, msg)
+	}
+}
+
+// ValidateJob, işi kaydetmeden SaveJob'un doğrulamasından geçirir; arayüz
+// başarısız bir kaydetmeden sonra alan hatalarını canlı güncellemek için
+// kullanır. Saved her zaman false'tur.
+func (a *App) ValidateJob(req SaveJobRequest) (SaveJobResult, error) {
+	res, _, _, err := a.validateSave(req, false)
+	return res, err
+}
+
+// validateSave, kaydedilecek işi hazırlar (ad, varsayılanlar, şifre) ve
+// doğrular; old, düzenlenen işin kayıtlı hâlidir (yeni işte nil). encrypt
+// false ise yeni şifre şifrelenmez, yalnızca var sayılır (doğrulama için).
+func (a *App) validateSave(req SaveJobRequest, encrypt bool) (res SaveJobResult, j config.Job, old *config.Job, err error) {
+	res = newSaveJobResult()
+	j = req.Job
 	j.Name = strings.TrimSpace(j.Name)
 	j.ApplyDefaults()
 
-	var old *config.Job
 	if orig := strings.TrimSpace(req.OriginalName); orig != "" {
-		var err error
 		if old, err = loadJob(orig); err != nil {
-			return res, err
+			return res, j, nil, err
 		}
 	}
 
@@ -148,33 +190,43 @@ func (a *App) SaveJob(req SaveJobRequest) (SaveJobResult, error) {
 	j.Connection.PasswordEnc = ""
 	if j.Connection.Auth == config.AuthSQL {
 		switch {
+		case req.PasswordChanged && req.Password != "" && !encrypt:
+			j.Connection.PasswordEnc = "-"
 		case req.PasswordChanged && req.Password != "":
-			if err := j.Connection.SetPassword(req.Password); err != nil {
-				return res, err
+			if err = j.Connection.SetPassword(req.Password); err != nil {
+				return res, j, old, err
 			}
 		case !req.PasswordChanged && old != nil:
 			j.Connection.PasswordEnc = old.Connection.PasswordEnc
 		}
 	}
 
-	res.Errors = append(res.Errors, errorList(j.Validate())...)
+	res.addErrors("", j.Validate())
 	if err := backup.ValidateTemplate(j.Backup.FileNameTemplate); err != nil {
-		res.Errors = append(res.Errors, err.Error())
+		res.addError("backup.fileNameTemplate", err.Error())
 	}
-	renamed := old != nil && j.Name != old.Name
 	// Dosya sistemi büyük/küçük harf duyarsız: yalnızca harf değişikliği çakışma değildir.
 	if old == nil || !strings.EqualFold(j.Name, old.Name) {
 		if config.ValidateName(j.Name) == nil && fileExists(config.JobPath(j.Name)) {
-			res.Errors = append(res.Errors, i18n.T("err.app.jobExists", "job", j.Name))
+			res.addError("name", i18n.T("err.app.jobExists", "job", j.Name))
 		}
 	}
-	if renamed && a.IsJobRunning(old.Name) {
-		res.Errors = append(res.Errors, i18n.T("err.app.renameRunning", "job", old.Name))
+	if old != nil && j.Name != old.Name && a.IsJobRunning(old.Name) {
+		res.addError("name", i18n.T("err.app.renameRunning", "job", old.Name))
 	}
-	if len(res.Errors) > 0 {
-		return res, nil
+	return res, j, old, nil
+}
+
+// SaveJob, işi doğrular ve kaydeder. Geçersiz iş kaydedilmez (Errors).
+// Yeniden adlandırmada eski dosya silinir; eski adın görevi ve .bat'ı
+// taşınmaz, uyarı verilir.
+func (a *App) SaveJob(req SaveJobRequest) (SaveJobResult, error) {
+	res, j, old, err := a.validateSave(req, true)
+	if err != nil || len(res.Errors) > 0 {
+		return res, err
 	}
 
+	renamed := old != nil && j.Name != old.Name
 	if renamed && strings.EqualFold(j.Name, old.Name) {
 		if err := os.Rename(config.JobPath(old.Name), config.JobPath(j.Name)); err != nil {
 			return res, err
@@ -211,18 +263,18 @@ func fileExists(p string) bool {
 // DuplicateJob, işi (şifresi ve zamanlamasıyla) yeni adla kopyalar. Görev
 // oluşturulmaz.
 func (a *App) DuplicateJob(name, newName string) (SaveJobResult, error) {
-	res := SaveJobResult{Errors: []string{}, Warnings: []string{}}
+	res := newSaveJobResult()
 	j, err := loadJob(name)
 	if err != nil {
 		return res, err
 	}
 	j.Name = strings.TrimSpace(newName)
 	if err := config.ValidateName(j.Name); err != nil {
-		res.Errors = append(res.Errors, err.Error())
+		res.addError("name", err.Error())
 		return res, nil
 	}
 	if fileExists(config.JobPath(j.Name)) {
-		res.Errors = append(res.Errors, i18n.T("err.app.jobExists", "job", j.Name))
+		res.addError("name", i18n.T("err.app.jobExists", "job", j.Name))
 		return res, nil
 	}
 	if err := config.SaveJob(config.JobPath(j.Name), j); err != nil {

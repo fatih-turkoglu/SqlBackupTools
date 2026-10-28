@@ -230,9 +230,12 @@ Faz 1'den sonra yapılır (CLI metinleri de hazır olur), GUI'den (Faz 4) önce 
 - [x] **Ayarlar:** dil ve tema (4.2), varsayılan klasörler (`Settings.DefaultServerPath/DefaultAccessPath` → `NewJob`), log saklama süresi
 
 ### 4.4 UX detayları
-- [ ] Form doğrulama ve anlaşılır hata mesajları (şimdilik kaydetmede `SaveJob` hata listesi düzenleyicinin üstünde; alan düzeyinde gösterim yok)
-- [ ] Kaydedilmemiş değişiklik uyarısı (düzenleyicide yapıldı: menü/geri dönüşte sorulur, Ctrl+S kaydeder; pencere kapanışı ve çalışan iş uyarısı kaldı)
-- [ ] Uzun işlemlerde kilitlenmeyen arayüz (async + spinner) (düğmeler ve yüklemeler meşgul gösteriyor; gözden geçirilecek)
+**Karar:** Doğrulama tek kaynakta (Go): `config.Validate` her hatayı `*config.FieldError{Field: "connection.server", …}` ile alana bağlar; `SaveJobResult.FieldErrors` (alan → metinler) frontend'de `field({name})` / `errorSlot(name)` altında gösterilir. Başarısız kaydetmeden sonra her değişiklik `ValidateJob` ile (300 ms gecikmeli) canlı doğrulanır; istemcide kural kopyası yok.
+**Karar:** Pencere kapanış uyarısı Go'da (`OnBeforeClose` → `app.BeforeClose`, yerel Evet/Hayır kutusu, varsayılan Hayır): frontend takılsa bile pencere kapatılabilir. Frontend kaydedilmemiş durumu `SetUnsavedChanges` ile bildirir; çalışan işler `App.running`'den.
+- [x] Form doğrulama ve anlaşılır hata mesajları: alan altında hata + kırmızı çerçeve, sekme başlığında hata sayısı, açık sekmede hata yoksa hatalı ilk sekmeye geçiş, üstte tüm hataların listesi; canlı yeniden doğrulama (`ValidateJob`). Şablon alanı önizleme ile zaten canlı doğrulanır.
+- [x] Kaydedilmemiş değişiklik uyarısı: düzenleyicide menü/geri dönüşte sorulur (Ctrl+S kaydeder); pencere kapanırken kaydedilmemiş değişiklik ve bu arayüzden çalışan yedekler (iptal edilecek) için sorulur
+- [x] Uzun işlemlerde kilitlenmeyen arayüz: Promise dönen düğmeler ve tablo satırları (Loglar'da kayıt/log okunurken) meşgul gösterilir, çift tıklama engellenir; render hatası sonsuz "yükleniyor" yerine sayfada hata olarak gösterilir (ör. bozuk `settings.json` ile Ayarlar)
+**Test:** `wails dev` + Edge ile 4 adımlık senaryo (kaydet → alan hataları + sekme rozetleri → canlı düzeltme → Veritabanları hata satırı → başarılı kayıt, hatalar temizlenir) geçti; uyarısız pencere kapanışı gerçek exe ile denendi. Uyarılı kapanış (yerel ileti kutusu) birim testli (`TestCloseWarning`), elle denenmeli.
 
 ---
 

@@ -262,6 +262,10 @@ func TestSaveJobValidation(t *testing.T) {
 	if res.Saved || len(res.Errors) != 3 { // şifre yok + klasör + saat
 		t.Fatalf("%+v", res)
 	}
+	if len(res.FieldErrors) != 3 || len(res.FieldErrors["connection.password"]) != 1 ||
+		len(res.FieldErrors["backup.serverPath"]) != 1 || len(res.FieldErrors["schedule.time"]) != 1 {
+		t.Errorf("alan hataları: %v", res.FieldErrors)
+	}
 	if _, err := os.Stat(config.JobPath("gece")); !errors.Is(err, os.ErrNotExist) {
 		t.Error("geçersiz iş kaydedilmemeli")
 	}
@@ -272,6 +276,9 @@ func TestSaveJobValidation(t *testing.T) {
 	if res.Saved || len(res.Errors) != 1 || !strings.Contains(res.Errors[0], `"GECE" adında bir iş zaten var`) {
 		t.Errorf("%+v", res)
 	}
+	if len(res.FieldErrors["name"]) != 1 {
+		t.Errorf("çakışma ada bağlanmalı: %v", res.FieldErrors)
+	}
 	// Geçersiz ad.
 	if res := ta.save(t, SaveJobRequest{Job: validJob(`..\kötü`)}); res.Saved {
 		t.Errorf("%+v", res)
@@ -280,6 +287,65 @@ func TestSaveJobValidation(t *testing.T) {
 	if _, err := ta.SaveJob(SaveJobRequest{Job: validJob("x"), OriginalName: "yok"}); err == nil ||
 		!strings.Contains(err.Error(), "iş bulunamadı: yok") {
 		t.Errorf("%v", err)
+	}
+}
+
+func TestValidateJob(t *testing.T) {
+	ta := newTestApp(t)
+	// Yeni şifre şifrelenmeden "var" sayılır; iş kaydedilmez.
+	res, err := ta.ValidateJob(SaveJobRequest{Job: validJob("gece"), Password: "x", PasswordChanged: true})
+	if err != nil || res.Saved || len(res.Errors) != 0 {
+		t.Fatalf("%+v %v", res, err)
+	}
+	if _, err := os.Stat(config.JobPath("gece")); !errors.Is(err, os.ErrNotExist) {
+		t.Error("ValidateJob kaydetmemeli")
+	}
+	j := validJob("gece")
+	j.Backup.FileNameTemplate = "{db}_{bilinmeyen}"
+	res, _ = ta.ValidateJob(SaveJobRequest{Job: j})
+	if len(res.FieldErrors["connection.password"]) != 1 || len(res.FieldErrors["backup.fileNameTemplate"]) != 1 {
+		t.Errorf("%v", res.FieldErrors)
+	}
+	// Kayıtlı işin şifresi korunur.
+	ta.save(t, SaveJobRequest{Job: validJob("gece"), Password: "x", PasswordChanged: true})
+	if res, _ := ta.ValidateJob(SaveJobRequest{Job: validJob("gece"), OriginalName: "gece"}); len(res.Errors) != 0 {
+		t.Errorf("%+v", res)
+	}
+}
+
+func TestCloseWarning(t *testing.T) {
+	ta := newTestApp(t)
+	var asked []string
+	answer := false
+	ta.confirm = func(title, msg string) bool {
+		asked = append(asked, msg)
+		return answer
+	}
+	beforeClose := BeforeClose(ta.App)
+	if beforeClose(context.Background()) || len(asked) != 0 {
+		t.Fatal("uyarı yokken sormadan kapanmalı")
+	}
+	ta.SetUnsavedChanges(true)
+	ta.mu.Lock()
+	ta.running["b"] = runningJob{name: "B_İş", cancel: func() {}}
+	ta.running["a"] = runningJob{name: "A_İş", cancel: func() {}}
+	ta.mu.Unlock()
+	if !beforeClose(context.Background()) {
+		t.Error("Hayır seçilince pencere kapanmamalı")
+	}
+	if len(asked) != 1 || !strings.Contains(asked[0], "kaydedilmemiş") || !strings.Contains(asked[0], "A_İş, B_İş") {
+		t.Errorf("%q", asked)
+	}
+	answer = true
+	if beforeClose(context.Background()) {
+		t.Error("Evet seçilince kapanmalı")
+	}
+	ta.mu.Lock()
+	clear(ta.running)
+	ta.mu.Unlock()
+	ta.SetUnsavedChanges(false)
+	if beforeClose(context.Background()) || len(asked) != 2 {
+		t.Error("uyarı kalmayınca sormamalı")
 	}
 }
 

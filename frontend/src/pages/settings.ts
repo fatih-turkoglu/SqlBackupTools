@@ -14,7 +14,13 @@ export async function settingsPage(el: HTMLElement): Promise<void> {
     const body = h('div', {class: 'stack'}, loading(t('gui.common.loading')));
     el.append(body);
 
-    const [langs, settings, info] = await Promise.all([languages(), GetSettings(), GetAppInfo()]);
+    let langs, settings, info;
+    try {
+        [langs, settings, info] = await Promise.all([languages(), GetSettings(), GetAppInfo()]);
+    } catch (err) {
+        body.remove();
+        throw err; // layout hatayı sayfada gösterir
+    }
 
     const langSelect = select(
         langs.languages.map((l) => ({value: l.code, label: l.name})),

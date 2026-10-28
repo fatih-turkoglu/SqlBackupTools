@@ -81,7 +81,7 @@ export function backupTab(ed: Editor): HTMLElement {
         h('section', {class: 'card'},
             h('h2', null, t('gui.backup.folders')),
             h('div', {class: 'stack'},
-                field(t('gui.backup.serverPath'), server.el, {hint: t('gui.backup.serverPathHint')}),
+                field(t('gui.backup.serverPath'), server.el, {hint: t('gui.backup.serverPathHint'), name: 'backup.serverPath'}),
                 field(t('gui.backup.accessPath'), access.el, {hint: t('gui.backup.accessPathHint')}),
                 accessResult,
                 alert('info', t('gui.backup.pathsInfo')))),
@@ -120,7 +120,7 @@ export function backupTab(ed: Editor): HTMLElement {
                         b.commandTimeoutMin = parseInt(v, 10) || 0;
                         ed.changed();
                     },
-                }), {hint: t('gui.backup.commandTimeoutHint')})),
+                }), {hint: t('gui.backup.commandTimeoutHint'), name: 'backup.commandTimeoutMin'})),
             h('p', {class: 'field-hint'}, t('gui.backup.copyOnlyHint')),
             noCompression && alert('info', t('gui.backup.compressionUnsupported'))));
 }

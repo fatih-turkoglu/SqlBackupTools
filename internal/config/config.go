@@ -207,69 +207,81 @@ func ValidateName(name string) error {
 	return nil
 }
 
+// FieldError, doğrulama hatasını ilgili alanla ilişkilendirir. Field, alanın
+// JSON yoludur (ör. "connection.server"); arayüz hatayı o alanın altında
+// gösterir. Error() yalnızca hata metnidir.
+type FieldError struct {
+	Field string
+	Err   error
+}
+
+func (e *FieldError) Error() string { return e.Err.Error() }
+func (e *FieldError) Unwrap() error { return e.Err }
+
 // Validate, işin çalıştırılabilir olup olmadığını kontrol eder. Tüm hataları
-// birlikte döner (errors.Join).
+// birlikte döner (errors.Join); her hata *FieldError'dır.
 func (j *Job) Validate() error {
 	var errs []error
-	add := func(key string, a ...any) { errs = append(errs, i18n.Errorf(key, a...)) }
+	addErr := func(field string, err error) { errs = append(errs, &FieldError{Field: field, Err: err}) }
+	add := func(field, key string, a ...any) { addErr(field, i18n.Errorf(key, a...)) }
 
 	if err := ValidateName(j.Name); err != nil {
-		errs = append(errs, err)
+		addErr("name", err)
 	}
 
 	// Bağlantı
 	c := j.Connection
 	if strings.TrimSpace(c.Server) == "" {
-		add("err.config.serverEmpty")
+		add("connection.server", "err.config.serverEmpty")
 	}
 	if c.Port < 0 || c.Port > 65535 {
-		add("err.config.portRange")
+		add("connection.port", "err.config.portRange")
 	}
 	switch c.Protocol {
 	case ProtocolAuto, ProtocolTCP:
 	case ProtocolNP, ProtocolLPC:
 		if c.Port > 0 {
-			add("err.config.portTCPOnly")
+			add("connection.port", "err.config.portTCPOnly")
 		}
 	default:
-		add("err.config.protocolInvalid", "value", c.Protocol)
+		add("connection.protocol", "err.config.protocolInvalid", "value", c.Protocol)
 	}
 	switch c.Auth {
 	case AuthSQL:
 		if strings.TrimSpace(c.User) == "" {
-			add("err.config.userEmpty")
+			add("connection.user", "err.config.userEmpty")
 		}
 		if c.PasswordEnc == "" {
-			add("err.config.passwordEmpty")
+			add("connection.password", "err.config.passwordEmpty")
 		}
 	case AuthWindows:
 	default:
-		add("err.config.authInvalid", "value", c.Auth)
+		add("connection.auth", "err.config.authInvalid", "value", c.Auth)
 	}
 	if c.TimeoutSec < 0 {
-		add("err.config.timeoutNegative")
+		add("connection.timeoutSec", "err.config.timeoutNegative")
 	}
 
 	// Veritabanları
 	if len(j.Databases) == 0 && !j.IncludeNewDatabases {
-		add("err.config.noDatabase")
+		add("databases", "err.config.noDatabase")
 	}
 
 	// Yedek
 	b := j.Backup
 	if strings.TrimSpace(b.ServerPath) == "" {
-		add("err.config.serverPathEmpty")
+		add("backup.serverPath", "err.config.serverPathEmpty")
 	}
 	if err := ValidateTemplate(b.FileNameTemplate); err != nil {
-		errs = append(errs, err)
+		addErr("backup.fileNameTemplate", err)
 	}
 	if b.CommandTimeoutMin < 0 {
-		add("err.config.commandTimeoutNegative")
+		add("backup.commandTimeoutMin", "err.config.commandTimeoutNegative")
 	}
 
 	// Arşiv
 	if j.Archive.DeleteBakAfterZip && !j.Archive.ZipEnabled {
-		add("err.config.deleteBakNeedsZip")
+		add("archive.deleteBakAfterZip", "err.config.deleteBakNeedsZip")
 	}
 
 	// Retention
@@ -277,39 +289,39 @@ func (j *Job) Validate() error {
 	case RetentionNone:
 	case RetentionDays, RetentionCount:
 		if j.Retention.Value <= 0 {
-			add("err.config.retentionValue")
+			add("retention.value", "err.config.retentionValue")
 		}
 	default:
-		add("err.config.retentionModeInvalid", "value", j.Retention.Mode)
+		add("retention.mode", "err.config.retentionModeInvalid", "value", j.Retention.Mode)
 	}
 
 	// Zamanlama
 	s := j.Schedule
 	if !timeRe.MatchString(s.Time) {
-		add("err.config.scheduleTime")
+		add("schedule.time", "err.config.scheduleTime")
 	}
 	switch s.Frequency {
 	case FrequencyDaily:
 	case FrequencyWeekly:
 		if len(s.Days) == 0 {
-			add("err.config.scheduleNoDays")
+			add("schedule.days", "err.config.scheduleNoDays")
 		}
 		for _, d := range s.Days {
 			if !validDays[d] {
-				add("err.config.scheduleDayInvalid", "value", d)
+				add("schedule.days", "err.config.scheduleDayInvalid", "value", d)
 			}
 		}
 	case FrequencyHourly:
 		if s.IntervalHours < 1 || s.IntervalHours > 23 {
-			add("err.config.scheduleInterval")
+			add("schedule.intervalHours", "err.config.scheduleInterval")
 		}
 	default:
-		add("err.config.scheduleFrequencyInvalid", "value", s.Frequency)
+		add("schedule.frequency", "err.config.scheduleFrequencyInvalid", "value", s.Frequency)
 	}
 	switch s.RunAs {
 	case RunAsSystem, RunAsCurrent:
 	default:
-		add("err.config.runAsInvalid", "value", s.RunAs)
+		add("schedule.runAs", "err.config.runAsInvalid", "value", s.RunAs)
 	}
 
 	return errors.Join(errs...)

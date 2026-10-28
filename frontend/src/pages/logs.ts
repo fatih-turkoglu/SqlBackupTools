@@ -100,18 +100,20 @@ function runsTable(runs: app.RunSummary[]): HTMLElement {
         {title: t('gui.logs.error'), render: (r) => h('span', {class: 'ellipsis text-error', title: r.error || r.readError}, r.error || r.readError)},
     ], runs, {
         empty: t('gui.logs.noRuns'),
-        onRowClick: (r) => void openRun(r),
+        onRowClick: openRun,
     });
 }
 
+// openRun ve openLog kaydı okuyup pencereyi açar; Promise okuma bitince
+// çözülür (satır o sürede meşgul görünür), pencerenin kapanması beklenmez.
 async function openRun(r: app.RunSummary): Promise<void> {
     if (r.readError) {
-        await messageDialog(t('gui.logs.runTitle'), alert('error', r.readError));
+        void messageDialog(t('gui.logs.runTitle'), alert('error', r.readError));
         return;
     }
     try {
         const res = await ReadRun(r.path);
-        await messageDialog(t('gui.logs.runTitle'), resultView(res), true);
+        void messageDialog(t('gui.logs.runTitle'), resultView(res), true);
     } catch (err) {
         toast(errorText(err), 'error');
     }
@@ -125,7 +127,7 @@ function filesTable(files: logging.LogInfo[]): HTMLElement {
         {title: t('gui.logs.file'), render: (f) => h('span', {class: 'mono muted'}, f.path.split('\\').pop() ?? f.path)},
     ], files, {
         empty: t('gui.logs.noFiles'),
-        onRowClick: (f) => void openLog(f),
+        onRowClick: openLog,
     });
 }
 
@@ -138,7 +140,7 @@ async function openLog(f: logging.LogInfo): Promise<void> {
             pre);
         // Pencere açıldıktan sonra en sona kaydırılır (en yeni kayıtlar).
         requestAnimationFrame(() => pre.scrollTop = pre.scrollHeight);
-        await messageDialog(t('gui.logs.logTitle', {job: f.job, date: fmtDay(f.date)}), view, true);
+        void messageDialog(t('gui.logs.logTitle', {job: f.job, date: fmtDay(f.date)}), view, true);
     } catch (err) {
         toast(errorText(err), 'error');
     }

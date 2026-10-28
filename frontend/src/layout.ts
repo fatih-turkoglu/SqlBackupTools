@@ -1,7 +1,8 @@
 // Uygulama iskeleti: sol menü + içerik alanı ve basit sayfa yönlendirici.
 // Dil değişince iskelet ve açık sayfa yeniden çizilir.
 import {t} from './i18n';
-import {Child, h, replace} from './ui/dom';
+import {alert} from './ui/components';
+import {Child, errorText, h, replace} from './ui/dom';
 import {icon, IconName, logo} from './ui/icons';
 
 // PageHandle, sayfanın isteğe bağlı yaşam döngüsü kancalarıdır.
@@ -77,7 +78,11 @@ function renderCurrent(): void {
     Promise.resolve(page.render(el)).then((hd) => {
         if (seq === renderSeq) handle = hd;
         else hd?.dispose?.();
-    }).catch(console.error);
+    }).catch((err) => {
+        // Sayfa yüklenemedi (ör. ayarlar okunamadı): sonsuz "yükleniyor" yerine hata.
+        console.error(err);
+        if (seq === renderSeq) el.append(alert('error', errorText(err)));
+    });
 }
 
 // pageHeader, sayfa başlığı + sağda eylem düğmeleridir.

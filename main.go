@@ -40,6 +40,7 @@ func main() {
 		BackgroundColour: background,
 		Windows:          windowsOptions,
 		OnStartup:        app.Startup(a),
+		OnBeforeClose:    app.BeforeClose(a),
 		OnShutdown:       app.Shutdown(a),
 		Bind:             []interface{}{a},
 	})

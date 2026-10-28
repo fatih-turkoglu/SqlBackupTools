@@ -384,7 +384,7 @@ gui.editor.unsaved = Kaydedilmemiş değişiklikler
 gui.editor.back = İşler
 gui.editor.save = Kaydet
 gui.editor.saved = "{job}" işi kaydedildi.
-gui.editor.saveFailed = İş kaydedilmedi. Üstte gösterilen hataları düzeltin.
+gui.editor.saveFailed = İş kaydedilmedi. İşaretli alanları düzeltin.
 gui.editor.saveErrors = İş kaydedilemedi:
 gui.editor.saveWarnings = Kaydedildi, uyarılar:
 gui.editor.saveFirstTitle = İşi kaydet
@@ -400,6 +400,12 @@ gui.editor.tabDatabases = Veritabanları
 gui.editor.tabBackup = Yedek
 gui.editor.tabArchive = ZIP ve Saklama
 gui.editor.tabSchedule = Zamanlama
+gui.editor.tabErrors = Bu sekmede {count} hata
+
+gui.close.title = SqlBackup'ı kapat
+gui.close.unsaved = İş düzenleyicide kaydedilmemiş değişiklikler var; kaybolacak.
+gui.close.running = Çalışan yedekler iptal edilecek: {jobs}
+gui.close.confirm = Yine de kapatılsın mı?
 
 # ---------- GUI: Bağlantı ----------
 gui.conn.server = Sunucu

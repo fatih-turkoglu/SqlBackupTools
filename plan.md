@@ -252,7 +252,10 @@ Faz 1'den sonra yapılır (CLI metinleri de hazır olur), GUI'den (Faz 4) önce 
   - Dolu disk: SQL tarafı hata metni ayrıştırma birim testiyle, ZIP tarafı yarıda kesilen yazmada `.tmp` temizliğiyle sınandı; gerçek dolu birimle (VHD, yönetici gerekir) elle denenmedi
 
 ### 5.2 Paketleme
-- [ ] Uygulama ikonu ve sürüm bilgisi (`wails.json`, `-ldflags` ile sürüm)
-- [ ] `wails build -clean -platform windows/amd64`
+- [x] Uygulama ikonu ve sürüm bilgisi (`wails.json`, `-ldflags` ile sürüm)
+  - Tek kaynak `wails.json` `info.productVersion`; `build.ps1` bunu `-X main.version` ile verir ve exe'nin bildirdiği sürümü doğrular
+  - `build/windows/info.json` dil anahtarı `0000` → `0409` (yoksa Windows dosya özelliklerinde sürüm boş görünüyordu)
+- [x] `wails build -clean -platform windows/amd64` (`.\build.ps1`; `lang\` post-build hook ile kopyalanır)
 - [ ] (Opsiyonel) NSIS installer (`wails build -nsis`) – `lang\` klasörü pakete dahil
-- [ ] README: kurulum, kullanım, uzak sunucu yol açıklaması, SQL yetki gereksinimleri
+  - `project.nsi` hazır: `lang\*.lng` kopyalanır, kurulum `Program Files\SqlBackup`, Türkçe kurulum dili. makensis kurulu değil → derlenip denenmedi
+- [x] README: kurulum, kullanım, uzak sunucu yol açıklaması, SQL yetki gereksinimleri

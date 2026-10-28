@@ -12,6 +12,12 @@
   "author": {
     "name": "Fatih TÜRKOĞLU",
     "email": "mbrroot@gmail.com"
+  },
+  "info": {
+    "companyName": "Fatih TÜRKOĞLU",
+    "productName": "SqlBackup",
+    "productVersion": "0.5.0",
+    "copyright": "Copyright © 2026 Fatih TÜRKOĞLU",
+    "comments": "MSSQL automatic backup"
   }
 }
-

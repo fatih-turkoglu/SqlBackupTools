@@ -65,6 +65,7 @@ ManifestDPIAware true
 !insertmacro MUI_UNPAGE_INSTFILES # Uinstalling page
 
 !insertmacro MUI_LANGUAGE "English" # Set the Language of the installer
+!insertmacro MUI_LANGUAGE "Turkish" # SqlBackup: sistem dili Türkçeyse kurulum Türkçe görünür
 
 ## The following two statements can be used to sign the installer and the uninstaller. The path to the binaries are provided in %1
 #!uninstfinalize 'signtool --file "%1"'
@@ -76,10 +77,10 @@ OutFile "..\..\bin\${INFO_PROJECTNAME}-${ARCH}-installer.exe" # Name of the inst
   !if "${WAILS_INSTALL_SCOPE}" == "user"
     InstallDir "$LOCALAPPDATA\Programs\${INFO_PRODUCTNAME}"
   !else
-    InstallDir "$PROGRAMFILES64\${INFO_COMPANYNAME}\${INFO_PRODUCTNAME}"
+    InstallDir "$PROGRAMFILES64\${INFO_PRODUCTNAME}"
   !endif
 !else
-  InstallDir "$PROGRAMFILES64\${INFO_COMPANYNAME}\${INFO_PRODUCTNAME}"
+  InstallDir "$PROGRAMFILES64\${INFO_PRODUCTNAME}"
 !endif # Default installing folder ($PROGRAMFILES is Program Files folder).
 ShowInstDetails show # This will always show the installation details.
 
@@ -95,6 +96,10 @@ Section
     SetOutPath $INSTDIR
 
     !insertmacro wails.files
+    # SqlBackup: dil dosyaları exe yanındaki lang\ klasöründen okunur (en.lng gömülü).
+    SetOutPath "$INSTDIR\lang"
+    File "..\..\bin\lang\*.lng"
+    SetOutPath $INSTDIR
 
     CreateShortcut "$SMPROGRAMS\${INFO_PRODUCTNAME}.lnk" "$INSTDIR\${PRODUCT_EXECUTABLE}"
     CreateShortCut "$DESKTOP\${INFO_PRODUCTNAME}.lnk" "$INSTDIR\${PRODUCT_EXECUTABLE}"

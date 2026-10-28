@@ -29,12 +29,13 @@ func testClient(t *testing.T) *Client {
 	if server == "" {
 		t.Skip("SQLBACKUP_TEST_SERVER tanımlı değil; entegrasyon testi atlandı")
 	}
+	// Varsayılan ayarlar (şifreleme kapalı, sertifikaya güven kapalı): yeni
+	// bir işin bağlanabildiği sınanır.
 	c := config.Connection{
-		Server:          server,
-		Auth:            config.AuthWindows,
-		Protocol:        os.Getenv("SQLBACKUP_TEST_PROTOCOL"),
-		TrustServerCert: true,
-		TimeoutSec:      15,
+		Server:     server,
+		Auth:       config.AuthWindows,
+		Protocol:   os.Getenv("SQLBACKUP_TEST_PROTOCOL"),
+		TimeoutSec: 15,
 	}
 	if u := os.Getenv("SQLBACKUP_TEST_USER"); u != "" {
 		c.Auth, c.User = config.AuthSQL, u

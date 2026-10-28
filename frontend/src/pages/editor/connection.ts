@@ -26,6 +26,13 @@ export function connectionTab(ed: Editor): HTMLElement {
         },
     });
 
+    // Şifreleme kapalıyken sertifika zaten doğrulanmaz (mssql.ConnString).
+    const trustCert = toggle(t('gui.conn.trustCert'), c.trustServerCert || !c.encrypt, (v) => {
+        c.trustServerCert = v;
+        ed.changed();
+    });
+    trustCert.querySelector('input')!.disabled = !c.encrypt;
+
     const test = async () => {
         replace(result, loading(t('gui.conn.testing')));
         try {
@@ -109,11 +116,10 @@ export function connectionTab(ed: Editor): HTMLElement {
                     toggle(t('gui.conn.encrypt'), c.encrypt, (v) => {
                         c.encrypt = v;
                         ed.changed();
+                        ed.rerenderTab();
                     }),
-                    toggle(t('gui.conn.trustCert'), c.trustServerCert, (v) => {
-                        c.trustServerCert = v;
-                        ed.changed();
-                    })),
+                    trustCert,
+                    h('p', {class: 'field-hint'}, t('gui.conn.trustCertHint'))),
                 field(t('gui.conn.timeout'), input({
                     type: 'number',
                     value: c.timeoutSec,

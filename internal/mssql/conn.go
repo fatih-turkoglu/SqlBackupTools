@@ -193,12 +193,17 @@ func ConnString(c config.Connection, password string) (string, error) {
 		q.Set("connection timeout", strconv.Itoa(c.TimeoutSec))
 		q.Set("dial timeout", strconv.Itoa(c.TimeoutSec))
 	}
+	// Şifreleme kapalıyken sürücü yine de login paketini TLS ile gönderir ve
+	// sertifikayı doğrular; kendinden imzalı sertifikalı (ör. varsayılan SQL
+	// Express) sunucuya hiç bağlanılamaz. ODBC Driver 17 / SSMS'in "Encrypt=no"
+	// davranışında olduğu gibi bu durumda sertifika doğrulanmaz; doğrulama
+	// yalnızca şifreleme açıkken anlamlıdır ve TrustServerCert'e bağlıdır.
 	if c.Encrypt {
 		q.Set("encrypt", "true")
 	} else {
 		q.Set("encrypt", "false")
 	}
-	if c.TrustServerCert {
+	if c.TrustServerCert || !c.Encrypt {
 		q.Set("TrustServerCertificate", "true")
 	}
 	if c.Protocol != config.ProtocolAuto {

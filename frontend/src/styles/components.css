@@ -303,6 +303,7 @@
 .table .num {
     text-align: right;
     font-variant-numeric: tabular-nums;
+    white-space: nowrap;
 }
 
 .table .shrink {

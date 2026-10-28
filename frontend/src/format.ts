@@ -49,6 +49,16 @@ export function fmtDuration(ms: number): string {
     return hrs > 0 ? `${hrs}:${pad(m)}:${pad(s)}` : `${m}:${pad(s)}`;
 }
 
+// protocolLabel, bağlantı protokolünün görünen adıdır (mssql.ProtocolLabel ile aynı).
+export function protocolLabel(p: string | undefined): string {
+    switch (p) {
+        case 'tcp': return 'TCP/IP';
+        case 'np': return 'Named Pipes';
+        case 'lpc': return 'Shared Memory';
+    }
+    return p ?? '';
+}
+
 // Haftanın günleri (config.Schedule.Days değerleri) sırasıyla.
 export const weekDays = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'] as const;
 

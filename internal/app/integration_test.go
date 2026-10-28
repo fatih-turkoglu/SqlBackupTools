@@ -18,7 +18,7 @@ func TestRealConnection(t *testing.T) {
 		t.Skip("SQLBACKUP_TEST_SERVER tanımlı değil; entegrasyon testi atlandı")
 	}
 	a := New("test")
-	c := config.Connection{Server: server, Auth: config.AuthWindows, TrustServerCert: true,
+	c := config.Connection{Server: server, Auth: config.AuthWindows,
 		Protocol: os.Getenv("SQLBACKUP_TEST_PROTOCOL")}
 	req := ConnectionRequest{Connection: c}
 	if u := os.Getenv("SQLBACKUP_TEST_USER"); u != "" {

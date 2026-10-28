@@ -105,7 +105,7 @@ export function databasesTab(ed: Editor): HTMLElement {
                         d.isSystem && badge(t('gui.db.system')),
                         d.isReadOnly && badge(t('gui.db.readOnly'))),
                 },
-                {title: t('gui.db.state'), render: (d) => d.canBackup ? d.state : badge(d.state, 'warning')},
+                {title: t('gui.db.state'), render: (d) => h('span', {class: 'row'}, d.state, !d.canBackup && badge(t('gui.db.notBackupable'), 'warning'))},
                 {title: t('gui.db.recovery'), key: 'recoveryModel'},
                 {title: t('gui.db.size'), className: 'num', render: (d) => fmtMB(d.sizeMB)},
                 {title: t('gui.db.lastBackup'), render: (d) => fmtDate(d.lastFullBackup) || h('span', {class: 'muted'}, t('gui.db.never'))},

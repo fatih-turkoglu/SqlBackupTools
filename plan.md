@@ -226,6 +226,7 @@ Faz 1'den sonra yapılır (CLI metinleri de hazır olur), GUI'den (Faz 4) önce 
 - [x] **ZIP ve Saklama:** ZIP aç/kapa, tek/DB başına ZIP, ZIP sonrası `.bak` sil, retention modu ve değeri, erişim uyarısı
 - [x] **Zamanlama:** sıklık, gün, saat, aralık, çalışacak hesap, canlı görev uyarıları; görev durumu (son/sonraki çalışma, sonuç, güncel değil), `Görev Oluştur/Güncelle`, `Çalıştır`, `Sil`, `.bat Kaydet`
 - [x] **Loglar:** iş filtresi, çalışma geçmişi tablosu + ayrıntı penceresi (DB/ZIP/saklama sonuçları), log dosyaları + görüntüleyici (büyük dosyada son 2 MB); İşler'den "Geçmiş" ile işe filtreli açılır
+**Test:** `wails dev` + yüklü Edge (playwright-core) ile 18 adımlık uçtan uca senaryo yerel SQL Express'te geçti. Bulunan hata: şifreleme kapalıyken sertifika doğrulandığı için varsayılan SQL Express'e bağlanılamıyordu (entegrasyon testleri `TrustServerCert` ile gizliyordu) → `ConnString` düzeltildi, testler varsayılan ayarlarla bağlanıyor.
 - [x] **Ayarlar:** dil ve tema (4.2), varsayılan klasörler (`Settings.DefaultServerPath/DefaultAccessPath` → `NewJob`), log saklama süresi
 
 ### 4.4 UX detayları

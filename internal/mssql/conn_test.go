@@ -47,7 +47,8 @@ func TestConnStringSQLAuthEscapesPassword(t *testing.T) {
 	if q.Get("pipe") != `MSSQL$INST\sql\query` {
 		t.Fatalf("pipe hatalı: %q", q.Get("pipe"))
 	}
-	if q.Get("connection timeout") != "10" || q.Get("encrypt") != "false" {
+	// Şifreleme kapalıyken (yalnızca login paketi) sertifika doğrulanmaz.
+	if q.Get("connection timeout") != "10" || q.Get("encrypt") != "false" || q.Get("TrustServerCertificate") != "true" {
 		t.Fatalf("parametreler hatalı: %v", q)
 	}
 }
@@ -69,6 +70,17 @@ func TestConnStringWindowsAuthHasNoUser(t *testing.T) {
 	}
 	if q.Get("encrypt") != "true" || q.Get("TrustServerCertificate") != "true" {
 		t.Fatalf("şifreleme parametreleri hatalı: %s", dsn)
+	}
+}
+
+func TestConnStringEncryptValidatesCert(t *testing.T) {
+	dsn, err := ConnString(config.Connection{Server: "srv", Auth: config.AuthWindows, Encrypt: true}, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	u, _ := url.Parse(dsn)
+	if q := u.Query(); q.Get("encrypt") != "true" || q.Has("TrustServerCertificate") {
+		t.Fatalf("şifreleme açıkken sertifika doğrulanmalı: %s", dsn)
 	}
 }
 

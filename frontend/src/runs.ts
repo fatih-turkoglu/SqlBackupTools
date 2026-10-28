@@ -3,7 +3,7 @@
 // iş bittiğinde hangi sayfa açık olursa olsun bildirim gösterilir.
 import {backup} from '../wailsjs/go/models';
 import {EventsOn} from '../wailsjs/runtime/runtime';
-import {dbStatusBadge, exitBadge, fmtBytes, fmtDate, fmtDuration} from './format';
+import {dbStatusBadge, exitBadge, fmtBytes, fmtDate, fmtDuration, protocolLabel} from './format';
 import {t} from './i18n';
 import {alert, badge, table} from './ui/components';
 import {Child, h} from './ui/dom';
@@ -100,7 +100,7 @@ export function resultView(r: backup.Result): HTMLElement {
             [t('gui.run.status'), exitBadge(r.exitCode, r.alreadyRunning)],
             [t('gui.run.server'), r.server],
             [t('gui.run.edition'), r.edition ?? ''],
-            [t('gui.run.protocol'), r.protocol ?? ''],
+            [t('gui.run.protocol'), protocolLabel(r.protocol)],
             [t('gui.run.start'), fmtDate(r.start)],
             [t('gui.run.duration'), fmtDuration(r.elapsedMs)],
             [t('gui.run.counts'), t('gui.run.countsText', {ok, failed, skipped})],

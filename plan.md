@@ -242,10 +242,14 @@ Faz 1'den sonra yapılır (CLI metinleri de hazır olur), GUI'den (Faz 4) önce 
 ## Faz 5 – Kalite, Test ve Paketleme
 
 ### 5.1 Test
-- [ ] Birim testleri: config, DPAPI, i18n, dosya adı şablonu, retention, zip, batch/schtasks komut üretimi
-- [ ] Entegrasyon testi: yerel SQL Express ile yedek alma
-- [ ] Uzak sunucu senaryosu: UNC `accessPath` ile zip + retention
-- [ ] Hata senaryoları: yanlış şifre, erişilemeyen yol, dolu disk, OFFLINE DB
+- [x] Birim testleri: config, DPAPI, i18n, dosya adı şablonu, retention, zip, batch/schtasks komut üretimi
+- [x] Entegrasyon testi: yerel SQL Express ile yedek alma
+- [ ] Uzak sunucu senaryosu: UNC `accessPath` ile zip + retention (uzak sunucu yok; bekliyor)
+- [x] Hata senaryoları: yanlış şifre, erişilemeyen yol, dolu disk, OFFLINE DB
+  - `backup.TestIntegrationErrorScenarios`: yanlış şifre (exit 2, 18456), OFFLINE DB, olmayan sürücü (3201/OS 3), servis hesabının yazamadığı klasör (3201/OS 5) → hepsi exit 2
+  - Giriş reddinde (veya başka SQL hatasında) diğer protokoller denenmez: yerelde kapalı TCP yüzünden 15 sn bekleme → 8 ms
+  - BACKUP hatalarında OS hata kodu (5 / 3,53,67 / 112) için ipucu (`err.mssql.backupHint`): servis hesabı izni, sunucu bakış açısı, disk dolu
+  - Dolu disk: SQL tarafı hata metni ayrıştırma birim testiyle, ZIP tarafı yarıda kesilen yazmada `.tmp` temizliğiyle sınandı; gerçek dolu birimle (VHD, yönetici gerekir) elle denenmedi
 
 ### 5.2 Paketleme
 - [ ] Uygulama ikonu ve sürüm bilgisi (`wails.json`, `-ldflags` ile sürüm)

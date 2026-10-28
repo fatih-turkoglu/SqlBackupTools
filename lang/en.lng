@@ -50,10 +50,15 @@ err.config.decrypt = could not decrypt password (was it created on another machi
 
 # ---------- SQL Server (mssql) ----------
 err.mssql.connect = could not connect to server: {err}
+err.mssql.login = SQL Server rejected the login: {err}. Check the user name and password (SQL authentication also requires "SQL Server and Windows Authentication mode" on the server). With Windows authentication, the account running the job (SYSTEM for scheduled tasks) needs a login on the server.
 err.mssql.connInvalid = invalid connection settings: {err}
 err.mssql.serverInfo = could not read server information: {err}
 err.mssql.listDatabases = could not list databases: {err}
 err.mssql.backup = could not back up {db}: {err}
+err.mssql.backupHint = could not back up {db}: {err} — Hint: {hint}
+err.mssql.hintAccess = The SQL Server service account (usually {account}) cannot write to this folder; grant that account Modify permission on the folder, or choose a folder it can write to.
+err.mssql.hintPath = The folder was not found on the machine running SQL Server. The backup folder is resolved by the server (for a remote server it is not a path on this computer); create the folder or use a path or UNC share the server can reach.
+err.mssql.hintDiskFull = There is not enough free space on the target disk; free up space or review the retention settings.
 err.mssql.verify = could not verify backup ({file}): {err}
 err.mssql.backupSet = could not read backup information ({db}): {err}
 err.mssql.canceled = operation canceled or timed out: {err}

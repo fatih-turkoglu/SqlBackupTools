@@ -188,3 +188,27 @@ func TestIntegrationCancel(t *testing.T) {
 		t.Fatalf("iptal çalışmadı: err=%v süre=%v", err, time.Since(start))
 	}
 }
+
+// TestIntegrationWrongPassword: sunucu girişi reddederse diğer protokoller
+// denenmemeli (yerelde kapalı TCP 15 sn bekletir) ve hata 18456 içermeli.
+func TestIntegrationWrongPassword(t *testing.T) {
+	server := os.Getenv("SQLBACKUP_TEST_SERVER")
+	if server == "" {
+		t.Skip("SQLBACKUP_TEST_SERVER tanımlı değil; entegrasyon testi atlandı")
+	}
+	c := config.Connection{Server: server, Auth: config.AuthSQL, User: "SqlBackupTest_yok",
+		Protocol: os.Getenv("SQLBACKUP_TEST_PROTOCOL"), TimeoutSec: 15}
+	start := time.Now()
+	cl, err := Open(context.Background(), c, "yanlis-sifre")
+	if err == nil {
+		cl.Close()
+		t.Fatal("yanlış şifre ile bağlanılmamalı")
+	}
+	t.Logf("%v (%v)", err, time.Since(start).Round(time.Millisecond))
+	if !strings.Contains(err.Error(), "18456") {
+		t.Errorf("18456 bekleniyordu: %v", err)
+	}
+	if d := time.Since(start); d > 5*time.Second {
+		t.Errorf("giriş reddinde diğer protokoller denenmemeli: %v", d)
+	}
+}

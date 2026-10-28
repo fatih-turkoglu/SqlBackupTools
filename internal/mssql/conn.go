@@ -4,6 +4,7 @@ package mssql
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"net/url"
 	"os"
@@ -64,6 +65,16 @@ func Open(ctx context.Context, c config.Connection, password string) (*Client, e
 			cl.info.Protocol = p
 			return cl, nil
 		}
+		// Sunucu bir SQL hatasıyla yanıt verdiyse (örn. giriş reddi) taşıma
+		// çalışıyordur; diğer protokoller aynı sonucu verir, kapalı olan
+		// TCP ise zaman aşımına kadar bekletir.
+		var se mssqldb.Error
+		if errors.As(err, &se) {
+			if se.Number == errLoginFailed {
+				return nil, i18n.Errorf("err.mssql.login", "err", err)
+			}
+			return nil, i18n.Errorf("err.mssql.connect", "err", err)
+		}
 		errs = append(errs, fmt.Sprintf("%s: %v", ProtocolLabel(p), err))
 		if ctx.Err() != nil {
 			break
@@ -71,6 +82,9 @@ func Open(ctx context.Context, c config.Connection, password string) (*Client, e
 	}
 	return nil, i18n.Errorf("err.mssql.connect", "err", strings.Join(errs, " | "))
 }
+
+// errLoginFailed, SQL Server'ın giriş reddi hata numarasıdır.
+const errLoginFailed = 18456
 
 func openWith(ctx context.Context, c config.Connection, password string) (*Client, error) {
 	dsn, err := ConnString(c, password)

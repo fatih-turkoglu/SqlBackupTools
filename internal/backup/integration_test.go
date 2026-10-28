@@ -220,3 +220,89 @@ func hostname() string {
 	h, _ := os.Hostname()
 	return h
 }
+
+// TestIntegrationErrorScenarios: yaygın hata senaryolarında çalıştırıcının
+// doğru exit code ve anlaşılır hata verdiğini sınar.
+func TestIntegrationErrorScenarios(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+	defer cancel()
+	conn, info, db := integrationEnv(t, ctx)
+	local := strings.EqualFold(info.MachineName, hostname())
+
+	run := func(t *testing.T, j *config.Job) *Result {
+		t.Helper()
+		r := Run(ctx, j, Options{})
+		t.Log("\n" + r.Summary())
+		t.Cleanup(func() { deleteServerFiles(t, db, r) })
+		return r
+	}
+
+	t.Run("YanlisSifre", func(t *testing.T) {
+		j := config.NewJob("entegrasyon")
+		j.Connection = conn
+		j.Connection.Auth, j.Connection.User = config.AuthSQL, "SqlBackupTest_yok"
+		enc, err := config.Protect("yanlis-sifre")
+		if err != nil {
+			t.Fatal(err)
+		}
+		j.Connection.PasswordEnc = enc
+		j.Databases = []string{"master"}
+		j.Backup.ServerPath = info.DefaultBackup
+		r := run(t, j)
+		if r.ExitCode != ExitFailed || !strings.Contains(r.Error, "18456") {
+			t.Fatalf("giriş hatası (exit 2) bekleniyordu: %d %q", r.ExitCode, r.Error)
+		}
+	})
+
+	t.Run("OfflineDB", func(t *testing.T) {
+		name := tempDatabase(t, ctx, db)
+		if _, err := db.ExecContext(ctx, "ALTER DATABASE ["+name+"] SET OFFLINE WITH ROLLBACK IMMEDIATE"); err != nil {
+			t.Fatal(err)
+		}
+		// OFFLINE DB silinirse dosyaları diskte kalır; silmeden önce çevrimiçi yap
+		// (Cleanup LIFO: tempDatabase'in silmesinden önce çalışır).
+		t.Cleanup(func() { db.ExecContext(context.Background(), "ALTER DATABASE ["+name+"] SET ONLINE") })
+
+		j := config.NewJob("entegrasyon")
+		j.Connection = conn
+		j.Databases = []string{name}
+		j.Backup.ServerPath = info.DefaultBackup
+		r := run(t, j)
+		if r.ExitCode != ExitFailed || len(r.Databases) != 1 || r.Databases[0].Status != StatusFailed ||
+			!strings.Contains(r.Databases[0].Error, "OFFLINE") {
+			t.Fatalf("OFFLINE DB hata vermeli: %+v", r)
+		}
+	})
+
+	t.Run("OlmayanSurucu", func(t *testing.T) {
+		name := tempDatabase(t, ctx, db)
+		j := config.NewJob("entegrasyon")
+		j.Connection = conn
+		j.Databases = []string{name}
+		j.Backup.ServerPath = `Q:\SqlBackupTest_yok\klasor`
+		r := run(t, j)
+		if r.ExitCode != ExitFailed || r.Databases[0].Status != StatusFailed ||
+			!strings.Contains(r.Databases[0].Error, "3201") {
+			t.Fatalf("3201 hatası bekleniyordu: %+v", r.Databases)
+		}
+	})
+
+	// Klasör var ama SQL Server servis hesabının yazma izni yok (en sık
+	// karşılaşılan kurulum hatası). Yalnızca yerel sunucuda.
+	t.Run("ServisHesabiIzinYok", func(t *testing.T) {
+		if !local {
+			t.Skip("uzak sunucu")
+		}
+		dir := t.TempDir() // yalnızca test kullanıcısı + SYSTEM + Administrators
+		name := tempDatabase(t, ctx, db)
+		j := config.NewJob("entegrasyon")
+		j.Connection = conn
+		j.Databases = []string{name}
+		j.Backup.ServerPath = dir
+		r := run(t, j)
+		if r.ExitCode != ExitFailed || r.Databases[0].Status != StatusFailed ||
+			!strings.Contains(r.Databases[0].Error, "3201") {
+			t.Fatalf("erişim reddi (3201) bekleniyordu: %+v", r.Databases)
+		}
+	})
+}

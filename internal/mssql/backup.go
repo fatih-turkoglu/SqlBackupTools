@@ -41,9 +41,44 @@ var firstNumberRe = regexp.MustCompile(`\d+`)
 func (c *Client) BackupDatabase(ctx context.Context, database, file string, opts BackupOptions, progress ProgressFunc) error {
 	query, args := buildBackupQuery(database, file, opts)
 	if err := c.execWithMessages(ctx, query, progress, args...); err != nil {
+		if hint := c.info.osErrorHint(err.Error()); hint != "" {
+			return i18n.Errorf("err.mssql.backupHint", "db", database, "err", err, "hint", hint)
+		}
 		return i18n.Errorf("err.mssql.backup", "db", database, "err", err)
 	}
 	return nil
+}
+
+// osErrorRe, BACKUP hata metnindeki işletim sistemi hata kodunu yakalar:
+// 3201 "Operating system error 5(...)", 3202 "... failed: 112(...)".
+var osErrorRe = regexp.MustCompile(`(?:Operating system error |failed: )(\d+)\(`)
+
+// osErrorHint, sık karşılaşılan işletim sistemi hataları için kullanıcıya
+// ne yapması gerektiğini söyleyen bir ipucu döner; yoksa boş döner. Dosyayı
+// SQL Server servis hesabı yazdığı için hata o hesabın bakış açısındandır.
+func (i ServerInfo) osErrorHint(msg string) string {
+	m := osErrorRe.FindStringSubmatch(msg)
+	if m == nil {
+		return ""
+	}
+	switch m[1] {
+	case "5":
+		return i18n.T("err.mssql.hintAccess", "account", i.serviceAccount())
+	case "3", "53", "67":
+		return i18n.T("err.mssql.hintPath")
+	case "112":
+		return i18n.T("err.mssql.hintDiskFull")
+	}
+	return ""
+}
+
+// serviceAccount, SQL Server servisinin varsayılan sanal hesabını tahmin
+// eder (kurulumda başka bir hesap seçilmiş olabilir).
+func (i ServerInfo) serviceAccount() string {
+	if _, inst, ok := strings.Cut(i.ServerName, `\`); ok && inst != "" {
+		return `NT Service\MSSQL$` + inst
+	}
+	return `NT Service\MSSQLSERVER`
 }
 
 func buildBackupQuery(database, file string, opts BackupOptions) (string, []any) {

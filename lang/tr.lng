@@ -49,10 +49,15 @@ err.config.decrypt = şifre çözülemedi (başka bir makinede mi oluşturuldu?)
 
 # ---------- SQL Server (mssql) ----------
 err.mssql.connect = sunucuya bağlanılamadı: {err}
+err.mssql.login = SQL Server girişi reddetti: {err}. Kullanıcı adı ve şifreyi kontrol edin (SQL kimlik doğrulaması sunucuda "SQL Server ve Windows Kimlik Doğrulaması modu" da gerektirir). Windows kimlik doğrulamasında işi çalıştıran hesabın (zamanlanmış görevde SYSTEM) sunucuda bir girişi olmalıdır.
 err.mssql.connInvalid = bağlantı bilgisi geçersiz: {err}
 err.mssql.serverInfo = sunucu bilgisi okunamadı: {err}
 err.mssql.listDatabases = veritabanları listelenemedi: {err}
 err.mssql.backup = {db} yedeklenemedi: {err}
+err.mssql.backupHint = {db} yedeklenemedi: {err} — İpucu: {hint}
+err.mssql.hintAccess = SQL Server servis hesabı (genellikle {account}) bu klasöre yazamıyor; klasörde bu hesaba Değiştirme izni verin veya hesabın yazabildiği bir klasör seçin.
+err.mssql.hintPath = Klasör, SQL Server'ın çalıştığı makinede bulunamadı. Yedek klasörü sunucunun bakış açısından yorumlanır (uzak sunucuda bu bilgisayardaki bir yol değildir); klasörü oluşturun veya sunucunun erişebildiği bir yol/UNC paylaşımı kullanın.
+err.mssql.hintDiskFull = Hedef diskte yeterli boş alan yok; yer açın veya saklama (retention) ayarlarını gözden geçirin.
 err.mssql.verify = yedek doğrulanamadı ({file}): {err}
 err.mssql.backupSet = yedek bilgisi okunamadı ({db}): {err}
 err.mssql.canceled = işlem iptal edildi veya zaman aşımına uğradı: {err}

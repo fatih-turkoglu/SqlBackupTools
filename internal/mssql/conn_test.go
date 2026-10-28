@@ -142,3 +142,25 @@ func TestSupportsCompression(t *testing.T) {
 		t.Fatal("Standard desteklemeli")
 	}
 }
+
+func TestOSErrorHint(t *testing.T) {
+	inst := ServerInfo{ServerName: `SRV\SQLEXPRESS`}
+	cases := []struct {
+		msg, want string
+	}{
+		{`[3201] Cannot open backup device 'D:\x.bak'. Operating system error 5(Erişim engellendi.). | [3013] ...`, `NT Service\MSSQL$SQLEXPRESS`},
+		{`[3201] Cannot open backup device 'Q:\x.bak'. Operating system error 3(The system cannot find the path specified.).`, "bulunamadı"},
+		{`[3202] Write on "D:\x.bak" failed: 112(There is not enough space on the disk.)`, "boş alan"},
+		{"[3201] ... Operating system error 1450(...)", ""},
+		{"[4060] Cannot open database", ""},
+	}
+	for _, c := range cases {
+		got := inst.osErrorHint(c.msg)
+		if (c.want == "") != (got == "") || !strings.Contains(got, c.want) {
+			t.Errorf("%q: beklenen %q içeren ipucu, gelen %q", c.msg, c.want, got)
+		}
+	}
+	if a := (ServerInfo{ServerName: "SRV"}).serviceAccount(); a != `NT Service\MSSQLSERVER` {
+		t.Errorf("varsayılan örnek hesabı: %s", a)
+	}
+}

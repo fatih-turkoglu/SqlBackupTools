@@ -58,6 +58,7 @@ $zip = Join-Path $dist 'SqlBackup-windows-amd64.zip'
 $files = @(
     @{ Src = 'build\bin\SqlBackup.exe'; Dst = 'SqlBackup/SqlBackup.exe' },
     @{ Src = 'README.md'; Dst = 'SqlBackup/README.md' },
+    @{ Src = 'README.tr.md'; Dst = 'SqlBackup/README.tr.md' },
     @{ Src = 'LICENSE'; Dst = 'SqlBackup/LICENSE.txt' }
 )
 foreach ($lng in Get-ChildItem build\bin\lang\*.lng) {

@@ -125,7 +125,7 @@ Dil dosyaları exe yanındaki `lang\` klasöründedir (`en.lng` exe'ye de gömü
 
 ## Geliştirme
 
-Go 1.26+, Node.js ve Wails v2 CLI gerekir (`go install github.com/wailsapp/wails/v2/cmd/wails@v2.17.0`).
+Go 1.27+, Node.js ve Wails v2 CLI gerekir (`go install github.com/wailsapp/wails/v2/cmd/wails@v2.17.0`).
 
 ```powershell
 .\build.ps1                  # temiz sürüm build'i → build\bin\SqlBackup.exe + lang\

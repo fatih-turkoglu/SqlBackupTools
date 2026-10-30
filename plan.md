@@ -269,3 +269,10 @@ Faz 1'den sonra yapılır (CLI metinleri de hazır olur), GUI'den (Faz 4) önce 
 - [x] Uzak sunucuya SQL kimlik doğrulaması sertifika doğrulanmadan gidiyorsa (şifreleme kapalı veya `TrustServerCertificate`) kaydederken ve `test` komutunda uyarı.
 - [x] Go araç zinciri `go1.26.10` (govulncheck: crypto/tls, crypto/x509, net/http, encoding/xml, encoding/asn1 açıkları).
 **Test:** `config` birim testleri yeni klasör + eski kurulum taşıma (Users izni kalkar, dosyalar devralır) senaryolarını sınar; gerçek `%ProgramData%\SqlBackup` taşındı (`icacls`: yalnızca SYSTEM, Administrators, kullanıcı). `CheckExeSecurity`: System32 ve Program Files exe'leri geçer, `build\bin` ve test binary'si reddedilir; `build\bin\SqlBackup.exe task create` SYSTEM işi için UAC sormadan reddetti. Tüm birim + SQL Express + görev entegrasyon testleri geçti; `govulncheck` koddan çağrılan açık bulmadı.
+
+### 5.4 Bağımlılık güncellemesi
+- [x] Go `go 1.27.0` / `toolchain go1.27.3` (1.26.10 → 1.27.3)
+- [x] Dolaylı Go modülleri (`go get -u ./...`): `x/crypto` v0.58.0 (ssh DoS açıkları GO-2026-6354/6355 kapandı; kod yalnızca `md4` kullanıyor), `x/net` v0.62.0, `x/text` v0.43.0, `go-webview2` v1.0.23, `echo` v4.16.3, `samber/lo` v1.53.0 vb. Doğrudan bağımlılıklar (wails v2.17.0, go-mssqldb v1.11.2, go-ole, sqlexp, x/sys) zaten günceldi.
+- [x] Frontend: Vite 8.3.5, TypeScript 7.0.2. TS 7 `moduleResolution: Node` (node10) seçeneğini kaldırdı → `Bundler`.
+- Ertelendi: Wails v3 (API tamamen değişti; ayrı taşıma işi), Node.js/npm geliştirme ortamı.
+**Test:** `go vet`, `gofmt`, tüm birim + SQL Express + görev entegrasyon testleri geçti; `govulncheck` koddan çağrılan açık bulmadı (kalan tek kayıt düzeltmesi olmayan `x/crypto/openpgp`, kullanılmıyor); `npm audit` 0; `build.ps1` exe'yi go1.27.3 ile üretti, GUI açıldı.

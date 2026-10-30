@@ -236,6 +236,9 @@ func (a *App) SaveJob(req SaveJobRequest) (SaveJobResult, error) {
 		return res, err
 	}
 	res.Saved = true
+	if mssql.LoginExposed(j.Connection) {
+		res.Warnings = append(res.Warnings, i18n.T("warn.mssql.insecureLogin"))
+	}
 
 	// Yalnızca harf değişikliğinde görev ve .bat çalışmaya devam eder (Windows
 	// yolları ve görev adları harf duyarsız); gerçek ad değişikliği onları bozar.
@@ -281,6 +284,9 @@ func (a *App) DuplicateJob(name, newName string) (SaveJobResult, error) {
 		return res, err
 	}
 	res.Saved = true
+	if mssql.LoginExposed(j.Connection) {
+		res.Warnings = append(res.Warnings, i18n.T("warn.mssql.insecureLogin"))
+	}
 	return res, nil
 }
 

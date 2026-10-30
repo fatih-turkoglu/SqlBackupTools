@@ -62,6 +62,7 @@ err.mssql.hintDiskFull = There is not enough free space on the target disk; free
 err.mssql.verify = could not verify backup ({file}): {err}
 err.mssql.backupSet = could not read backup information ({db}): {err}
 err.mssql.canceled = operation canceled or timed out: {err}
+warn.mssql.insecureLogin = the SQL Server password is sent to the remote server without verifying its certificate; someone on the network could intercept it. Turn on encryption with certificate verification (Trust server certificate off) or use Windows authentication.
 
 # ---------- File name template ----------
 err.template.unmatchedClose = file name template has an unmatched '}'
@@ -141,6 +142,8 @@ err.scheduler.run = could not start the scheduled task: {err}
 err.scheduler.query = could not read the scheduled task: {err}
 err.scheduler.elevate = could not start with administrator rights: {err}
 err.scheduler.elevateCancelled = administrator rights were not granted (UAC prompt cancelled)
+err.scheduler.exeCheck = could not check the permissions of {path}: {err}
+err.scheduler.unsafeExe = a SYSTEM task cannot run {exe}: {account} can modify {path}, so it could run its own code as SYSTEM. Install the program with the installer (Program Files) or use a folder only administrators can write to.
 warn.scheduler.systemWindowsAuth = the task runs as SYSTEM with Windows authentication: SQL Server needs a login for NT AUTHORITY\\SYSTEM (DOMAIN\\COMPUTER$ for a remote server) with backup permission
 warn.scheduler.systemNetworkPath = the task runs as SYSTEM: the network folder {path} is accessed with the computer account (DOMAIN\\COMPUTER$), which needs read, write and delete permission
 warn.scheduler.currentUser = the task runs only while {user} is logged on

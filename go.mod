@@ -2,6 +2,8 @@ module sqlbackup
 
 go 1.26.0
 
+toolchain go1.26.10
+
 require (
 	github.com/go-ole/go-ole v1.3.0
 	github.com/golang-sql/sqlexp v0.1.0

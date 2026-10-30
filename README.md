@@ -30,6 +30,8 @@ Program işlerini, ayarlarını ve loglarını `%ProgramData%\SqlBackup` klasör
   logs\runs\*.json          her çalışmanın sonuç kaydı
 ```
 
+Klasöre yalnızca SYSTEM, yöneticiler ve programı kullanan Windows hesabı erişebilir (iş dosyalarındaki şifreli SQL şifresi bu bilgisayarda çözülebildiği için diğer kullanıcılara kapalıdır). Önceki sürümlerin oluşturduğu klasörün izinleri program ilk açıldığında bu şekilde düzeltilir. Programı başka bir Windows hesabıyla da kullanacaksanız o hesabı yönetici olarak çalıştırın veya klasöre izin verin.
+
 Kaldırma bu klasörü ve zamanlanmış görevleri **silmez**. Programı tamamen kaldırmak için önce arayüzden (veya `SqlBackup.exe task delete --job <iş>`) görevleri silin, sonra klasörü elle silin.
 
 ## Kullanım
@@ -65,7 +67,7 @@ Yedek dosyasını programınız değil, **SQL Server servis hesabı** yazar. Bu 
 ## Zamanlanmış görev
 
 - Görevler Görev Zamanlayıcı'da `\SqlBackup\<iş>` altında oluşturulur ve doğrudan `SqlBackup.exe run --job "<iş.json>"` çalıştırır. Görev ve `.bat` hiçbir şifre içermez.
-- **SYSTEM:** oturum açık olmasa da çalışır; görevi oluşturmak/güncellemek yönetici onayı (UAC) ister. **Geçerli kullanıcı:** yalnızca o kullanıcı oturum açmışken çalışır, yönetici onayı gerekmez.
+- **SYSTEM:** oturum açık olmasa da çalışır; görevi oluşturmak/güncellemek yönetici onayı (UAC) ister. Program yalnızca yöneticilerin değiştirebildiği bir klasörde (kurulum paketiyle `Program Files`) olmalıdır; aksi halde exe'yi değiştirebilen biri kendi kodunu SYSTEM olarak çalıştırabileceği için görev oluşturulmaz. **Geçerli kullanıcı:** yalnızca o kullanıcı oturum açmışken çalışır, yönetici onayı gerekmez.
 - Programı başka bir klasöre taşırsanız görevleri yeniden oluşturun (arayüz güncel olmayan görevi işaretler).
 - Görevin "Son çalışma sonucu" programın çıkış kodudur (aşağıda).
 
@@ -93,7 +95,7 @@ ALTER ROLE db_backupoperator ADD MEMBER [NT AUTHORITY\SYSTEM];
 
 ## Şifre güvenliği
 
-SQL şifresi Windows DPAPI ile **bu bilgisayara** özel şifrelenip yalnızca iş dosyasında (`passwordEnc`) saklanır; log, `.bat`, görev ve hata iletilerine yazılmaz. İş dosyası başka bilgisayara kopyalanırsa şifre çözülemez; arayüz şifreyi yeniden ister.
+SQL şifresi Windows DPAPI ile **bu bilgisayara** özel şifrelenip yalnızca iş dosyasında (`passwordEnc`) saklanır; log, `.bat`, görev ve hata iletilerine yazılmaz. İş dosyası başka bilgisayara kopyalanırsa şifre çözülemez; arayüz şifreyi yeniden ister. Uzak sunucuda SQL kimlik doğrulaması kullanıyorsanız **Bağlantıyı şifrele** seçeneğini sertifika doğrulamasıyla ("Sunucu sertifikasına güven" kapalı) açın; aksi halde şifre ağda araya giren birine açık olur ve program kaydederken uyarır.
 
 ## Komut satırı
 

@@ -232,6 +232,22 @@ func ConnString(c config.Connection, password string) (string, error) {
 	return u.String(), nil
 }
 
+// LoginExposed, SQL kimlik doğrulaması şifresinin uzak sunucuya sertifika
+// doğrulanmadan gönderilip gönderilmediğini döner. Şifreleme kapalıyken de
+// giriş paketi TLS ile gider, ancak sertifika doğrulanmadığı için (bkz.
+// ConnString) ağda araya giren biri kendi sertifikasıyla şifreyi okuyabilir.
+// Yerel bağlantı (Shared Memory / yerel Named Pipes) ağa çıkmaz.
+func LoginExposed(c config.Connection) bool {
+	if c.Auth == config.AuthWindows {
+		return false
+	}
+	host, _ := splitServer(c.Server, c.Instance)
+	if host == "" || host == "." {
+		return false
+	}
+	return !c.Encrypt || c.TrustServerCert
+}
+
 // splitServer, "host\instance" biçimini ayırır ve yerel makineyi gösteren
 // adları (localhost, (local), 127.0.0.1, makine adı) "." olarak normalize
 // eder. "." seçildi çünkü Named Pipes yerelde \\.\pipe\... yolunu ister;

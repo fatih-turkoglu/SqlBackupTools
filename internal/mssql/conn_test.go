@@ -164,3 +164,26 @@ func TestOSErrorHint(t *testing.T) {
 		t.Errorf("varsayılan örnek hesabı: %s", a)
 	}
 }
+
+func TestLoginExposed(t *testing.T) {
+	sql := func(server string, encrypt, trust bool) config.Connection {
+		return config.Connection{Server: server, Auth: config.AuthSQL, User: "sa", Encrypt: encrypt, TrustServerCert: trust}
+	}
+	cases := []struct {
+		name string
+		c    config.Connection
+		want bool
+	}{
+		{"uzak, şifreleme kapalı", sql("db01", false, false), true},
+		{"uzak, sertifikaya güven", sql(`db01\SQLEXPRESS`, true, true), true},
+		{"uzak, doğrulanan sertifika", sql("db01", true, false), false},
+		{"yerel", sql(`.\SQLEXPRESS`, false, false), false},
+		{"localhost", sql("localhost", false, false), false},
+		{"Windows kimlik doğrulaması", config.Connection{Server: "db01", Auth: config.AuthWindows}, false},
+	}
+	for _, tc := range cases {
+		if got := LoginExposed(tc.c); got != tc.want {
+			t.Errorf("%s: %v, beklenen %v", tc.name, got, tc.want)
+		}
+	}
+}

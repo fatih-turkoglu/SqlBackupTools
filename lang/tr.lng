@@ -61,6 +61,7 @@ err.mssql.hintDiskFull = Hedef diskte yeterli boş alan yok; yer açın veya sak
 err.mssql.verify = yedek doğrulanamadı ({file}): {err}
 err.mssql.backupSet = yedek bilgisi okunamadı ({db}): {err}
 err.mssql.canceled = işlem iptal edildi veya zaman aşımına uğradı: {err}
+warn.mssql.insecureLogin = SQL Server şifresi uzak sunucuya sertifikası doğrulanmadan gönderiliyor; ağda araya giren biri şifreyi ele geçirebilir. Şifrelemeyi sertifika doğrulamasıyla açın ("Sunucu sertifikasına güven" kapalı) veya Windows kimlik doğrulaması kullanın.
 
 # ---------- Dosya adı şablonu ----------
 err.template.unmatchedClose = dosya adı şablonunda eşleşmeyen '}' var
@@ -140,6 +141,8 @@ err.scheduler.run = zamanlanmış görev başlatılamadı: {err}
 err.scheduler.query = zamanlanmış görev okunamadı: {err}
 err.scheduler.elevate = yönetici yetkisiyle başlatılamadı: {err}
 err.scheduler.elevateCancelled = yönetici yetkisi verilmedi (UAC isteği iptal edildi)
+err.scheduler.exeCheck = {path} izinleri denetlenemedi: {err}
+err.scheduler.unsafeExe = SYSTEM görevi {exe} dosyasını çalıştıramaz: {account} hesabı {path} üzerinde değişiklik yapabiliyor, bu yüzden kendi kodunu SYSTEM olarak çalıştırabilir. Programı kurulum paketiyle (Program Files) kurun veya yalnızca yöneticilerin yazabildiği bir klasör kullanın.
 warn.scheduler.systemWindowsAuth = görev SYSTEM hesabıyla ve Windows kimlik doğrulamasıyla çalışır: SQL Server'da NT AUTHORITY\\SYSTEM (uzak sunucuda DOMAIN\\BILGISAYAR$) için yedek yetkisi olan bir login gerekir
 warn.scheduler.systemNetworkPath = görev SYSTEM hesabıyla çalışır: {path} ağ klasörüne bilgisayar hesabıyla (DOMAIN\\BILGISAYAR$) erişilir; bu hesabın okuma, yazma ve silme izni olmalı
 warn.scheduler.currentUser = görev yalnızca {user} oturum açmışken çalışır

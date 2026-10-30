@@ -261,3 +261,11 @@ Faz 1'den sonra yapılır (CLI metinleri de hazır olur), GUI'den (Faz 4) önce 
   - `project.nsi`: `lang\*.lng` kopyalanır, kurulum `Program Files\SqlBackup`, Türkçe kurulum dili
   - Sessiz kurulum/kaldırma denendi (`/S /D=...`): exe + lang + kısayollar + kaldırma kaydı (0.5.0); kaldırma hepsini siler, `%ProgramData%\SqlBackup` ve görevler kalır (README'de yazılı)
 - [x] README: kurulum, kullanım, uzak sunucu yol açıklaması, SQL yetki gereksinimleri
+
+### 5.3 Güvenlik sertleştirme (denetim bulguları)
+- [x] Veri klasörü izinleri: `%ProgramData%\SqlBackup` devralmayı kesen DACL ile korunur (SYSTEM, Administrators, sahip kullanıcı); `jobs\*.json` (`passwordEnc`) artık diğer kullanıcılarca okunamaz. Mevcut kurulum ilk çalıştırmada taşınır.
+- [x] `logs` klasöründeki `Users:(OI)(CI)M` izni kaldırılır (klasör silinip junction ile değiştirilerek SYSTEM'e istenen yola yazdırılabiliyordu); SYSTEM ↔ kullanıcı ortak log yazımı sahip kullanıcının kök izniyle sağlanır.
+- [x] SYSTEM görevi yalnızca yönetici olmayan hesapların değiştiremeyeceği bir exe ile oluşturulur (exe, klasörü ve üst klasörlerin DACL/sahip denetimi).
+- [x] Uzak sunucuya SQL kimlik doğrulaması sertifika doğrulanmadan gidiyorsa (şifreleme kapalı veya `TrustServerCertificate`) kaydederken ve `test` komutunda uyarı.
+- [x] Go araç zinciri `go1.26.10` (govulncheck: crypto/tls, crypto/x509, net/http, encoding/xml, encoding/asn1 açıkları).
+**Test:** `config` birim testleri yeni klasör + eski kurulum taşıma (Users izni kalkar, dosyalar devralır) senaryolarını sınar; gerçek `%ProgramData%\SqlBackup` taşındı (`icacls`: yalnızca SYSTEM, Administrators, kullanıcı). `CheckExeSecurity`: System32 ve Program Files exe'leri geçer, `build\bin` ve test binary'si reddedilir; `build\bin\SqlBackup.exe task create` SYSTEM işi için UAC sormadan reddetti. Tüm birim + SQL Express + görev entegrasyon testleri geçti; `govulncheck` koddan çağrılan açık bulmadı.

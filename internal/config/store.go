@@ -22,6 +22,10 @@ func DataDir() string {
 	if d := os.Getenv(HomeEnv); d != "" {
 		return d
 	}
+	return defaultDataDir()
+}
+
+func defaultDataDir() string {
 	pd := os.Getenv("ProgramData")
 	if pd == "" {
 		pd = `C:\ProgramData`
@@ -35,24 +39,25 @@ func JobsDir() string { return filepath.Join(DataDir(), "jobs") }
 // LogsDir, log dosyalarının klasörüdür.
 func LogsDir() string { return filepath.Join(DataDir(), "logs") }
 
-// EnsureDirs, veri klasörlerini oluşturur. Log klasörü ilk oluşturulduğunda
-// tüm kullanıcılara değiştirme izni verilir (bkz. grantUsersModify); böylece
+// EnsureDirs, veri klasörlerini oluşturur. Kök klasör yalnızca SYSTEM,
+// Administrators ve kullanıcı hesabının erişebildiği korumalı izinlerle
+// oluşturulur (bkz. dirs_windows.go); varsayılan konumdaki eski kurulumların
+// izinleri taşınır. Kullanıcı hesabına verilen izin devredildiği için
 // zamanlanmış görev (SYSTEM) ile arayüzü kullanan kullanıcı aynı log
-// dosyalarına yazabilir. İzin yalnızca oluşturmada verilir: sonradan
-// yalnızca klasörün sahibi değiştirebilir ve değişiklik tüm dosyalara yayılır.
-// Log klasörü çalışma sırasında logging paketince de oluşturulabildiği için
-// iş çalıştıranlar log açmadan önce bunu çağırmalıdır.
+// dosyalarına yazabilir. Log klasörü çalışma sırasında logging paketince de
+// oluşturulabildiği için iş çalıştıranlar log açmadan önce bunu çağırmalıdır.
 func EnsureDirs() error {
+	root := DataDir()
+	if err := secureDataDir(root, root == defaultDataDir()); err != nil {
+		return i18n.Errorf("err.config.dirPermission", "path", root, "err", err)
+	}
 	for _, d := range []string{JobsDir(), LogsDir()} {
-		_, statErr := os.Stat(d)
 		if err := os.MkdirAll(d, 0o755); err != nil {
 			return i18n.Errorf("err.config.mkdir", "path", d, "err", err)
 		}
-		if d == LogsDir() && errors.Is(statErr, os.ErrNotExist) {
-			if err := grantUsersModify(d); err != nil {
-				return i18n.Errorf("err.config.dirPermission", "path", d, "err", err)
-			}
-		}
+	}
+	if err := resetLogsACL(root, LogsDir()); err != nil {
+		return i18n.Errorf("err.config.dirPermission", "path", LogsDir(), "err", err)
 	}
 	return nil
 }

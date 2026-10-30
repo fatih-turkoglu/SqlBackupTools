@@ -92,6 +92,10 @@ func (e *env) cmdTest(args []string) int {
 	if info.DefaultBackup != "" {
 		row("cli.test.defaultBackupDir", info.DefaultBackup)
 	}
+	if mssql.LoginExposed(j.Connection) {
+		w.Flush()
+		e.warnf(i18n.T("warn.mssql.insecureLogin"))
+	}
 	if j.Archive.ZipEnabled || j.Retention.Mode != config.RetentionNone {
 		dir := j.Backup.EffectiveAccessPath()
 		if err := backup.CheckAccess(dir); err != nil {

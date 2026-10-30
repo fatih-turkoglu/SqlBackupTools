@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/user"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -166,11 +167,25 @@ func TestSystemTaskNeedsAdmin(t *testing.T) {
 		t.Skip("süreç yönetici yetkisiyle çalışıyor")
 	}
 	j := config.NewJob("sistem")
-	x, err := TaskXML(j, TaskOptions{Command: testCommand(), Now: time.Now()})
+	// Exe güvenlik denetiminden geçen bir exe ile yönetici yetkisi istenir.
+	cmd := testCommand()
+	cmd.Exe = filepath.Join(os.Getenv("SystemRoot"), "System32", "cmd.exe")
+	x, err := TaskXML(j, TaskOptions{Command: cmd, Now: time.Now()})
 	if err != nil {
 		t.Fatal(err)
 	}
 	if err := CreateTask("sistem", x, config.RunAsSystem); !errors.Is(err, ErrAccessDenied) {
 		t.Errorf("SYSTEM görevi: %v", err)
+	}
+
+	// Kullanıcının değiştirebildiği exe yetki sorulmadan reddedilir.
+	if cmd.Exe, err = os.Executable(); err != nil {
+		t.Fatal(err)
+	}
+	if x, err = TaskXML(j, TaskOptions{Command: cmd, Now: time.Now()}); err != nil {
+		t.Fatal(err)
+	}
+	if err := CreateTask("sistem", x, config.RunAsSystem); err == nil || errors.Is(err, ErrAccessDenied) {
+		t.Errorf("güvensiz exe ile SYSTEM görevi: %v", err)
 	}
 }

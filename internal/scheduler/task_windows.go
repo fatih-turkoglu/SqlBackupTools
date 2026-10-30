@@ -186,10 +186,22 @@ func ensureFolder(svc *ole.IDispatch) (*ole.IDispatch, error) {
 
 // CreateTask, görevi (TaskXML çıktısı) kaydeder; varsa günceller. runAs,
 // XML'deki hesapla aynı olmalıdır (config.RunAsSystem / RunAsCurrent).
+// SYSTEM görevinde exe'nin yönetici olmayanlarca değiştirilemediği denetlenir
+// (bkz. CheckExeSecurity); CLI, arayüz ve yükseltilmiş süreç buradan geçer.
 func CreateTask(name, taskXML, runAs string) error {
 	logon := taskLogonInteractiveToken
 	if runAs == config.RunAsSystem {
 		logon = taskLogonServiceAccount
+		def, err := ParseTaskXML(taskXML)
+		if err != nil {
+			return err
+		}
+		if def.Command == "" {
+			return i18n.Errorf("err.scheduler.badPath", "path", def.Command)
+		}
+		if err := CheckExeSecurity(def.Command); err != nil {
+			return err
+		}
 	}
 	return withService(func(svc *ole.IDispatch) error {
 		folder, err := ensureFolder(svc)

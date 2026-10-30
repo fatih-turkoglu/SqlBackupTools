@@ -18,7 +18,17 @@ Set-Location $PSScriptRoot
 $version = (Get-Content wails.json -Raw -Encoding UTF8 | ConvertFrom-Json).info.productVersion
 if (-not $version) { throw 'wails.json info.productVersion tanımlı değil' }
 
-$wails = Join-Path (go env GOPATH) 'bin\wails.exe'
+$wails = (Get-Command wails -ErrorAction SilentlyContinue).Source
+if (-not $wails) {
+    # go çıktısı UTF-8; PS 5.1 onu konsol kod sayfasıyla okur ve yoldaki Ü, Ğ gibi harfler bozulur.
+    $consoleEnc = [Console]::OutputEncoding
+    try {
+        [Console]::OutputEncoding = [Text.Encoding]::UTF8
+        $gopath = (go env GOPATH)
+    } finally { [Console]::OutputEncoding = $consoleEnc }
+    $wails = Join-Path ($gopath -split ';')[0] 'bin\wails.exe'
+}
+if (-not (Test-Path -LiteralPath $wails)) { throw "wails bulunamadı: $wails" }
 $buildArgs = @('build', '-clean', '-platform', 'windows/amd64', '-ldflags', "-X main.version=$version")
 if ($Nsis) {
     $buildArgs += '-nsis'

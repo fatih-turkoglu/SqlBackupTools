@@ -683,7 +683,8 @@ func TestSettings(t *testing.T) {
 	if err := ta.SaveSettings(config.Settings{LogKeepDays: 7, Theme: config.ThemeLight}); err != nil {
 		t.Fatal(err)
 	}
-	if s, _ := ta.GetSettings(); s.LogKeepDays != 7 || s.Language != "tr" || s.EffectiveTheme() != config.ThemeLight {
+	// Dil verilmezse boş kalır: açılışta Windows dili kullanılmaya devam eder.
+	if s, _ := ta.GetSettings(); s.LogKeepDays != 7 || s.Language != "" || s.EffectiveTheme() != config.ThemeLight {
 		t.Errorf("%+v", s)
 	}
 	if err := ta.SaveSettings(config.Settings{DefaultServerPath: ` D:\Yedek `, DefaultAccessPath: `\\srv\Yedek`}); err != nil {

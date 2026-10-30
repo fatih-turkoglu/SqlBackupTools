@@ -1,0 +1,606 @@
+# Arquivo de idioma do SqlBackup – Português
+# Formato: chave = valor  (UTF-8). Linhas que começam com "#" são comentários.
+# Marcadores como {name} são preenchidos em tempo de execução; mantenha-os inalterados ao traduzir.
+# Escapes: \n nova linha, \t tabulação, \\ barra invertida.
+@code = pt
+@name = Português
+
+# ---------- Comum ----------
+common.unknown = desconhecido
+common.taskDescription = Executa o trabalho do SqlBackup "{job}" (criado pelo SqlBackup).
+common.batchFiles = Arquivos em lote
+
+# ---------- Configurações do trabalho (config) ----------
+err.config.nameInvalid = o nome do trabalho deve ter de 1 a 64 caracteres e só pode conter letras, dígitos, '_', '-' e '.'
+err.config.nameDots = o nome do trabalho não pode ser formado apenas por pontos
+err.config.serverEmpty = o nome do servidor não pode ficar vazio
+err.config.portRange = a porta deve estar entre 0 e 65535
+err.config.portTCPOnly = a porta só pode ser usada com o protocolo TCP
+err.config.protocolInvalid = protocolo inválido: "{value}"
+err.config.userEmpty = o nome de usuário é obrigatório para a autenticação do SQL
+err.config.passwordEmpty = a senha é obrigatória para a autenticação do SQL
+err.config.authInvalid = tipo de autenticação inválido: "{value}"
+err.config.timeoutNegative = o tempo limite de conexão não pode ser negativo
+err.config.noDatabase = é necessário selecionar pelo menos um banco de dados
+err.config.serverPathEmpty = a pasta de backup (caminho no servidor) não pode ficar vazia
+err.config.commandTimeoutNegative = o tempo limite de comando não pode ser negativo
+err.config.deleteBakNeedsZip = para excluir os .bak após o zip, a opção zip precisa estar ativada
+err.config.retentionValue = o valor de retenção deve ser maior que 0
+err.config.retentionModeInvalid = modo de retenção inválido: "{value}"
+err.config.scheduleTime = o horário do agendamento deve estar no formato HH:MM (ex.: 02:00)
+err.config.scheduleNoDays = é necessário selecionar pelo menos um dia para um agendamento semanal
+err.config.scheduleDayInvalid = dia inválido: "{value}"
+err.config.scheduleInterval = o intervalo do agendamento por hora deve ser de 1 a 23 horas
+err.config.scheduleFrequencyInvalid = frequência de agendamento inválida: "{value}"
+err.config.runAsInvalid = conta de execução inválida: "{value}"
+err.config.templateEmpty = o modelo de nome de arquivo não pode ficar vazio
+err.config.templateNoDb = o modelo de nome de arquivo deve conter {db}
+err.config.templateInvalidChars = o modelo de nome de arquivo não pode conter \\ / : * ? " < > |
+err.config.mkdir = não foi possível criar a pasta {path}: {err}
+err.config.dirPermission = não foi possível definir as permissões da pasta {path}: {err}
+err.config.jobRead = não foi possível ler o arquivo do trabalho: {err}
+err.config.jobParse = não foi possível interpretar o arquivo do trabalho ({path}): {err}
+err.config.jobVersion = o arquivo do trabalho pertence a uma versão mais recente (v{version}); atualize o programa
+err.config.settingsRead = não foi possível ler o arquivo de configurações: {err}
+err.config.settingsParse = não foi possível interpretar o arquivo de configurações ({path}): {err}
+err.config.encrypt = não foi possível criptografar a senha: {err}
+err.config.decryptBase64 = o valor criptografado é inválido (não é base64)
+err.config.decrypt = não foi possível descriptografar a senha (ela foi criada em outro computador?): {err}
+
+# ---------- SQL Server (mssql) ----------
+err.mssql.connect = não foi possível conectar ao servidor: {err}
+err.mssql.login = O SQL Server recusou o logon: {err}. Verifique o nome de usuário e a senha (a autenticação do SQL também exige o modo "Autenticação do SQL Server e do Windows" no servidor). Com a autenticação do Windows, a conta que executa o trabalho (SYSTEM para tarefas agendadas) precisa de um logon no servidor.
+err.mssql.connInvalid = configurações de conexão inválidas: {err}
+err.mssql.serverInfo = não foi possível ler as informações do servidor: {err}
+err.mssql.listDatabases = não foi possível listar os bancos de dados: {err}
+err.mssql.backup = não foi possível fazer backup de {db}: {err}
+err.mssql.backupHint = não foi possível fazer backup de {db}: {err} — Dica: {hint}
+err.mssql.hintAccess = A conta de serviço do SQL Server (normalmente {account}) não consegue gravar nesta pasta; conceda a essa conta a permissão Modificar na pasta ou escolha uma pasta em que ela possa gravar.
+err.mssql.hintPath = A pasta não foi encontrada no computador que executa o SQL Server. A pasta de backup é resolvida pelo servidor (em um servidor remoto não é um caminho deste computador); crie a pasta ou use um caminho ou compartilhamento UNC acessível ao servidor.
+err.mssql.hintDiskFull = Não há espaço livre suficiente no disco de destino; libere espaço ou revise as configurações de retenção.
+err.mssql.verify = não foi possível verificar o backup ({file}): {err}
+err.mssql.backupSet = não foi possível ler as informações do backup ({db}): {err}
+err.mssql.canceled = operação cancelada ou tempo limite esgotado: {err}
+warn.mssql.insecureLogin = a senha do SQL Server é enviada ao servidor remoto sem verificar o certificado dele; alguém na rede poderia interceptá-la. Ative a criptografia com verificação de certificado ("Confiar no certificado do servidor" desligado) ou use a autenticação do Windows.
+
+# ---------- Modelo de nome de arquivo ----------
+err.template.unmatchedClose = o modelo de nome de arquivo tem um '}' sem par
+err.template.unclosed = o modelo de nome de arquivo tem um '{' não fechado
+err.template.unknown = marcador desconhecido no modelo de nome de arquivo: {{name}}
+
+# ---------- Execução do backup ----------
+err.backup.invalidJob = configurações do trabalho inválidas: {err}
+err.backup.alreadyRunning = o trabalho "{job}" já está em execução; esta execução não foi iniciada
+err.backup.lockHeld = o trabalho já está em execução
+err.backup.lock = não foi possível obter o bloqueio do trabalho: {err}
+err.backup.password = não foi possível descriptografar a senha salva; se o arquivo do trabalho foi copiado de outro computador, digite a senha novamente: {err}
+err.backup.noDatabases = não há bancos de dados para fazer backup
+err.backup.canceled = operação cancelada
+err.backup.deleteBak = zip criado, mas não foi possível excluir o .bak: {err}
+err.backup.access = não é possível acessar a pasta de backup: {msg}. A pasta deve permitir leitura, gravação e exclusão tanto para a conta de serviço do SQL Server quanto para a conta que executa este programa ({account}) (ex.: D:\\SqlBackups); em um servidor remoto o caminho de acesso deve ser um caminho UNC
+warn.backup.noCompression = a edição do servidor ({edition}) não oferece suporte à compactação de backup; compactação desativada
+
+reason.notFound = não encontrado no servidor
+reason.systemExcluded = os bancos de dados do sistema estão excluídos
+reason.tempdb = não é possível fazer backup do tempdb
+reason.state = o banco de dados não está em um estado que permita backup ({state})
+
+# ---------- Retenção ----------
+err.retention.readDir = não foi possível ler a pasta de backup: {err}
+err.retention.delete = não foi possível excluir alguns backups antigos: {err}
+warn.retention.noDate = retenção não aplicada porque o modelo de nome de arquivo não contém data (ano, mês e dia)
+warn.retention.canceled = operação cancelada; retenção não aplicada
+
+# ---------- ZIP (archive) ----------
+err.archive.dirNotFound = pasta não encontrada: {path}
+err.archive.dirNoPermission = sem permissão para acessar a pasta: {path}
+err.archive.dirAccess = não é possível acessar a pasta: {err}
+err.archive.notDir = o caminho não é uma pasta: {path}
+err.archive.noWrite = sem permissão de gravação na pasta ({path}): {err}
+err.archive.write = não é possível gravar na pasta ({path}): {err}
+err.archive.noRead = sem permissão de leitura na pasta ({path}): {err}
+err.archive.noDelete = sem permissão de exclusão na pasta ({path}): {err}
+err.archive.noFiles = não há arquivos para compactar
+err.archive.readBak = não foi possível ler o arquivo de backup: {err}
+err.archive.duplicateName = um zip não pode conter dois arquivos com o mesmo nome: {name}
+err.archive.rename = não foi possível renomear o arquivo zip: {err}
+err.archive.create = não foi possível criar o arquivo zip: {err}
+err.archive.writeZip = não foi possível gravar o arquivo zip: {err}
+err.archive.entry = não foi possível criar a entrada do zip: {err}
+err.archive.canceled = zip cancelado: {err}
+err.archive.compress = não foi possível compactar {name}: {err}
+err.archive.verify = falha na verificação do zip: {err}
+err.archive.verifyEntry = falha na verificação do zip ({name}): {err}
+err.archive.verifyCount = falha na verificação do zip: esperadas {want} entradas, encontradas {got}
+err.archive.verifyUnexpected = falha na verificação do zip: entrada inesperada {name}
+err.archive.verifySize = falha na verificação do zip: tamanho divergente em {name} ({got} / {want})
+err.archive.verifyReadSize = falha na verificação do zip: tamanho lido divergente em {name}
+
+# ---------- Registro em log ----------
+err.logging.mkdir = não foi possível criar a pasta de logs: {err}
+err.logging.open = não foi possível abrir o arquivo de log: {err}
+err.logging.runsMkdir = não foi possível criar a pasta de relatórios de execução: {err}
+err.logging.runWrite = não foi possível gravar o relatório de execução: {err}
+err.logging.runRead = não foi possível ler o relatório de execução: {err}
+err.logging.runParse = não foi possível interpretar o relatório de execução ({path}): {err}
+err.logging.cleanup = não foi possível excluir alguns arquivos de log antigos: {err}
+
+# ---------- Arquivo em lote e tarefa agendada (scheduler) ----------
+err.scheduler.exePath = não foi possível determinar o caminho do programa: {err}
+err.scheduler.path = caminho inválido {path}: {err}
+err.scheduler.badPath = o caminho não pode ser usado em uma linha de comando: "{path}"
+err.scheduler.percentPath = o caminho contém caracteres "%", que o Agendador de Tarefas expande como variáveis de ambiente: {path}
+err.scheduler.batchWrite = não foi possível gravar o arquivo em lote {path}: {err}
+err.scheduler.noUser = não foi possível determinar a conta de usuário da tarefa
+err.scheduler.accessDenied = o Agendador de Tarefas negou o acesso (são necessários direitos de administrador)
+err.scheduler.notFound = tarefa agendada não encontrada
+err.scheduler.connect = não foi possível conectar ao Agendador de Tarefas: {err}
+err.scheduler.create = não foi possível criar a tarefa agendada: {err}
+err.scheduler.delete = não foi possível excluir a tarefa agendada: {err}
+err.scheduler.run = não foi possível iniciar a tarefa agendada: {err}
+err.scheduler.query = não foi possível ler a tarefa agendada: {err}
+err.scheduler.elevate = não foi possível iniciar com direitos de administrador: {err}
+err.scheduler.elevateCancelled = os direitos de administrador não foram concedidos (solicitação do UAC cancelada)
+err.scheduler.exeCheck = não foi possível verificar as permissões de {path}: {err}
+err.scheduler.unsafeExe = uma tarefa SYSTEM não pode executar {exe}: {account} pode modificar {path} e, assim, executar seu próprio código como SYSTEM. Instale o programa com o instalador (Program Files) ou use uma pasta em que só administradores possam gravar.
+warn.scheduler.systemWindowsAuth = a tarefa é executada como SYSTEM com autenticação do Windows: o SQL Server precisa de um logon para NT AUTHORITY\\SYSTEM (DOMINIO\\COMPUTADOR$ em um servidor remoto) com permissão de backup
+warn.scheduler.systemNetworkPath = a tarefa é executada como SYSTEM: a pasta de rede {path} é acessada com a conta do computador (DOMINIO\\COMPUTADOR$), que precisa de permissão de leitura, gravação e exclusão
+warn.scheduler.currentUser = a tarefa só é executada enquanto {user} estiver conectado
+
+# ---------- Backend da interface (app) ----------
+err.app.jobNotFound = trabalho não encontrado: {job}
+err.app.jobExists = já existe um trabalho chamado "{job}"
+err.app.alreadyRunning = o trabalho "{job}" já está em execução
+err.app.renameRunning = o trabalho "{job}" está em execução; não é possível renomeá-lo agora
+err.app.deleteRunning = o trabalho "{job}" está em execução; não é possível excluí-lo agora
+err.app.elevatedExit = o comando executado com direitos de administrador falhou (código de saída {code})
+err.app.pathOutside = o arquivo não está na pasta de logs: {path}
+err.app.keepDays = a retenção de logs não pode ser negativa
+err.app.theme = tema desconhecido: {theme}
+warn.app.renamedTask = a tarefa agendada do nome antigo ({path}) ainda executa o trabalho antigo e vai falhar; exclua-a e crie a tarefa novamente
+warn.app.renamedBatch = o arquivo em lote do nome antigo ({path}) ainda executa o trabalho antigo
+warn.app.taskOutdated = a tarefa agendada ({path}) não corresponde às configurações salvas; atualize a tarefa
+
+# ---------- Mensagens de log ----------
+log.job.started = trabalho iniciado
+log.job.done = trabalho concluído
+log.job.failed = não foi possível executar o trabalho
+log.job.alreadyRunning = o trabalho já está em execução; execução não iniciada
+log.access.failed = não é possível acessar a pasta de backup; o zip e a retenção serão ignorados
+log.connected = conectado ao servidor
+log.targets = bancos de dados de destino determinados
+log.db.cannotBackup = não é possível fazer backup do banco de dados
+log.db.skipped = banco de dados ignorado
+log.backup.started = backup iniciado
+log.backup.done = backup concluído
+log.backup.failed = falha no backup
+log.backup.sizeUnknown = não foi possível ler o tamanho do backup
+log.zip.started = zip iniciado
+log.zip.done = zip concluído
+log.zip.failed = falha no zip
+log.retention.done = retenção aplicada
+log.retention.failed = não foi possível aplicar a retenção
+log.retention.noSuccess = retenção não aplicada porque nenhum backup foi bem-sucedido
+log.retention.deleted = backup antigo excluído
+log.cli.started = iniciado pela linha de comando
+log.gui.started = iniciado pela interface do usuário
+warn.run.noLogFile = {err}; nada será gravado no arquivo de log
+log.run.saved = relatório de execução gravado
+log.run.saveFailed = não foi possível gravar o relatório de execução
+log.cleanup.done = logs antigos limpos
+log.cleanup.failed = não foi possível limpar os logs antigos
+log.i18n.missing = há chaves ausentes nos arquivos de idioma
+
+# ---------- Resumo da execução ----------
+summary.header = Trabalho: {job}  Servidor: {server}  Duração: {elapsed}
+summary.error = ERRO: {msg}
+summary.warning = AVISO: {msg}
+summary.dbOK = [OK]   {db}  {size}  {elapsed}
+summary.dbFailed = [FALHA] {db}  {msg}
+summary.dbSkipped = [IGNORADO] {db}  {msg}
+summary.verified = verificado
+summary.zipOK = [ZIP]  {file}  {source} → {size}  {elapsed}
+summary.zipFailed = [FALHA ZIP] {file}  {msg}
+summary.bakDeleted = .bak excluído
+summary.deleted = [EXCL]  {file}  {size}
+summary.retentionFailed = [FALHA RETENÇÃO] {msg}
+summary.result = Resultado: {ok} com sucesso, {failed} com falha, {skipped} ignorados
+summary.zipErrors = {count} erro(s) de zip
+summary.retentionError = erro de retenção
+summary.exitCode = (código de saída {code})
+
+# ---------- Linha de comando ----------
+cli.usage = SqlBackup {version} – backup automático do MSSQL\n\nUso:\n  SqlBackup.exe                            abre a interface do usuário\n  SqlBackup.exe run   --job <trabalho> [-v] executa o trabalho (backup, verificação, zip, retenção)\n  SqlBackup.exe test  --job <trabalho>     testa a conexão e o acesso à pasta de backup\n  SqlBackup.exe list  --job <trabalho> [--json] lista os bancos de dados do servidor\n  SqlBackup.exe batch --job <trabalho> [--path <arquivo.bat>]\n                                           grava um arquivo em lote que executa o trabalho (padrão: jobs\\<trabalho>.bat)\n  SqlBackup.exe task create|delete|run|status --job <trabalho> [--elevate] [--json]\n                                           gerencia a tarefa agendada (\\SqlBackup\\<trabalho>)\n  SqlBackup.exe version                    mostra a versão\n\n<trabalho>: nome do trabalho (procurado em {jobsDir}) ou caminho de um arquivo .json\n  -v              também grava as entradas de log no console\n  --json          grava a saída em JSON\n  --elevate       solicita direitos de administrador (UAC) quando necessário\n  --lang <código> idioma (ex.: en, tr, pt); padrão: o idioma das configurações ou, se não houver, o do Windows\n  --home <pasta>  pasta de dados (padrão %ProgramData%\\SqlBackup)\n  --output <arquivo> grava toda a saída em um arquivo\n\nCódigos de saída: 0 sucesso, 1 falha parcial (task status: tarefa não encontrada), 2 falha/erro de configuração, 3 trabalho já em execução
+cli.error = ERRO: {msg}
+cli.warning = AVISO: {msg}
+cli.yes = sim
+cli.no = não
+cli.err.unknownCommand = comando desconhecido: {cmd}
+cli.err.unexpectedArg = argumento inesperado: {arg}
+cli.err.noJob = --job não especificado
+cli.err.jobNotFound = arquivo do trabalho não encontrado: {path}
+cli.err.connect = não foi possível conectar: {err}
+cli.warn.language = não foi possível carregar o idioma ({code}): {err}
+cli.phase.backup = backup
+cli.phase.verify = verificação
+cli.phase.zip = zip
+cli.test.server = Servidor
+cli.test.version = Versão
+cli.test.edition = Edição
+cli.test.protocol = Protocolo
+cli.test.login = Logon
+cli.test.loginValue = {login} (sysadmin: {sysadmin})
+cli.test.compression = Compactação
+cli.test.compressionYes = suportada
+cli.test.compressionNo = não suportada
+cli.test.defaultBackupDir = Pasta de backup padrão
+cli.test.access = Acesso à pasta de backup
+cli.test.accessOK = OK ({path})
+cli.test.accessFailed = ERRO
+cli.test.success = Conexão bem-sucedida.
+cli.list.header = BANCO DE DADOS\tESTADO\tRECUPERAÇÃO\tTAMANHO (MB)\tSISTEMA\tÚLTIMO COMPLETO\tBACKUP
+cli.list.failed = ERRO: {reason}
+cli.list.skipped = não ({reason})
+cli.list.footer = {count} banco(s) de dados, {backup} terão backup
+
+cli.warn.jobInvalid = o trabalho tem configurações inválidas e vai falhar ao ser executado: {err}
+cli.batch.saved = Arquivo em lote salvo: {path}
+cli.err.noTaskCommand = comando de tarefa não especificado (create, delete, run, status)
+cli.err.unknownTaskCommand = comando de tarefa desconhecido: {cmd} (create, delete, run, status)
+cli.err.needAdmin = {err}; execute em um prompt de comando de administrador ou adicione --elevate
+cli.warn.taskExeMismatch = a tarefa executa outro arquivo de programa: {exe}
+cli.task.created = Tarefa agendada criada: {path}
+cli.task.deleted = Tarefa agendada excluída: {path}
+cli.task.started = Tarefa agendada iniciada: {path}
+cli.task.notFound = Tarefa agendada não encontrada: {path}
+cli.task.nextRunAt = Próxima execução: {time}
+cli.task.path = Tarefa
+cli.task.state = Estado
+cli.task.account = Conta
+cli.task.lastRun = Última execução
+cli.task.lastResult = Último resultado
+cli.task.nextRun = Próxima execução
+cli.task.command = Comando
+cli.task.never = nunca
+cli.task.state.ready = pronta
+cli.task.state.running = em execução
+cli.task.state.queued = na fila
+cli.task.state.disabled = desabilitada
+cli.task.result.code = {code} ({text})
+cli.task.result.ok = sucesso
+cli.task.result.partial = falha parcial
+cli.task.result.failed = falha
+cli.task.result.alreadyRunning = o trabalho já estava em execução
+cli.task.result.running = em execução agora
+cli.task.result.other = erro do Agendador de Tarefas {code}
+
+# ---------- Interface do usuário (frontend) ----------
+gui.app.title = SqlBackup
+gui.app.version = Versão {version}
+gui.common.ok = OK
+gui.common.cancel = Cancelar
+gui.common.loading = Carregando…
+gui.menu.jobs = Trabalhos
+gui.menu.logs = Logs
+gui.menu.settings = Configurações
+gui.settings.appearance = Aparência
+gui.settings.language = Idioma
+gui.settings.theme = Tema
+gui.settings.themeDark = Escuro
+gui.settings.themeLight = Claro
+gui.settings.saved = Configurações salvas.
+gui.settings.about = Sobre
+gui.settings.version = Versão
+gui.settings.dataDir = Pasta de dados
+
+# ---------- GUI: Comum ----------
+gui.common.yes = Sim
+gui.common.no = Não
+gui.common.refresh = Atualizar
+gui.common.browse = Procurar…
+gui.common.selectFolder = Selecionar pasta
+
+# ---------- GUI: Dias ----------
+gui.day.mon = Seg
+gui.day.tue = Ter
+gui.day.wed = Qua
+gui.day.thu = Qui
+gui.day.fri = Sex
+gui.day.sat = Sáb
+gui.day.sun = Dom
+
+# ---------- GUI: Trabalhos ----------
+gui.jobs.new = Novo trabalho
+gui.jobs.empty = Ainda não há trabalhos de backup. Crie um trabalho para começar a fazer backup dos seus bancos de dados.
+gui.jobs.unreadable = Não foi possível ler alguns arquivos de trabalho:
+gui.jobs.server = Servidor
+gui.jobs.databases = Bancos de dados
+gui.jobs.allDatabases = Todos os bancos de dados (incluindo novos)
+gui.jobs.databaseCount = {count} banco(s) de dados
+gui.jobs.schedule = Agendamento
+gui.jobs.lastRun = Última execução
+gui.jobs.neverRun = Nunca executado
+gui.jobs.unreadableRun = Relatório ilegível
+gui.jobs.nextRun = Próxima execução
+gui.jobs.noTask = Nenhuma tarefa agendada
+gui.jobs.taskDisabled = Tarefa desabilitada
+gui.jobs.taskOutdated = Tarefa desatualizada
+gui.jobs.running = Em execução
+gui.jobs.runningElsewhere = Em execução em outro processo (ex.: tarefa agendada).
+gui.jobs.invalid = Configurações inválidas
+gui.jobs.invalidInfo = Este trabalho não pode ser executado até que os itens a seguir sejam corrigidos:
+gui.jobs.runNow = Executar agora
+gui.jobs.stop = Parar
+gui.jobs.stopTitle = Parar backup
+gui.jobs.stopConfirm = Parar o backup em andamento de "{job}"? O banco de dados que está sendo copiado será marcado como falho.
+gui.jobs.stopNotHere = Esta execução não foi iniciada nesta janela e não pode ser parada aqui.
+gui.jobs.edit = Editar
+gui.jobs.duplicate = Duplicar
+gui.jobs.duplicateTitle = Duplicar "{job}"
+gui.jobs.duplicateInfo = Todas as configurações, incluindo a senha salva e o agendamento, são copiadas. Nenhuma tarefa agendada é criada para a cópia.
+gui.jobs.duplicateName = Nome do novo trabalho
+gui.jobs.duplicated = Trabalho "{job}" criado.
+gui.jobs.history = Histórico
+gui.jobs.delete = Excluir
+gui.jobs.deleteTitle = Excluir trabalho
+gui.jobs.deleteConfirm = Excluir o trabalho "{job}"? A tarefa agendada e o arquivo .bat padrão dele também são excluídos (pode ser solicitada aprovação de administrador). Os logs e os arquivos de backup são mantidos.
+gui.jobs.deleted = Trabalho "{job}" excluído.
+
+# ---------- GUI: Resultado da execução ----------
+gui.run.starting = Iniciando…
+gui.run.phaseBackup = Fazendo backup de {db} ({index}/{total}) – {percent}%
+gui.run.phaseVerify = Verificando {db} ({index}/{total}) – {percent}%
+gui.run.phaseZip = Compactando {db} ({index}/{total}) – {percent}%
+gui.run.success = Bem-sucedido
+gui.run.partial = Falha parcial
+gui.run.failed = Falhou
+gui.run.alreadyRunning = Já em execução
+gui.run.doneSuccess = "{job}" foi concluído com sucesso.
+gui.run.donePartial = "{job}" foi concluído com erros. Veja os detalhes em Logs.
+gui.run.doneFailed = "{job}" falhou. Veja os detalhes em Logs.
+gui.run.doneFailedError = "{job}" falhou: {error}
+gui.run.doneAlreadyRunning = "{job}" não foi iniciado porque já está em execução.
+gui.run.job = Trabalho
+gui.run.status = Status
+gui.run.server = Servidor
+gui.run.edition = Edição
+gui.run.protocol = Protocolo
+gui.run.start = Início
+gui.run.duration = Duração
+gui.run.counts = Bancos de dados
+gui.run.countsText = {ok} com sucesso, {failed} com falha, {skipped} ignorados
+gui.run.warnings = Avisos:
+gui.run.databases = Bancos de dados
+gui.run.database = Banco de dados
+gui.run.dbSuccess = Bem-sucedido
+gui.run.dbFailed = Falhou
+gui.run.dbSkipped = Ignorado
+gui.run.file = Arquivo
+gui.run.size = Tamanho
+gui.run.verified = Verificado
+gui.run.error = Erro
+gui.run.archives = Arquivos ZIP
+gui.run.bakDeleted = .bak excluído
+gui.run.retention = Limpeza de backups antigos
+gui.run.deletedFile = Arquivo excluído
+gui.run.fileDate = Data do backup
+gui.run.nothingDeleted = Não há backups antigos para excluir.
+
+# ---------- GUI: Editor de trabalhos ----------
+gui.editor.newJob = Novo trabalho
+gui.editor.unsaved = Alterações não salvas
+gui.editor.back = Trabalhos
+gui.editor.save = Salvar
+gui.editor.saved = Trabalho "{job}" salvo.
+gui.editor.saveFailed = O trabalho não foi salvo. Corrija os campos marcados.
+gui.editor.saveErrors = Não foi possível salvar o trabalho:
+gui.editor.saveWarnings = Salvo com avisos:
+gui.editor.saveFirstTitle = Salvar trabalho
+gui.editor.saveFirst = Esta ação usa o trabalho salvo. Salvar as alterações agora?
+gui.editor.discardTitle = Alterações não salvas
+gui.editor.discard = O trabalho tem alterações não salvas. Sair sem salvar?
+gui.editor.discardConfirm = Descartar alterações
+gui.editor.name = Nome do trabalho
+gui.editor.namePlaceholder = ex.: Backup_Noturno
+gui.editor.nameHint = Usado como nome de arquivo e nome da tarefa agendada: letras, dígitos, '_', '-' e '.' (máx. 64).
+gui.editor.tabConnection = Conexão
+gui.editor.tabDatabases = Bancos de dados
+gui.editor.tabBackup = Backup
+gui.editor.tabArchive = ZIP e retenção
+gui.editor.tabSchedule = Agendamento
+gui.editor.tabErrors = {count} erro(s) nesta guia
+
+gui.close.title = Fechar o SqlBackup
+gui.close.unsaved = O editor de trabalhos tem alterações não salvas; elas serão perdidas.
+gui.close.running = Os backups em andamento serão cancelados: {jobs}
+gui.close.confirm = Fechar mesmo assim?
+
+# ---------- GUI: Conexão ----------
+gui.conn.server = Servidor
+gui.conn.serverName = Nome do servidor
+gui.conn.serverPlaceholder = ex.: . ou SRV01 ou 10.0.0.5
+gui.conn.serverHint = Nome do host ou endereço IP. Para este computador, use "." ou localhost. HOST\\INSTANCIA também é aceito.
+gui.conn.instance = Instância
+gui.conn.instanceHint = Deixe em branco para a instância padrão (MSSQLSERVER).
+gui.conn.port = Porta
+gui.conn.portHint = Vazio = padrão / resolvida pela instância. Somente para TCP.
+gui.conn.protocol = Protocolo
+gui.conn.protocolAuto = Automático
+gui.conn.protocolHint = O modo automático tenta os protocolos um a um (local: Shared Memory, Named Pipes, TCP; remoto: TCP, Named Pipes).
+gui.conn.auth = Autenticação
+gui.conn.authType = Tipo de autenticação
+gui.conn.authSql = Autenticação do SQL Server
+gui.conn.authWindows = Autenticação do Windows
+gui.conn.user = Nome de usuário
+gui.conn.password = Senha
+gui.conn.passwordStored = (senha salva inalterada)
+gui.conn.passwordHint = Deixe em branco para manter a senha salva. Ela é armazenada criptografada para este computador (DPAPI).
+gui.conn.passwordUnreadable = A senha salva não pode ser descriptografada neste computador (o trabalho pode ter sido copiado de outro computador). Digite a senha novamente. ({error})
+gui.conn.windowsAuthInfo = É usada a conta que executa o backup. Se a tarefa agendada for executada como SYSTEM, o SQL Server precisa de um logon para NT AUTHORITY\\SYSTEM (em um servidor remoto: DOMINIO\\COMPUTADOR$) com permissão de backup.
+gui.conn.options = Opções
+gui.conn.encrypt = Criptografar a conexão
+gui.conn.trustCert = Confiar no certificado do servidor
+gui.conn.trustCertHint = Sem criptografia, apenas o logon é criptografado e o certificado do servidor não é validado. Com a criptografia ativada, ative esta opção para certificados autoassinados (ex.: uma instalação padrão do SQL Express).
+gui.conn.timeout = Tempo limite de conexão (segundos)
+gui.conn.test = Teste de conexão
+gui.conn.testButton = Testar conexão
+gui.conn.testing = Conectando…
+gui.conn.testOk = Conexão bem-sucedida.
+gui.conn.infoServer = Servidor
+gui.conn.infoVersion = Versão
+gui.conn.infoEdition = Edição
+gui.conn.infoProtocol = Protocolo
+gui.conn.infoLogin = Logon
+gui.conn.infoSysAdmin = sysadmin
+gui.conn.infoBackupDir = Pasta de backup padrão
+gui.conn.noCompression = Esta edição não oferece suporte à compactação de backup; a compactação é desativada automaticamente quando o trabalho é executado.
+
+# ---------- GUI: Bancos de dados ----------
+gui.db.options = Seleção
+gui.db.includeNew = Incluir novos bancos de dados
+gui.db.includeNewHint = Quando ativado, em cada execução é feito backup de todos os bancos de dados do servidor, exceto os desmarcados; bancos de dados criados depois são incluídos automaticamente.
+gui.db.excludeSystem = Excluir bancos de dados do sistema (master, model, msdb)
+gui.db.list = Bancos de dados no servidor
+gui.db.refresh = Carregar lista
+gui.db.loading = Carregando bancos de dados…
+gui.db.notLoaded = Informe os dados de conexão e carregue a lista de bancos de dados.
+gui.db.selectedList = Selecionados:
+gui.db.summarySelected = {count} selecionado(s)
+gui.db.summaryAllNew = Todos os bancos de dados, {count} excluído(s)
+gui.db.selectAll = Selecionar tudo
+gui.db.missing = Selecionados, mas não encontrados no servidor: {list}
+gui.db.removeMissing = Remover da seleção
+gui.db.empty = Nenhum banco de dados encontrado.
+gui.db.name = Nome
+gui.db.system = sistema
+gui.db.readOnly = somente leitura
+gui.db.state = Estado
+gui.db.notBackupable = não é possível fazer backup
+gui.db.recovery = Modelo de recuperação
+gui.db.size = Tamanho
+gui.db.lastBackup = Último backup completo
+gui.db.never = nunca
+
+# ---------- GUI: Backup ----------
+gui.backup.folders = Pasta de backup
+gui.backup.serverPath = Pasta no SQL Server (caminho no servidor)
+gui.backup.serverPathHint = O SQL Server grava o backup aqui, visto a partir do computador do SQL Server (ex.: D:\\SqlBackups).
+gui.backup.useServerDefault = Padrão do servidor
+gui.backup.accessPath = A mesma pasta vista por este programa (caminho de acesso)
+gui.backup.accessPathHint = Deixe em branco para um servidor local. Para um servidor remoto, informe o caminho do compartilhamento (ex.: \\\\SRV01\\SqlBackups). Necessário para ZIP e retenção.
+gui.backup.checkAccess = Verificar acesso
+gui.backup.noFolder = Informe uma pasta primeiro.
+gui.backup.accessOk = Este programa pode ler, gravar e excluir em {path}.
+gui.backup.accessFailed = Sem acesso a {path}: {error}
+gui.backup.pathsInfo = O arquivo de backup é gravado pela conta de serviço do SQL Server (ex.: NT Service\\MSSQL$SQLEXPRESS), não por este programa. Escolha uma pasta que tanto a conta de serviço quanto a conta que executa o trabalho possam acessar, ex.: D:\\SqlBackups (a pasta padrão em Program Files normalmente nega acesso a outras contas).
+gui.backup.fileName = Nome do arquivo
+gui.backup.template = Modelo de nome de arquivo
+gui.backup.templateHint = {db} é obrigatório. Também: {server}, {job} e partes de data como {yyyyMMdd}, {HHmmss}, {yyyy-MM-dd}. .bak é adicionado se estiver faltando.
+gui.backup.preview = Exemplo:
+gui.backup.options = Opções
+gui.backup.compression = Compactação
+gui.backup.checksum = Soma de verificação
+gui.backup.copyOnly = Backup somente cópia
+gui.backup.copyOnlyHint = Backups somente cópia não afetam a cadeia de backup de outras ferramentas de backup.
+gui.backup.verify = Verificar após o backup (RESTORE VERIFYONLY)
+gui.backup.commandTimeout = Tempo limite de comando (minutos)
+gui.backup.commandTimeoutHint = 0 = ilimitado.
+gui.backup.compressionUnsupported = O servidor conectado não oferece suporte à compactação (Express/Web); ela será desativada na execução.
+
+# ---------- GUI: ZIP e retenção ----------
+gui.archive.zip = ZIP
+gui.archive.zipEnabled = Compactar os backups em ZIP
+gui.archive.mode = Arquivos ZIP
+gui.archive.modeSingle = Um ZIP para todos os bancos de dados
+gui.archive.modePerDb = Um ZIP por banco de dados
+gui.archive.deleteBak = Excluir os arquivos .bak após um ZIP bem-sucedido
+gui.archive.zipHint = O ZIP é criado depois que todos os backups terminam, na mesma pasta.
+gui.archive.retention = Retenção
+gui.archive.retentionMode = Excluir backups antigos
+gui.archive.retentionNone = Nunca
+gui.archive.retentionByDays = Mais antigos que um número de dias
+gui.archive.retentionByCount = Manter os últimos N backups
+gui.archive.retentionDays = Dias a manter
+gui.archive.retentionDaysHint = Backups mais antigos são excluídos após um backup bem-sucedido.
+gui.archive.retentionCount = Backups a manter (por banco de dados)
+gui.archive.retentionCountHint = Backups mais antigos além deste número são excluídos após um backup bem-sucedido.
+gui.archive.retentionInfo = Somente os arquivos que correspondem ao modelo de nome de arquivo deste trabalho são excluídos; a data do backup é lida do nome do arquivo. Dois trabalhos que usam a mesma pasta, o mesmo modelo e o mesmo banco de dados compartilham os mesmos arquivos.
+gui.archive.accessWarning = O ZIP e a retenção trabalham diretamente com os arquivos, por isso este programa (e a conta da tarefa agendada) precisa de acesso de leitura, gravação e exclusão ao caminho de acesso. Use "Verificar acesso" na guia Backup.
+
+# ---------- GUI: Agendamento ----------
+gui.schedule.title = Agendamento
+gui.schedule.frequency = Frequência
+gui.schedule.daily = Diário
+gui.schedule.weekly = Semanal
+gui.schedule.hourly = A cada algumas horas
+gui.schedule.time = Horário
+gui.schedule.startTime = Horário de início
+gui.schedule.days = Dias
+gui.schedule.interval = Repetir a cada (horas)
+gui.schedule.intervalHint = 1-23. A primeira execução ocorre no horário de início.
+gui.schedule.runAs = Executar como
+gui.schedule.runAsSystem = SYSTEM (recomendado)
+gui.schedule.runAsCurrent = Usuário atual
+gui.schedule.runAsHint = SYSTEM é executado mesmo quando ninguém está conectado; criar a tarefa exige aprovação de administrador.
+gui.schedule.warnings = Verifique antes de criar a tarefa:
+gui.schedule.dailyText = Diariamente às {time}
+gui.schedule.weeklyText = {days} às {time}
+gui.schedule.hourlyText = A cada {hours} h a partir das {time}
+gui.task.title = Tarefa agendada
+gui.task.notSaved = Salve o trabalho para criar uma tarefa agendada.
+gui.task.none = Nenhuma tarefa agendada foi criada para este trabalho.
+gui.task.path = Tarefa
+gui.task.state = Estado
+gui.task.stateReady = Pronta
+gui.task.stateRunning = Em execução
+gui.task.stateDisabled = Desabilitada
+gui.task.stateUnknown = Desconhecido
+gui.task.lastRun = Última execução
+gui.task.never = Nunca
+gui.task.nextRun = Próxima execução
+gui.task.account = Conta
+gui.task.outdated = A tarefa não corresponde às configurações salvas do trabalho (agendamento, conta ou caminho do programa). Atualize a tarefa.
+gui.task.create = Criar tarefa
+gui.task.update = Atualizar tarefa
+gui.task.created = Tarefa agendada salva.
+gui.task.run = Executar tarefa agora
+gui.task.started = Tarefa iniciada. O resultado aparecerá em Logs.
+gui.task.delete = Excluir tarefa
+gui.task.deleteTitle = Excluir tarefa agendada
+gui.task.deleteConfirm = Excluir a tarefa agendada {path}? O trabalho em si é mantido.
+gui.task.deleted = Tarefa agendada excluída.
+gui.task.uacHint = As tarefas usam o trabalho salvo. O Windows pode solicitar aprovação de administrador (UAC).
+gui.batch.title = Arquivo em lote
+gui.batch.hint = Um arquivo .bat que executa este trabalho, para uso com outros agendadores ou execuções manuais. Ele não contém senha.
+gui.batch.save = Salvar .bat…
+gui.batch.saved = Salvo: {path}
+
+# ---------- GUI: Logs ----------
+gui.logs.allJobs = Todos os trabalhos
+gui.logs.tabRuns = Histórico de execuções
+gui.logs.tabFiles = Arquivos de log
+gui.logs.start = Início
+gui.logs.job = Trabalho
+gui.logs.status = Status
+gui.logs.databases = Bancos de dados
+gui.logs.duration = Duração
+gui.logs.error = Erro
+gui.logs.unreadable = Ilegível
+gui.logs.noRuns = Ainda não há execuções.
+gui.logs.runTitle = Detalhes da execução
+gui.logs.date = Data
+gui.logs.size = Tamanho
+gui.logs.file = Arquivo
+gui.logs.noFiles = Nenhum arquivo de log.
+gui.logs.logTitle = Log: {job} – {date}
+gui.logs.truncated = O arquivo é grande ({size}); apenas o final é exibido.
+
+# ---------- GUI: Configurações ----------
+gui.settings.defaults = Padrões
+gui.settings.defaultServerPath = Pasta de backup padrão (caminho no servidor)
+gui.settings.defaultServerPathHint = Sugerida para novos trabalhos.
+gui.settings.defaultAccessPath = Caminho de acesso padrão
+gui.settings.defaultAccessPathHint = Sugerido para novos trabalhos; deixe em branco ao fazer backup de um servidor local.
+gui.settings.logKeepDays = Manter logs por (dias)
+gui.settings.logKeepDaysHint = Arquivos de log e relatórios de execução mais antigos são excluídos. Vazio = 30.
+gui.settings.saveDefaults = Salvar

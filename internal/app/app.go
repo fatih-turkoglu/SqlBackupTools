@@ -62,14 +62,19 @@ func New(version string) *App {
 }
 
 // Startup, Wails OnStartup işlevidir: olayları bağlar, veri klasörlerini
-// oluşturur ve dili ayarlardan yükler (sorun olursa İngilizce).
+// oluşturur ve dili ayarlardan yükler; ayarda dil yoksa Windows diline
+// uyan dil, o da yoksa İngilizce seçilir.
 func Startup(a *App) func(context.Context) {
 	return func(ctx context.Context) {
 		a.ctx = ctx
 		a.emit = func(event string, data any) { runtime.EventsEmit(ctx, event, data) }
 		s, err := config.LoadSettings()
 		a.startupErr = errors.Join(config.EnsureDirs(), err)
-		_ = i18n.SetLanguage(s.Language)
+		code := s.Language
+		if code == "" {
+			code = i18n.Detect()
+		}
+		_ = i18n.SetLanguage(code)
 	}
 }
 
@@ -151,6 +156,7 @@ func (a *App) GetSettings() (config.Settings, error) {
 }
 
 // SaveSettings, uygulama ayarlarını kaydeder; dil değiştiyse uygulanır.
+// Dil boşsa boş kalır (açılışta Windows dili kullanılmaya devam eder).
 func (a *App) SaveSettings(s config.Settings) error {
 	if s.LogKeepDays < 0 {
 		return i18n.Errorf("err.app.keepDays")
@@ -158,12 +164,14 @@ func (a *App) SaveSettings(s config.Settings) error {
 	if s.Theme != "" && s.Theme != config.ThemeDark && s.Theme != config.ThemeLight {
 		return i18n.Errorf("err.app.theme", "theme", s.Theme)
 	}
-	if s.Language != "" && s.Language != i18n.Language() {
-		if err := i18n.SetLanguage(s.Language); err != nil {
-			return err
+	if s.Language != "" {
+		if s.Language != i18n.Language() {
+			if err := i18n.SetLanguage(s.Language); err != nil {
+				return err
+			}
 		}
+		s.Language = i18n.Language()
 	}
-	s.Language = i18n.Language()
 	return config.SaveSettings(s)
 }
 

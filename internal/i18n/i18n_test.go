@@ -153,6 +153,38 @@ func TestLanguages(t *testing.T) {
 	}
 }
 
+func TestDetect(t *testing.T) {
+	dir := t.TempDir()
+	useDir(t, dir)
+	writeLang(t, dir, "tr.lng", "")
+	writeLang(t, dir, "pt.lng", "")
+	writeLang(t, dir, "zh-tw.lng", "")
+	t.Cleanup(func() { SetSystemLanguages(nil) })
+	tests := []struct {
+		system []string
+		want   string
+	}{
+		{[]string{"tr-TR", "en-US"}, "tr"},
+		{[]string{"pt-BR"}, "pt"},             // ana dile düşer
+		{[]string{"zh-TW", "tr-TR"}, "zh-tw"}, // tam etiket önce
+		{[]string{"zh_CN", "ja-JP"}, Default}, // uyan yok
+		{[]string{"ja-JP", "pt-PT"}, "pt"},    // tercih sırasında sonraki dil
+		{[]string{"en-GB", "tr-TR"}, Default}, // İngilizce her zaman var
+		{nil, Default},
+	}
+	for _, tt := range tests {
+		SetSystemLanguages(func() []string { return tt.system })
+		if got := Detect(); got != tt.want {
+			t.Errorf("%v: %s, beklenen %s", tt.system, got, tt.want)
+		}
+	}
+	// Gerçek Windows dilleri okunabilmeli (sonuç makineye bağlı).
+	SetSystemLanguages(nil)
+	if len(windowsLanguages()) == 0 {
+		t.Error("Windows arayüz dili okunamadı")
+	}
+}
+
 func TestError(t *testing.T) {
 	base := errors.New("Access is denied.")
 	err := Errorf("err.archive.noWrite", "path", `D:\Yedek`, "err", base)

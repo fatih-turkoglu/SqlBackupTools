@@ -22,9 +22,11 @@ func LangDir() string {
 }
 
 // Use, dil klasörünü repo içindekine ayarlar ve dili seçer; dil dosyası
-// yüklenemez veya bozuksa testleri durdurur.
+// yüklenemez veya bozuksa testleri durdurur. Sonuç makinenin Windows diline
+// bağlı olmasın diye sistem dili yok sayılır (Detect → İngilizce).
 func Use(code string) {
 	i18n.SetDir(LangDir())
+	i18n.SetSystemLanguages(func() []string { return nil })
 	if err := i18n.SetLanguage(code); err != nil {
 		fmt.Fprintln(os.Stderr, "i18ntest:", err)
 		os.Exit(2)

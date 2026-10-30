@@ -77,8 +77,8 @@ func Main(args []string, version string) int {
 	return e.main(args)
 }
 
-// setup, veri klasörünü (--home), dili (--lang → ayarlar → İngilizce) ve
-// ayarları yükler; bu argümanları listeden çıkarır. Sorunlar uyarı olarak
+// setup, veri klasörünü (--home), dili (--lang → ayarlar → Windows dili →
+// İngilizce) ve ayarları yükler; bu argümanları listeden çıkarır. Sorunlar uyarı olarak
 // yazılır, çalışmayı durdurmaz.
 func (e *env) setup(args []string) []string {
 	// --home, SQLBACKUP_HOME'un karşılığıdır: zamanlanmış görev ve
@@ -93,6 +93,9 @@ func (e *env) setup(args []string) []string {
 	code := langArg
 	if code == "" {
 		code = settings.Language
+	}
+	if code == "" {
+		code = i18n.Detect()
 	}
 	// Dil, uyarı metinlerinden önce seçilmeli.
 	if err := i18n.SetLanguage(code); err != nil {

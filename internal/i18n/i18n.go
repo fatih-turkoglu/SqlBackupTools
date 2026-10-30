@@ -34,6 +34,8 @@ var (
 	current map[string]string // seçili dil (İngilizce seçiliyse diskteki en.lng)
 	english map[string]string // gömülü İngilizce
 	missing = map[string]bool{}
+	// systemLanguages, işletim sisteminin dil etiketlerini tercih sırasıyla döner.
+	systemLanguages = windowsLanguages
 )
 
 func init() {
@@ -64,6 +66,40 @@ func SetDir(d string) {
 	mu.Lock()
 	dir = d
 	mu.Unlock()
+}
+
+// SetSystemLanguages, Detect'in kullandığı sistem dili kaynağını değiştirir
+// (testler için; nil → Windows dilleri).
+func SetSystemLanguages(f func() []string) {
+	if f == nil {
+		f = windowsLanguages
+	}
+	mu.Lock()
+	systemLanguages = f
+	mu.Unlock()
+}
+
+// Detect, Windows arayüz diline uyan kullanılabilir dilin kodunu döner:
+// tercih edilen her dil için önce tam etiket (pt-br.lng), sonra ana dil
+// (pt.lng) aranır. Uyan dil yoksa İngilizce.
+func Detect() string {
+	mu.RLock()
+	f := systemLanguages
+	mu.RUnlock()
+	available := map[string]bool{}
+	for _, l := range Languages() {
+		available[l.Code] = true
+	}
+	for _, tag := range f() {
+		tag = strings.ToLower(strings.ReplaceAll(strings.TrimSpace(tag), "_", "-"))
+		base, _, _ := strings.Cut(tag, "-")
+		for _, c := range []string{tag, base} {
+			if available[c] {
+				return c
+			}
+		}
+	}
+	return Default
 }
 
 // ErrUnknownLanguage, istenen dilin dosyası bulunamadığında döner.

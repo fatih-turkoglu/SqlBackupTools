@@ -1,0 +1,606 @@
+# SqlBackup-Sprachdatei – Deutsch
+# Format: Schlüssel = Wert  (UTF-8). Zeilen, die mit "#" beginnen, sind Kommentare.
+# Platzhalter wie {name} werden zur Laufzeit ersetzt; beim Übersetzen unverändert lassen.
+# Escapes: \n neue Zeile, \t Tabulator, \\ Backslash.
+@code = de
+@name = Deutsch
+
+# ---------- Allgemein ----------
+common.unknown = unbekannt
+common.taskDescription = Führt den SqlBackup-Auftrag "{job}" aus (von SqlBackup erstellt).
+common.batchFiles = Batchdateien
+
+# ---------- Auftragseinstellungen (config) ----------
+err.config.nameInvalid = der Auftragsname muss 1-64 Zeichen lang sein und darf nur Buchstaben, Ziffern, '_', '-' und '.' enthalten
+err.config.nameDots = der Auftragsname darf nicht nur aus Punkten bestehen
+err.config.serverEmpty = der Servername darf nicht leer sein
+err.config.portRange = der Port muss zwischen 0 und 65535 liegen
+err.config.portTCPOnly = ein Port kann nur mit dem TCP-Protokoll verwendet werden
+err.config.protocolInvalid = ungültiges Protokoll: "{value}"
+err.config.userEmpty = für die SQL-Authentifizierung ist ein Benutzername erforderlich
+err.config.passwordEmpty = für die SQL-Authentifizierung ist ein Kennwort erforderlich
+err.config.authInvalid = ungültiger Authentifizierungstyp: "{value}"
+err.config.timeoutNegative = das Verbindungs-Timeout darf nicht negativ sein
+err.config.noDatabase = es muss mindestens eine Datenbank ausgewählt werden
+err.config.serverPathEmpty = der Sicherungsordner (Serverpfad) darf nicht leer sein
+err.config.commandTimeoutNegative = das Befehls-Timeout darf nicht negativ sein
+err.config.deleteBakNeedsZip = zum Löschen der .bak-Dateien nach dem ZIP muss die ZIP-Option aktiviert sein
+err.config.retentionValue = der Aufbewahrungswert muss größer als 0 sein
+err.config.retentionModeInvalid = ungültiger Aufbewahrungsmodus: "{value}"
+err.config.scheduleTime = die Uhrzeit des Zeitplans muss im Format HH:MM angegeben werden (z. B. 02:00)
+err.config.scheduleNoDays = für einen wöchentlichen Zeitplan muss mindestens ein Tag ausgewählt werden
+err.config.scheduleDayInvalid = ungültiger Tag: "{value}"
+err.config.scheduleInterval = das Intervall des stündlichen Zeitplans muss 1-23 Stunden betragen
+err.config.scheduleFrequencyInvalid = ungültige Häufigkeit des Zeitplans: "{value}"
+err.config.runAsInvalid = ungültiges Ausführungskonto: "{value}"
+err.config.templateEmpty = die Dateinamenvorlage darf nicht leer sein
+err.config.templateNoDb = die Dateinamenvorlage muss {db} enthalten
+err.config.templateInvalidChars = die Dateinamenvorlage darf \\ / : * ? " < > | nicht enthalten
+err.config.mkdir = Ordner {path} konnte nicht erstellt werden: {err}
+err.config.dirPermission = Berechtigungen für den Ordner {path} konnten nicht gesetzt werden: {err}
+err.config.jobRead = Auftragsdatei konnte nicht gelesen werden: {err}
+err.config.jobParse = Auftragsdatei konnte nicht verarbeitet werden ({path}): {err}
+err.config.jobVersion = die Auftragsdatei stammt von einer neueren Version (v{version}); bitte aktualisieren Sie das Programm
+err.config.settingsRead = Einstellungsdatei konnte nicht gelesen werden: {err}
+err.config.settingsParse = Einstellungsdatei konnte nicht verarbeitet werden ({path}): {err}
+err.config.encrypt = Kennwort konnte nicht verschlüsselt werden: {err}
+err.config.decryptBase64 = der verschlüsselte Wert ist ungültig (kein Base64)
+err.config.decrypt = Kennwort konnte nicht entschlüsselt werden (wurde es auf einem anderen Computer erstellt?): {err}
+
+# ---------- SQL Server (mssql) ----------
+err.mssql.connect = Verbindung zum Server fehlgeschlagen: {err}
+err.mssql.login = SQL Server hat die Anmeldung abgelehnt: {err}. Prüfen Sie Benutzername und Kennwort (für die SQL-Authentifizierung muss auf dem Server außerdem der Modus "SQL Server- und Windows-Authentifizierung" aktiv sein). Bei Windows-Authentifizierung benötigt das Konto, das den Auftrag ausführt (bei geplanten Aufgaben SYSTEM), eine Anmeldung auf dem Server.
+err.mssql.connInvalid = ungültige Verbindungseinstellungen: {err}
+err.mssql.serverInfo = Serverinformationen konnten nicht gelesen werden: {err}
+err.mssql.listDatabases = Datenbanken konnten nicht aufgelistet werden: {err}
+err.mssql.backup = {db} konnte nicht gesichert werden: {err}
+err.mssql.backupHint = {db} konnte nicht gesichert werden: {err} — Hinweis: {hint}
+err.mssql.hintAccess = Das SQL Server-Dienstkonto (normalerweise {account}) kann nicht in diesen Ordner schreiben; erteilen Sie diesem Konto die Berechtigung "Ändern" für den Ordner oder wählen Sie einen Ordner, in den es schreiben kann.
+err.mssql.hintPath = Der Ordner wurde auf dem Computer, auf dem SQL Server läuft, nicht gefunden. Der Sicherungsordner wird vom Server aufgelöst (bei einem Remoteserver ist es kein Pfad auf diesem Computer); erstellen Sie den Ordner oder verwenden Sie einen Pfad oder eine UNC-Freigabe, die der Server erreichen kann.
+err.mssql.hintDiskFull = Auf dem Zieldatenträger ist nicht genügend freier Speicherplatz vorhanden; geben Sie Speicherplatz frei oder überprüfen Sie die Aufbewahrungseinstellungen.
+err.mssql.verify = Sicherung konnte nicht überprüft werden ({file}): {err}
+err.mssql.backupSet = Sicherungsinformationen konnten nicht gelesen werden ({db}): {err}
+err.mssql.canceled = Vorgang abgebrochen oder Zeitüberschreitung: {err}
+warn.mssql.insecureLogin = das SQL Server-Kennwort wird an den Remoteserver gesendet, ohne dessen Zertifikat zu überprüfen; jemand im Netzwerk könnte es abfangen. Aktivieren Sie die Verschlüsselung mit Zertifikatsprüfung ("Serverzertifikat vertrauen" aus) oder verwenden Sie die Windows-Authentifizierung.
+
+# ---------- Dateinamenvorlage ----------
+err.template.unmatchedClose = die Dateinamenvorlage enthält ein '}' ohne Gegenstück
+err.template.unclosed = die Dateinamenvorlage enthält ein nicht geschlossenes '{'
+err.template.unknown = unbekannter Platzhalter in der Dateinamenvorlage: {{name}}
+
+# ---------- Sicherungsausführung ----------
+err.backup.invalidJob = ungültige Auftragseinstellungen: {err}
+err.backup.alreadyRunning = der Auftrag "{job}" wird bereits ausgeführt; dieser Lauf wurde nicht gestartet
+err.backup.lockHeld = der Auftrag wird bereits ausgeführt
+err.backup.lock = Auftragssperre konnte nicht abgerufen werden: {err}
+err.backup.password = das gespeicherte Kennwort konnte nicht entschlüsselt werden; wenn die Auftragsdatei von einem anderen Computer kopiert wurde, geben Sie das Kennwort erneut ein: {err}
+err.backup.noDatabases = keine Datenbanken zu sichern
+err.backup.canceled = Vorgang abgebrochen
+err.backup.deleteBak = ZIP erstellt, aber .bak konnte nicht gelöscht werden: {err}
+err.backup.access = kein Zugriff auf den Sicherungsordner: {msg}. Der Ordner muss sowohl für das SQL Server-Dienstkonto als auch für das Konto, das dieses Programm ausführt ({account}), lesbar, beschreibbar und löschbar sein (z. B. D:\\SqlBackups); bei einem Remoteserver muss der Zugriffspfad ein UNC-Pfad sein
+warn.backup.noCompression = die Server-Edition ({edition}) unterstützt keine Sicherungskomprimierung; Komprimierung deaktiviert
+
+reason.notFound = auf dem Server nicht gefunden
+reason.systemExcluded = Systemdatenbanken sind ausgeschlossen
+reason.tempdb = tempdb kann nicht gesichert werden
+reason.state = die Datenbank befindet sich in keinem Zustand, der eine Sicherung erlaubt ({state})
+
+# ---------- Aufbewahrung ----------
+err.retention.readDir = Sicherungsordner konnte nicht gelesen werden: {err}
+err.retention.delete = einige alte Sicherungen konnten nicht gelöscht werden: {err}
+warn.retention.noDate = Aufbewahrung nicht angewendet, da die Dateinamenvorlage kein Datum (Jahr, Monat und Tag) enthält
+warn.retention.canceled = Vorgang abgebrochen; Aufbewahrung nicht angewendet
+
+# ---------- ZIP (archive) ----------
+err.archive.dirNotFound = Ordner nicht gefunden: {path}
+err.archive.dirNoPermission = keine Berechtigung für den Zugriff auf den Ordner: {path}
+err.archive.dirAccess = kein Zugriff auf den Ordner: {err}
+err.archive.notDir = der Pfad ist kein Ordner: {path}
+err.archive.noWrite = keine Schreibberechtigung für den Ordner ({path}): {err}
+err.archive.write = in den Ordner kann nicht geschrieben werden ({path}): {err}
+err.archive.noRead = keine Leseberechtigung für den Ordner ({path}): {err}
+err.archive.noDelete = keine Löschberechtigung für den Ordner ({path}): {err}
+err.archive.noFiles = keine Dateien zum Zippen
+err.archive.readBak = Sicherungsdatei konnte nicht gelesen werden: {err}
+err.archive.duplicateName = ein ZIP kann nicht zwei Dateien mit demselben Namen enthalten: {name}
+err.archive.rename = ZIP-Datei konnte nicht umbenannt werden: {err}
+err.archive.create = ZIP-Datei konnte nicht erstellt werden: {err}
+err.archive.writeZip = ZIP-Datei konnte nicht geschrieben werden: {err}
+err.archive.entry = ZIP-Eintrag konnte nicht erstellt werden: {err}
+err.archive.canceled = ZIP abgebrochen: {err}
+err.archive.compress = {name} konnte nicht gezippt werden: {err}
+err.archive.verify = ZIP-Überprüfung fehlgeschlagen: {err}
+err.archive.verifyEntry = ZIP-Überprüfung fehlgeschlagen ({name}): {err}
+err.archive.verifyCount = ZIP-Überprüfung fehlgeschlagen: {want} Einträge erwartet, {got} gefunden
+err.archive.verifyUnexpected = ZIP-Überprüfung fehlgeschlagen: unerwarteter Eintrag {name}
+err.archive.verifySize = ZIP-Überprüfung fehlgeschlagen: Größenabweichung bei {name} ({got} / {want})
+err.archive.verifyReadSize = ZIP-Überprüfung fehlgeschlagen: Abweichung der gelesenen Größe bei {name}
+
+# ---------- Protokollierung ----------
+err.logging.mkdir = Protokollordner konnte nicht erstellt werden: {err}
+err.logging.open = Protokolldatei konnte nicht geöffnet werden: {err}
+err.logging.runsMkdir = Ordner für Laufprotokolle konnte nicht erstellt werden: {err}
+err.logging.runWrite = Laufprotokoll konnte nicht geschrieben werden: {err}
+err.logging.runRead = Laufprotokoll konnte nicht gelesen werden: {err}
+err.logging.runParse = Laufprotokoll konnte nicht verarbeitet werden ({path}): {err}
+err.logging.cleanup = einige alte Protokolldateien konnten nicht gelöscht werden: {err}
+
+# ---------- Batchdatei und geplante Aufgabe (scheduler) ----------
+err.scheduler.exePath = der Programmpfad konnte nicht ermittelt werden: {err}
+err.scheduler.path = ungültiger Pfad {path}: {err}
+err.scheduler.badPath = der Pfad kann nicht in einer Befehlszeile verwendet werden: "{path}"
+err.scheduler.percentPath = der Pfad enthält "%"-Zeichen, die die Aufgabenplanung als Umgebungsvariablen erweitert: {path}
+err.scheduler.batchWrite = Batchdatei {path} konnte nicht geschrieben werden: {err}
+err.scheduler.noUser = das Benutzerkonto für die Aufgabe konnte nicht ermittelt werden
+err.scheduler.accessDenied = die Aufgabenplanung hat den Zugriff verweigert (Administratorrechte erforderlich)
+err.scheduler.notFound = geplante Aufgabe nicht gefunden
+err.scheduler.connect = Verbindung zur Aufgabenplanung fehlgeschlagen: {err}
+err.scheduler.create = die geplante Aufgabe konnte nicht erstellt werden: {err}
+err.scheduler.delete = die geplante Aufgabe konnte nicht gelöscht werden: {err}
+err.scheduler.run = die geplante Aufgabe konnte nicht gestartet werden: {err}
+err.scheduler.query = die geplante Aufgabe konnte nicht gelesen werden: {err}
+err.scheduler.elevate = Start mit Administratorrechten fehlgeschlagen: {err}
+err.scheduler.elevateCancelled = Administratorrechte wurden nicht erteilt (UAC-Abfrage abgebrochen)
+err.scheduler.exeCheck = die Berechtigungen von {path} konnten nicht geprüft werden: {err}
+err.scheduler.unsafeExe = eine SYSTEM-Aufgabe kann {exe} nicht ausführen: {account} kann {path} ändern und so eigenen Code als SYSTEM ausführen. Installieren Sie das Programm mit dem Installationsprogramm (Program Files) oder verwenden Sie einen Ordner, in den nur Administratoren schreiben können.
+warn.scheduler.systemWindowsAuth = die Aufgabe wird als SYSTEM mit Windows-Authentifizierung ausgeführt: SQL Server benötigt eine Anmeldung für NT AUTHORITY\\SYSTEM (bei einem Remoteserver DOMÄNE\\COMPUTER$) mit Sicherungsberechtigung
+warn.scheduler.systemNetworkPath = die Aufgabe wird als SYSTEM ausgeführt: auf den Netzwerkordner {path} wird mit dem Computerkonto (DOMÄNE\\COMPUTER$) zugegriffen, das Lese-, Schreib- und Löschberechtigung benötigt
+warn.scheduler.currentUser = die Aufgabe wird nur ausgeführt, solange {user} angemeldet ist
+
+# ---------- Backend der Benutzeroberfläche (app) ----------
+err.app.jobNotFound = Auftrag nicht gefunden: {job}
+err.app.jobExists = ein Auftrag namens "{job}" ist bereits vorhanden
+err.app.alreadyRunning = der Auftrag "{job}" wird bereits ausgeführt
+err.app.renameRunning = der Auftrag "{job}" wird ausgeführt; er kann jetzt nicht umbenannt werden
+err.app.deleteRunning = der Auftrag "{job}" wird ausgeführt; er kann jetzt nicht gelöscht werden
+err.app.elevatedExit = der mit Administratorrechten ausgeführte Befehl ist fehlgeschlagen (Exitcode {code})
+err.app.pathOutside = die Datei befindet sich nicht im Protokollordner: {path}
+err.app.keepDays = die Protokollaufbewahrung darf nicht negativ sein
+err.app.theme = unbekanntes Design: {theme}
+warn.app.renamedTask = die geplante Aufgabe des alten Namens ({path}) führt weiterhin den alten Auftrag aus und wird fehlschlagen; löschen Sie sie und erstellen Sie die Aufgabe neu
+warn.app.renamedBatch = die Batchdatei des alten Namens ({path}) führt weiterhin den alten Auftrag aus
+warn.app.taskOutdated = die geplante Aufgabe ({path}) entspricht nicht den gespeicherten Einstellungen; aktualisieren Sie die Aufgabe
+
+# ---------- Protokollmeldungen ----------
+log.job.started = Auftrag gestartet
+log.job.done = Auftrag beendet
+log.job.failed = Auftrag konnte nicht ausgeführt werden
+log.job.alreadyRunning = Auftrag wird bereits ausgeführt; Lauf nicht gestartet
+log.access.failed = kein Zugriff auf den Sicherungsordner; ZIP und Aufbewahrung werden übersprungen
+log.connected = mit dem Server verbunden
+log.targets = Zieldatenbanken ermittelt
+log.db.cannotBackup = Datenbank kann nicht gesichert werden
+log.db.skipped = Datenbank übersprungen
+log.backup.started = Sicherung gestartet
+log.backup.done = Sicherung beendet
+log.backup.failed = Sicherung fehlgeschlagen
+log.backup.sizeUnknown = Sicherungsgröße konnte nicht gelesen werden
+log.zip.started = ZIP gestartet
+log.zip.done = ZIP beendet
+log.zip.failed = ZIP fehlgeschlagen
+log.retention.done = Aufbewahrung angewendet
+log.retention.failed = Aufbewahrung konnte nicht angewendet werden
+log.retention.noSuccess = Aufbewahrung nicht angewendet, da keine Sicherung erfolgreich war
+log.retention.deleted = alte Sicherung gelöscht
+log.cli.started = über die Befehlszeile gestartet
+log.gui.started = über die Benutzeroberfläche gestartet
+warn.run.noLogFile = {err}; es wird nichts in die Protokolldatei geschrieben
+log.run.saved = Laufprotokoll geschrieben
+log.run.saveFailed = Laufprotokoll konnte nicht geschrieben werden
+log.cleanup.done = alte Protokolle bereinigt
+log.cleanup.failed = alte Protokolle konnten nicht bereinigt werden
+log.i18n.missing = in den Sprachdateien fehlen Schlüssel
+
+# ---------- Laufzusammenfassung ----------
+summary.header = Auftrag: {job}  Server: {server}  Dauer: {elapsed}
+summary.error = FEHLER: {msg}
+summary.warning = WARNUNG: {msg}
+summary.dbOK = [OK]   {db}  {size}  {elapsed}
+summary.dbFailed = [FEHLER] {db}  {msg}
+summary.dbSkipped = [ÜBERSPRUNGEN] {db}  {msg}
+summary.verified = überprüft
+summary.zipOK = [ZIP]  {file}  {source} → {size}  {elapsed}
+summary.zipFailed = [ZIP-FEHLER] {file}  {msg}
+summary.bakDeleted = .bak gelöscht
+summary.deleted = [GELÖSCHT]  {file}  {size}
+summary.retentionFailed = [AUFBEWAHRUNGSFEHLER] {msg}
+summary.result = Ergebnis: {ok} erfolgreich, {failed} fehlgeschlagen, {skipped} übersprungen
+summary.zipErrors = {count} ZIP-Fehler
+summary.retentionError = Aufbewahrungsfehler
+summary.exitCode = (Exitcode {code})
+
+# ---------- Befehlszeile ----------
+cli.usage = SqlBackup {version} – automatische MSSQL-Sicherung\n\nVerwendung:\n  SqlBackup.exe                            öffnet die Benutzeroberfläche\n  SqlBackup.exe run   --job <auftrag> [-v] führt den Auftrag aus (Sicherung, Überprüfung, ZIP, Aufbewahrung)\n  SqlBackup.exe test  --job <auftrag>      testet die Verbindung und den Zugriff auf den Sicherungsordner\n  SqlBackup.exe list  --job <auftrag> [--json] listet die Datenbanken auf dem Server auf\n  SqlBackup.exe batch --job <auftrag> [--path <datei.bat>]\n                                           schreibt eine Batchdatei, die den Auftrag ausführt (Standard: jobs\\<auftrag>.bat)\n  SqlBackup.exe task create|delete|run|status --job <auftrag> [--elevate] [--json]\n                                           verwaltet die geplante Aufgabe (\\SqlBackup\\<auftrag>)\n  SqlBackup.exe version                    gibt die Version aus\n\n<auftrag>: Auftragsname (gesucht in {jobsDir}) oder Pfad zu einer .json-Datei\n  -v              schreibt Protokolleinträge auch in die Konsole\n  --json          gibt die Ausgabe als JSON aus\n  --elevate       fordert bei Bedarf Administratorrechte (UAC) an\n  --lang <code>   Sprache (z. B. en, tr, de); Standard: Sprache aus den Einstellungen, sonst die Windows-Sprache\n  --home <ordner> Datenordner (Standard %ProgramData%\\SqlBackup)\n  --output <datei> schreibt die gesamte Ausgabe in eine Datei\n\nExitcodes: 0 Erfolg, 1 Teilfehler (task status: Aufgabe nicht gefunden), 2 Fehler/Einstellungsfehler, 3 Auftrag läuft bereits
+cli.error = FEHLER: {msg}
+cli.warning = WARNUNG: {msg}
+cli.yes = ja
+cli.no = nein
+cli.err.unknownCommand = unbekannter Befehl: {cmd}
+cli.err.unexpectedArg = unerwartetes Argument: {arg}
+cli.err.noJob = --job nicht angegeben
+cli.err.jobNotFound = Auftragsdatei nicht gefunden: {path}
+cli.err.connect = Verbindung fehlgeschlagen: {err}
+cli.warn.language = Sprache konnte nicht geladen werden ({code}): {err}
+cli.phase.backup = Sicherung
+cli.phase.verify = Überprüfung
+cli.phase.zip = ZIP
+cli.test.server = Server
+cli.test.version = Version
+cli.test.edition = Edition
+cli.test.protocol = Protokoll
+cli.test.login = Anmeldung
+cli.test.loginValue = {login} (sysadmin: {sysadmin})
+cli.test.compression = Komprimierung
+cli.test.compressionYes = unterstützt
+cli.test.compressionNo = nicht unterstützt
+cli.test.defaultBackupDir = Standard-Sicherungsordner
+cli.test.access = Zugriff auf Sicherungsordner
+cli.test.accessOK = OK ({path})
+cli.test.accessFailed = FEHLER
+cli.test.success = Verbindung erfolgreich.
+cli.list.header = DATENBANK\tZUSTAND\tWIEDERHERSTELLUNG\tGRÖSSE (MB)\tSYSTEM\tLETZTE VOLLSICHERUNG\tSICHERUNG
+cli.list.failed = FEHLER: {reason}
+cli.list.skipped = nein ({reason})
+cli.list.footer = {count} Datenbank(en), {backup} werden gesichert
+
+cli.warn.jobInvalid = der Auftrag hat ungültige Einstellungen und wird bei der Ausführung fehlschlagen: {err}
+cli.batch.saved = Batchdatei gespeichert: {path}
+cli.err.noTaskCommand = Aufgabenbefehl nicht angegeben (create, delete, run, status)
+cli.err.unknownTaskCommand = unbekannter Aufgabenbefehl: {cmd} (create, delete, run, status)
+cli.err.needAdmin = {err}; führen Sie den Befehl in einer Administrator-Eingabeaufforderung aus oder fügen Sie --elevate hinzu
+cli.warn.taskExeMismatch = die Aufgabe führt eine andere Programmdatei aus: {exe}
+cli.task.created = Geplante Aufgabe erstellt: {path}
+cli.task.deleted = Geplante Aufgabe gelöscht: {path}
+cli.task.started = Geplante Aufgabe gestartet: {path}
+cli.task.notFound = Geplante Aufgabe nicht gefunden: {path}
+cli.task.nextRunAt = Nächste Ausführung: {time}
+cli.task.path = Aufgabe
+cli.task.state = Status
+cli.task.account = Konto
+cli.task.lastRun = Letzte Ausführung
+cli.task.lastResult = Letztes Ergebnis
+cli.task.nextRun = Nächste Ausführung
+cli.task.command = Befehl
+cli.task.never = nie
+cli.task.state.ready = bereit
+cli.task.state.running = wird ausgeführt
+cli.task.state.queued = in Warteschlange
+cli.task.state.disabled = deaktiviert
+cli.task.result.code = {code} ({text})
+cli.task.result.ok = Erfolg
+cli.task.result.partial = Teilfehler
+cli.task.result.failed = fehlgeschlagen
+cli.task.result.alreadyRunning = Auftrag lief bereits
+cli.task.result.running = wird gerade ausgeführt
+cli.task.result.other = Fehler der Aufgabenplanung {code}
+
+# ---------- Benutzeroberfläche (frontend) ----------
+gui.app.title = SqlBackup
+gui.app.version = Version {version}
+gui.common.ok = OK
+gui.common.cancel = Abbrechen
+gui.common.loading = Wird geladen…
+gui.menu.jobs = Aufträge
+gui.menu.logs = Protokolle
+gui.menu.settings = Einstellungen
+gui.settings.appearance = Darstellung
+gui.settings.language = Sprache
+gui.settings.theme = Design
+gui.settings.themeDark = Dunkel
+gui.settings.themeLight = Hell
+gui.settings.saved = Einstellungen gespeichert.
+gui.settings.about = Info
+gui.settings.version = Version
+gui.settings.dataDir = Datenordner
+
+# ---------- GUI: Allgemein ----------
+gui.common.yes = Ja
+gui.common.no = Nein
+gui.common.refresh = Aktualisieren
+gui.common.browse = Durchsuchen…
+gui.common.selectFolder = Ordner auswählen
+
+# ---------- GUI: Wochentage ----------
+gui.day.mon = Mo
+gui.day.tue = Di
+gui.day.wed = Mi
+gui.day.thu = Do
+gui.day.fri = Fr
+gui.day.sat = Sa
+gui.day.sun = So
+
+# ---------- GUI: Aufträge ----------
+gui.jobs.new = Neuer Auftrag
+gui.jobs.empty = Noch keine Sicherungsaufträge. Erstellen Sie einen Auftrag, um mit der Sicherung Ihrer Datenbanken zu beginnen.
+gui.jobs.unreadable = Einige Auftragsdateien konnten nicht gelesen werden:
+gui.jobs.server = Server
+gui.jobs.databases = Datenbanken
+gui.jobs.allDatabases = Alle Datenbanken (einschließlich neuer)
+gui.jobs.databaseCount = {count} Datenbank(en)
+gui.jobs.schedule = Zeitplan
+gui.jobs.lastRun = Letzte Ausführung
+gui.jobs.neverRun = Nie ausgeführt
+gui.jobs.unreadableRun = Protokoll nicht lesbar
+gui.jobs.nextRun = Nächste Ausführung
+gui.jobs.noTask = Keine geplante Aufgabe
+gui.jobs.taskDisabled = Aufgabe deaktiviert
+gui.jobs.taskOutdated = Aufgabe veraltet
+gui.jobs.running = Wird ausgeführt
+gui.jobs.runningElsewhere = Wird in einem anderen Prozess ausgeführt (z. B. geplante Aufgabe).
+gui.jobs.invalid = Ungültige Einstellungen
+gui.jobs.invalidInfo = Dieser Auftrag kann erst ausgeführt werden, wenn Folgendes behoben ist:
+gui.jobs.runNow = Jetzt ausführen
+gui.jobs.stop = Stoppen
+gui.jobs.stopTitle = Sicherung stoppen
+gui.jobs.stopConfirm = Die laufende Sicherung von "{job}" stoppen? Die gerade gesicherte Datenbank wird als fehlgeschlagen markiert.
+gui.jobs.stopNotHere = Dieser Lauf wurde nicht in diesem Fenster gestartet und kann hier nicht gestoppt werden.
+gui.jobs.edit = Bearbeiten
+gui.jobs.duplicate = Duplizieren
+gui.jobs.duplicateTitle = "{job}" duplizieren
+gui.jobs.duplicateInfo = Alle Einstellungen, einschließlich des gespeicherten Kennworts und des Zeitplans, werden kopiert. Für die Kopie wird keine geplante Aufgabe erstellt.
+gui.jobs.duplicateName = Name des neuen Auftrags
+gui.jobs.duplicated = Auftrag "{job}" erstellt.
+gui.jobs.history = Verlauf
+gui.jobs.delete = Löschen
+gui.jobs.deleteTitle = Auftrag löschen
+gui.jobs.deleteConfirm = Den Auftrag "{job}" löschen? Seine geplante Aufgabe und die Standard-.bat-Datei werden ebenfalls gelöscht (möglicherweise ist eine Administratorbestätigung erforderlich). Protokolle und Sicherungsdateien bleiben erhalten.
+gui.jobs.deleted = Auftrag "{job}" gelöscht.
+
+# ---------- GUI: Laufergebnis ----------
+gui.run.starting = Wird gestartet…
+gui.run.phaseBackup = Sichere {db} ({index}/{total}) – {percent}%
+gui.run.phaseVerify = Überprüfe {db} ({index}/{total}) – {percent}%
+gui.run.phaseZip = Komprimiere {db} ({index}/{total}) – {percent}%
+gui.run.success = Erfolgreich
+gui.run.partial = Teilweise fehlgeschlagen
+gui.run.failed = Fehlgeschlagen
+gui.run.alreadyRunning = Läuft bereits
+gui.run.doneSuccess = "{job}" wurde erfolgreich abgeschlossen.
+gui.run.donePartial = "{job}" wurde mit Fehlern abgeschlossen. Details unter Protokolle.
+gui.run.doneFailed = "{job}" ist fehlgeschlagen. Details unter Protokolle.
+gui.run.doneFailedError = "{job}" ist fehlgeschlagen: {error}
+gui.run.doneAlreadyRunning = "{job}" wurde nicht gestartet, da er bereits ausgeführt wird.
+gui.run.job = Auftrag
+gui.run.status = Status
+gui.run.server = Server
+gui.run.edition = Edition
+gui.run.protocol = Protokoll
+gui.run.start = Gestartet
+gui.run.duration = Dauer
+gui.run.counts = Datenbanken
+gui.run.countsText = {ok} erfolgreich, {failed} fehlgeschlagen, {skipped} übersprungen
+gui.run.warnings = Warnungen:
+gui.run.databases = Datenbanken
+gui.run.database = Datenbank
+gui.run.dbSuccess = Erfolgreich
+gui.run.dbFailed = Fehlgeschlagen
+gui.run.dbSkipped = Übersprungen
+gui.run.file = Datei
+gui.run.size = Größe
+gui.run.verified = Überprüft
+gui.run.error = Fehler
+gui.run.archives = ZIP-Dateien
+gui.run.bakDeleted = .bak gelöscht
+gui.run.retention = Bereinigung alter Sicherungen
+gui.run.deletedFile = Gelöschte Datei
+gui.run.fileDate = Sicherungsdatum
+gui.run.nothingDeleted = Keine alten Sicherungen zu löschen.
+
+# ---------- GUI: Auftragseditor ----------
+gui.editor.newJob = Neuer Auftrag
+gui.editor.unsaved = Nicht gespeicherte Änderungen
+gui.editor.back = Aufträge
+gui.editor.save = Speichern
+gui.editor.saved = Auftrag "{job}" gespeichert.
+gui.editor.saveFailed = Der Auftrag wurde nicht gespeichert. Korrigieren Sie die markierten Felder.
+gui.editor.saveErrors = Der Auftrag konnte nicht gespeichert werden:
+gui.editor.saveWarnings = Mit Warnungen gespeichert:
+gui.editor.saveFirstTitle = Auftrag speichern
+gui.editor.saveFirst = Diese Aktion verwendet den gespeicherten Auftrag. Änderungen jetzt speichern?
+gui.editor.discardTitle = Nicht gespeicherte Änderungen
+gui.editor.discard = Der Auftrag enthält nicht gespeicherte Änderungen. Ohne Speichern verlassen?
+gui.editor.discardConfirm = Änderungen verwerfen
+gui.editor.name = Auftragsname
+gui.editor.namePlaceholder = z. B. Naechtliche_Sicherung
+gui.editor.nameHint = Wird als Dateiname und Name der geplanten Aufgabe verwendet: Buchstaben, Ziffern, '_', '-' und '.' (max. 64).
+gui.editor.tabConnection = Verbindung
+gui.editor.tabDatabases = Datenbanken
+gui.editor.tabBackup = Sicherung
+gui.editor.tabArchive = ZIP & Aufbewahrung
+gui.editor.tabSchedule = Zeitplan
+gui.editor.tabErrors = {count} Fehler auf dieser Registerkarte
+
+gui.close.title = SqlBackup schließen
+gui.close.unsaved = Der Auftragseditor enthält nicht gespeicherte Änderungen; sie gehen verloren.
+gui.close.running = Laufende Sicherungen werden abgebrochen: {jobs}
+gui.close.confirm = Trotzdem schließen?
+
+# ---------- GUI: Verbindung ----------
+gui.conn.server = Server
+gui.conn.serverName = Servername
+gui.conn.serverPlaceholder = z. B. . oder SRV01 oder 10.0.0.5
+gui.conn.serverHint = Hostname oder IP-Adresse. Für diesen Computer "." oder localhost verwenden. HOST\\INSTANZ wird ebenfalls akzeptiert.
+gui.conn.instance = Instanz
+gui.conn.instanceHint = Für die Standardinstanz (MSSQLSERVER) leer lassen.
+gui.conn.port = Port
+gui.conn.portHint = Leer = Standard / über die Instanz ermittelt. Nur für TCP.
+gui.conn.protocol = Protokoll
+gui.conn.protocolAuto = Automatisch
+gui.conn.protocolHint = Automatisch probiert die Protokolle nacheinander (lokal: Shared Memory, Named Pipes, TCP; remote: TCP, Named Pipes).
+gui.conn.auth = Authentifizierung
+gui.conn.authType = Authentifizierungstyp
+gui.conn.authSql = SQL Server-Authentifizierung
+gui.conn.authWindows = Windows-Authentifizierung
+gui.conn.user = Benutzername
+gui.conn.password = Kennwort
+gui.conn.passwordStored = (gespeichertes Kennwort unverändert)
+gui.conn.passwordHint = Leer lassen, um das gespeicherte Kennwort beizubehalten. Es wird für diesen Computer verschlüsselt gespeichert (DPAPI).
+gui.conn.passwordUnreadable = Das gespeicherte Kennwort kann auf diesem Computer nicht entschlüsselt werden (der Auftrag wurde möglicherweise von einem anderen Computer kopiert). Geben Sie das Kennwort erneut ein. ({error})
+gui.conn.windowsAuthInfo = Es wird das Konto verwendet, das die Sicherung ausführt. Wenn die geplante Aufgabe als SYSTEM läuft, benötigt SQL Server eine Anmeldung für NT AUTHORITY\\SYSTEM (auf einem Remoteserver: DOMÄNE\\COMPUTER$) mit Sicherungsberechtigung.
+gui.conn.options = Optionen
+gui.conn.encrypt = Verbindung verschlüsseln
+gui.conn.trustCert = Serverzertifikat vertrauen
+gui.conn.trustCertHint = Ohne Verschlüsselung wird nur die Anmeldung verschlüsselt und das Serverzertifikat nicht geprüft. Bei aktivierter Verschlüsselung für selbstsignierte Zertifikate einschalten (z. B. eine Standardinstallation von SQL Express).
+gui.conn.timeout = Verbindungs-Timeout (Sekunden)
+gui.conn.test = Verbindungstest
+gui.conn.testButton = Verbindung testen
+gui.conn.testing = Verbindung wird hergestellt…
+gui.conn.testOk = Verbindung erfolgreich.
+gui.conn.infoServer = Server
+gui.conn.infoVersion = Version
+gui.conn.infoEdition = Edition
+gui.conn.infoProtocol = Protokoll
+gui.conn.infoLogin = Anmeldung
+gui.conn.infoSysAdmin = sysadmin
+gui.conn.infoBackupDir = Standard-Sicherungsordner
+gui.conn.noCompression = Diese Edition unterstützt keine Sicherungskomprimierung; die Komprimierung wird bei der Ausführung automatisch deaktiviert.
+
+# ---------- GUI: Datenbanken ----------
+gui.db.options = Auswahl
+gui.db.includeNew = Neue Datenbanken einbeziehen
+gui.db.includeNewHint = Wenn aktiviert, werden bei der Ausführung alle Datenbanken auf dem Server außer den nicht markierten gesichert; später erstellte Datenbanken werden automatisch einbezogen.
+gui.db.excludeSystem = Systemdatenbanken ausschließen (master, model, msdb)
+gui.db.list = Datenbanken auf dem Server
+gui.db.refresh = Liste laden
+gui.db.loading = Datenbanken werden geladen…
+gui.db.notLoaded = Geben Sie die Verbindungsdaten ein und laden Sie die Datenbankliste.
+gui.db.selectedList = Ausgewählt:
+gui.db.summarySelected = {count} ausgewählt
+gui.db.summaryAllNew = Alle Datenbanken, {count} ausgeschlossen
+gui.db.selectAll = Alle auswählen
+gui.db.missing = Ausgewählt, aber auf dem Server nicht gefunden: {list}
+gui.db.removeMissing = Aus der Auswahl entfernen
+gui.db.empty = Keine Datenbanken gefunden.
+gui.db.name = Name
+gui.db.system = System
+gui.db.readOnly = schreibgeschützt
+gui.db.state = Zustand
+gui.db.notBackupable = kann nicht gesichert werden
+gui.db.recovery = Wiederherstellungsmodell
+gui.db.size = Größe
+gui.db.lastBackup = Letzte Vollsicherung
+gui.db.never = nie
+
+# ---------- GUI: Sicherung ----------
+gui.backup.folders = Sicherungsordner
+gui.backup.serverPath = Ordner auf dem SQL Server (Serverpfad)
+gui.backup.serverPathHint = SQL Server schreibt die Sicherung hierhin, aus Sicht des SQL Server-Computers (z. B. D:\\SqlBackups).
+gui.backup.useServerDefault = Serverstandard
+gui.backup.accessPath = Derselbe Ordner aus Sicht dieses Programms (Zugriffspfad)
+gui.backup.accessPathHint = Bei einem lokalen Server leer lassen. Bei einem Remoteserver den Freigabepfad eingeben (z. B. \\\\SRV01\\SqlBackups). Erforderlich für ZIP und Aufbewahrung.
+gui.backup.checkAccess = Zugriff prüfen
+gui.backup.noFolder = Geben Sie zuerst einen Ordner ein.
+gui.backup.accessOk = Dieses Programm kann in {path} lesen, schreiben und löschen.
+gui.backup.accessFailed = Kein Zugriff auf {path}: {error}
+gui.backup.pathsInfo = Die Sicherungsdatei wird vom SQL Server-Dienstkonto (z. B. NT Service\\MSSQL$SQLEXPRESS) geschrieben, nicht von diesem Programm. Wählen Sie einen Ordner, auf den sowohl das Dienstkonto als auch das Konto, das den Auftrag ausführt, zugreifen können, z. B. D:\\SqlBackups (der Standardordner unter Program Files verweigert anderen Konten in der Regel den Zugriff).
+gui.backup.fileName = Dateiname
+gui.backup.template = Dateinamenvorlage
+gui.backup.templateHint = {db} ist erforderlich. Außerdem: {server}, {job} und Datumsteile wie {yyyyMMdd}, {HHmmss}, {yyyy-MM-dd}. .bak wird ergänzt, falls es fehlt.
+gui.backup.preview = Beispiel:
+gui.backup.options = Optionen
+gui.backup.compression = Komprimierung
+gui.backup.checksum = Prüfsumme
+gui.backup.copyOnly = Nur-Kopie-Sicherung
+gui.backup.copyOnlyHint = Nur-Kopie-Sicherungen beeinflussen die Sicherungskette anderer Sicherungsprogramme nicht.
+gui.backup.verify = Nach der Sicherung überprüfen (RESTORE VERIFYONLY)
+gui.backup.commandTimeout = Befehls-Timeout (Minuten)
+gui.backup.commandTimeoutHint = 0 = unbegrenzt.
+gui.backup.compressionUnsupported = Der verbundene Server unterstützt keine Komprimierung (Express/Web); sie wird bei der Ausführung deaktiviert.
+
+# ---------- GUI: ZIP und Aufbewahrung ----------
+gui.archive.zip = ZIP
+gui.archive.zipEnabled = Sicherungen in ZIP komprimieren
+gui.archive.mode = ZIP-Dateien
+gui.archive.modeSingle = Ein ZIP für alle Datenbanken
+gui.archive.modePerDb = Ein ZIP pro Datenbank
+gui.archive.deleteBak = .bak-Dateien nach erfolgreichem ZIP löschen
+gui.archive.zipHint = Das ZIP wird nach Abschluss aller Sicherungen im selben Ordner erstellt.
+gui.archive.retention = Aufbewahrung
+gui.archive.retentionMode = Alte Sicherungen löschen
+gui.archive.retentionNone = Nie
+gui.archive.retentionByDays = Älter als eine Anzahl von Tagen
+gui.archive.retentionByCount = Die letzten N Sicherungen behalten
+gui.archive.retentionDays = Aufbewahrungsdauer (Tage)
+gui.archive.retentionDaysHint = Ältere Sicherungen werden nach einer erfolgreichen Sicherung gelöscht.
+gui.archive.retentionCount = Zu behaltende Sicherungen (pro Datenbank)
+gui.archive.retentionCountHint = Ältere Sicherungen über diese Anzahl hinaus werden nach einer erfolgreichen Sicherung gelöscht.
+gui.archive.retentionInfo = Es werden nur Dateien gelöscht, die der Dateinamenvorlage dieses Auftrags entsprechen; das Sicherungsdatum wird aus dem Dateinamen gelesen. Zwei Aufträge mit demselben Ordner, derselben Vorlage und derselben Datenbank teilen sich dieselben Dateien.
+gui.archive.accessWarning = ZIP und Aufbewahrung arbeiten direkt mit den Dateien, daher benötigt dieses Programm (und das Konto der geplanten Aufgabe) Lese-, Schreib- und Löschzugriff auf den Zugriffspfad. Verwenden Sie "Zugriff prüfen" auf der Registerkarte Sicherung.
+
+# ---------- GUI: Zeitplan ----------
+gui.schedule.title = Zeitplan
+gui.schedule.frequency = Häufigkeit
+gui.schedule.daily = Täglich
+gui.schedule.weekly = Wöchentlich
+gui.schedule.hourly = Alle paar Stunden
+gui.schedule.time = Uhrzeit
+gui.schedule.startTime = Startzeit
+gui.schedule.days = Tage
+gui.schedule.interval = Wiederholen alle (Stunden)
+gui.schedule.intervalHint = 1-23. Die erste Ausführung erfolgt zur Startzeit.
+gui.schedule.runAs = Ausführen als
+gui.schedule.runAsSystem = SYSTEM (empfohlen)
+gui.schedule.runAsCurrent = Aktueller Benutzer
+gui.schedule.runAsHint = SYSTEM läuft auch, wenn niemand angemeldet ist; das Erstellen der Aufgabe erfordert eine Administratorbestätigung.
+gui.schedule.warnings = Vor dem Erstellen der Aufgabe prüfen:
+gui.schedule.dailyText = Täglich um {time}
+gui.schedule.weeklyText = {days} um {time}
+gui.schedule.hourlyText = Alle {hours} Std. ab {time}
+gui.task.title = Geplante Aufgabe
+gui.task.notSaved = Speichern Sie den Auftrag, um eine geplante Aufgabe zu erstellen.
+gui.task.none = Für diesen Auftrag wurde keine geplante Aufgabe erstellt.
+gui.task.path = Aufgabe
+gui.task.state = Status
+gui.task.stateReady = Bereit
+gui.task.stateRunning = Wird ausgeführt
+gui.task.stateDisabled = Deaktiviert
+gui.task.stateUnknown = Unbekannt
+gui.task.lastRun = Letzte Ausführung
+gui.task.never = Nie
+gui.task.nextRun = Nächste Ausführung
+gui.task.account = Konto
+gui.task.outdated = Die Aufgabe entspricht nicht den gespeicherten Auftragseinstellungen (Zeitplan, Konto oder Programmpfad). Aktualisieren Sie die Aufgabe.
+gui.task.create = Aufgabe erstellen
+gui.task.update = Aufgabe aktualisieren
+gui.task.created = Geplante Aufgabe gespeichert.
+gui.task.run = Aufgabe jetzt ausführen
+gui.task.started = Aufgabe gestartet. Das Ergebnis erscheint unter Protokolle.
+gui.task.delete = Aufgabe löschen
+gui.task.deleteTitle = Geplante Aufgabe löschen
+gui.task.deleteConfirm = Die geplante Aufgabe {path} löschen? Der Auftrag selbst bleibt erhalten.
+gui.task.deleted = Geplante Aufgabe gelöscht.
+gui.task.uacHint = Aufgaben verwenden den gespeicherten Auftrag. Windows fordert möglicherweise eine Administratorbestätigung (UAC) an.
+gui.batch.title = Batchdatei
+gui.batch.hint = Eine .bat-Datei, die diesen Auftrag ausführt, zur Verwendung mit anderen Planern oder für manuelle Ausführungen. Sie enthält kein Kennwort.
+gui.batch.save = .bat speichern…
+gui.batch.saved = Gespeichert: {path}
+
+# ---------- GUI: Protokolle ----------
+gui.logs.allJobs = Alle Aufträge
+gui.logs.tabRuns = Ausführungsverlauf
+gui.logs.tabFiles = Protokolldateien
+gui.logs.start = Gestartet
+gui.logs.job = Auftrag
+gui.logs.status = Status
+gui.logs.databases = Datenbanken
+gui.logs.duration = Dauer
+gui.logs.error = Fehler
+gui.logs.unreadable = Nicht lesbar
+gui.logs.noRuns = Noch keine Ausführungen.
+gui.logs.runTitle = Ausführungsdetails
+gui.logs.date = Datum
+gui.logs.size = Größe
+gui.logs.file = Datei
+gui.logs.noFiles = Keine Protokolldateien.
+gui.logs.logTitle = Protokoll: {job} – {date}
+gui.logs.truncated = Die Datei ist groß ({size}); nur das Ende wird angezeigt.
+
+# ---------- GUI: Einstellungen ----------
+gui.settings.defaults = Standardwerte
+gui.settings.defaultServerPath = Standard-Sicherungsordner (Serverpfad)
+gui.settings.defaultServerPathHint = Wird für neue Aufträge vorgeschlagen.
+gui.settings.defaultAccessPath = Standard-Zugriffspfad
+gui.settings.defaultAccessPathHint = Wird für neue Aufträge vorgeschlagen; bei der Sicherung eines lokalen Servers leer lassen.
+gui.settings.logKeepDays = Protokolle aufbewahren (Tage)
+gui.settings.logKeepDaysHint = Ältere Protokolldateien und Laufprotokolle werden gelöscht. Leer = 30.
+gui.settings.saveDefaults = Speichern

@@ -16,6 +16,12 @@ even if this folder is missing.
 6. Put the file in the `lang` folder next to `SqlBackup.exe` and select the language in Settings, or
    use `SqlBackup.exe <command> --lang de` on the command line.
 
+## Language selection
+
+`--lang` on the command line → the language chosen in Settings → the Windows display language → English.
+Until a language is chosen in Settings, the program follows the Windows display language: for `pt-BR` it
+looks for `pt-br.lng` first, then `pt.lng`; if no file matches, English is used.
+
 ## File format
 
 ```

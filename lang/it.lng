@@ -1,0 +1,606 @@
+# File di lingua di SqlBackup – Italiano
+# Formato: chiave = valore  (UTF-8). Le righe che iniziano con "#" sono commenti.
+# I segnaposto come {name} vengono sostituiti in fase di esecuzione; non modificarli durante la traduzione.
+# Sequenze di escape: \n nuova riga, \t tabulazione, \\ barra rovesciata.
+@code = it
+@name = Italiano
+
+# ---------- Comune ----------
+common.unknown = sconosciuto
+common.taskDescription = Esegue il processo SqlBackup "{job}" (creato da SqlBackup).
+common.batchFiles = File batch
+
+# ---------- Impostazioni del processo (config) ----------
+err.config.nameInvalid = il nome del processo deve avere da 1 a 64 caratteri e può contenere solo lettere, cifre, '_', '-' e '.'
+err.config.nameDots = il nome del processo non può essere composto solo da punti
+err.config.serverEmpty = il nome del server non può essere vuoto
+err.config.portRange = la porta deve essere compresa tra 0 e 65535
+err.config.portTCPOnly = la porta può essere usata solo con il protocollo TCP
+err.config.protocolInvalid = protocollo non valido: "{value}"
+err.config.userEmpty = il nome utente è obbligatorio per l'autenticazione SQL
+err.config.passwordEmpty = la password è obbligatoria per l'autenticazione SQL
+err.config.authInvalid = tipo di autenticazione non valido: "{value}"
+err.config.timeoutNegative = il timeout di connessione non può essere negativo
+err.config.noDatabase = è necessario selezionare almeno un database
+err.config.serverPathEmpty = la cartella di backup (percorso server) non può essere vuota
+err.config.commandTimeoutNegative = il timeout dei comandi non può essere negativo
+err.config.deleteBakNeedsZip = per eliminare i .bak dopo lo zip l'opzione zip deve essere attivata
+err.config.retentionValue = il valore di conservazione deve essere maggiore di 0
+err.config.retentionModeInvalid = modalità di conservazione non valida: "{value}"
+err.config.scheduleTime = l'orario della pianificazione deve essere nel formato HH:MM (ad es. 02:00)
+err.config.scheduleNoDays = per una pianificazione settimanale è necessario selezionare almeno un giorno
+err.config.scheduleDayInvalid = giorno non valido: "{value}"
+err.config.scheduleInterval = l'intervallo della pianificazione oraria deve essere di 1-23 ore
+err.config.scheduleFrequencyInvalid = frequenza di pianificazione non valida: "{value}"
+err.config.runAsInvalid = account di esecuzione non valido: "{value}"
+err.config.templateEmpty = il modello del nome file non può essere vuoto
+err.config.templateNoDb = il modello del nome file deve contenere {db}
+err.config.templateInvalidChars = il modello del nome file non può contenere \\ / : * ? " < > |
+err.config.mkdir = impossibile creare la cartella {path}: {err}
+err.config.dirPermission = impossibile impostare le autorizzazioni della cartella {path}: {err}
+err.config.jobRead = impossibile leggere il file del processo: {err}
+err.config.jobParse = impossibile analizzare il file del processo ({path}): {err}
+err.config.jobVersion = il file del processo appartiene a una versione più recente (v{version}); aggiornare il programma
+err.config.settingsRead = impossibile leggere il file delle impostazioni: {err}
+err.config.settingsParse = impossibile analizzare il file delle impostazioni ({path}): {err}
+err.config.encrypt = impossibile crittografare la password: {err}
+err.config.decryptBase64 = il valore crittografato non è valido (non è base64)
+err.config.decrypt = impossibile decrittografare la password (è stata creata su un altro computer?): {err}
+
+# ---------- SQL Server (mssql) ----------
+err.mssql.connect = impossibile connettersi al server: {err}
+err.mssql.login = SQL Server ha rifiutato l'accesso: {err}. Verificare nome utente e password (l'autenticazione SQL richiede anche la modalità "Autenticazione di SQL Server e di Windows" sul server). Con l'autenticazione di Windows, l'account che esegue il processo (SYSTEM per le attività pianificate) deve disporre di un account di accesso sul server.
+err.mssql.connInvalid = impostazioni di connessione non valide: {err}
+err.mssql.serverInfo = impossibile leggere le informazioni del server: {err}
+err.mssql.listDatabases = impossibile elencare i database: {err}
+err.mssql.backup = impossibile eseguire il backup di {db}: {err}
+err.mssql.backupHint = impossibile eseguire il backup di {db}: {err} — Suggerimento: {hint}
+err.mssql.hintAccess = L'account del servizio SQL Server (di solito {account}) non può scrivere in questa cartella; concedere a tale account l'autorizzazione Modifica sulla cartella oppure scegliere una cartella in cui possa scrivere.
+err.mssql.hintPath = La cartella non è stata trovata sul computer che esegue SQL Server. La cartella di backup viene risolta dal server (per un server remoto non è un percorso di questo computer); creare la cartella o usare un percorso o una condivisione UNC raggiungibile dal server.
+err.mssql.hintDiskFull = Spazio libero insufficiente sul disco di destinazione; liberare spazio o rivedere le impostazioni di conservazione.
+err.mssql.verify = impossibile verificare il backup ({file}): {err}
+err.mssql.backupSet = impossibile leggere le informazioni del backup ({db}): {err}
+err.mssql.canceled = operazione annullata o timeout scaduto: {err}
+warn.mssql.insecureLogin = la password di SQL Server viene inviata al server remoto senza verificarne il certificato; qualcuno in rete potrebbe intercettarla. Attivare la crittografia con verifica del certificato ("Considera attendibile il certificato del server" disattivato) o usare l'autenticazione di Windows.
+
+# ---------- Modello del nome file ----------
+err.template.unmatchedClose = il modello del nome file contiene una '}' senza corrispondenza
+err.template.unclosed = il modello del nome file contiene una '{' non chiusa
+err.template.unknown = segnaposto sconosciuto nel modello del nome file: {{name}}
+
+# ---------- Esecuzione del backup ----------
+err.backup.invalidJob = impostazioni del processo non valide: {err}
+err.backup.alreadyRunning = il processo "{job}" è già in esecuzione; questa esecuzione non è stata avviata
+err.backup.lockHeld = il processo è già in esecuzione
+err.backup.lock = impossibile ottenere il blocco del processo: {err}
+err.backup.password = impossibile decrittografare la password salvata; se il file del processo è stato copiato da un altro computer, immettere di nuovo la password: {err}
+err.backup.noDatabases = nessun database di cui eseguire il backup
+err.backup.canceled = operazione annullata
+err.backup.deleteBak = zip creato, ma impossibile eliminare il .bak: {err}
+err.backup.access = impossibile accedere alla cartella di backup: {msg}. La cartella deve essere leggibile, scrivibile ed eliminabile sia dall'account del servizio SQL Server sia dall'account che esegue questo programma ({account}) (ad es. D:\\SqlBackups); per un server remoto il percorso di accesso deve essere un percorso UNC
+warn.backup.noCompression = l'edizione del server ({edition}) non supporta la compressione dei backup; compressione disattivata
+
+reason.notFound = non trovato sul server
+reason.systemExcluded = i database di sistema sono esclusi
+reason.tempdb = non è possibile eseguire il backup di tempdb
+reason.state = il database non è in uno stato che consente il backup ({state})
+
+# ---------- Conservazione ----------
+err.retention.readDir = impossibile leggere la cartella di backup: {err}
+err.retention.delete = impossibile eliminare alcuni backup vecchi: {err}
+warn.retention.noDate = conservazione non applicata perché il modello del nome file non contiene una data (anno, mese e giorno)
+warn.retention.canceled = operazione annullata; conservazione non applicata
+
+# ---------- ZIP (archive) ----------
+err.archive.dirNotFound = cartella non trovata: {path}
+err.archive.dirNoPermission = nessuna autorizzazione per accedere alla cartella: {path}
+err.archive.dirAccess = impossibile accedere alla cartella: {err}
+err.archive.notDir = il percorso non è una cartella: {path}
+err.archive.noWrite = nessuna autorizzazione di scrittura sulla cartella ({path}): {err}
+err.archive.write = impossibile scrivere nella cartella ({path}): {err}
+err.archive.noRead = nessuna autorizzazione di lettura sulla cartella ({path}): {err}
+err.archive.noDelete = nessuna autorizzazione di eliminazione sulla cartella ({path}): {err}
+err.archive.noFiles = nessun file da comprimere
+err.archive.readBak = impossibile leggere il file di backup: {err}
+err.archive.duplicateName = uno zip non può contenere due file con lo stesso nome: {name}
+err.archive.rename = impossibile rinominare il file zip: {err}
+err.archive.create = impossibile creare il file zip: {err}
+err.archive.writeZip = impossibile scrivere il file zip: {err}
+err.archive.entry = impossibile creare la voce zip: {err}
+err.archive.canceled = zip annullato: {err}
+err.archive.compress = impossibile comprimere {name}: {err}
+err.archive.verify = verifica dello zip non riuscita: {err}
+err.archive.verifyEntry = verifica dello zip non riuscita ({name}): {err}
+err.archive.verifyCount = verifica dello zip non riuscita: previste {want} voci, trovate {got}
+err.archive.verifyUnexpected = verifica dello zip non riuscita: voce imprevista {name}
+err.archive.verifySize = verifica dello zip non riuscita: dimensione non corrispondente per {name} ({got} / {want})
+err.archive.verifyReadSize = verifica dello zip non riuscita: dimensione letta non corrispondente per {name}
+
+# ---------- Registrazione ----------
+err.logging.mkdir = impossibile creare la cartella dei log: {err}
+err.logging.open = impossibile aprire il file di log: {err}
+err.logging.runsMkdir = impossibile creare la cartella dei report di esecuzione: {err}
+err.logging.runWrite = impossibile scrivere il report di esecuzione: {err}
+err.logging.runRead = impossibile leggere il report di esecuzione: {err}
+err.logging.runParse = impossibile analizzare il report di esecuzione ({path}): {err}
+err.logging.cleanup = impossibile eliminare alcuni file di log vecchi: {err}
+
+# ---------- File batch e attività pianificata (scheduler) ----------
+err.scheduler.exePath = impossibile determinare il percorso del programma: {err}
+err.scheduler.path = percorso non valido {path}: {err}
+err.scheduler.badPath = il percorso non può essere usato in una riga di comando: "{path}"
+err.scheduler.percentPath = il percorso contiene caratteri "%", che l'Utilità di pianificazione espande come variabili di ambiente: {path}
+err.scheduler.batchWrite = impossibile scrivere il file batch {path}: {err}
+err.scheduler.noUser = impossibile determinare l'account utente per l'attività
+err.scheduler.accessDenied = l'Utilità di pianificazione ha negato l'accesso (sono necessari i diritti di amministratore)
+err.scheduler.notFound = attività pianificata non trovata
+err.scheduler.connect = impossibile connettersi all'Utilità di pianificazione: {err}
+err.scheduler.create = impossibile creare l'attività pianificata: {err}
+err.scheduler.delete = impossibile eliminare l'attività pianificata: {err}
+err.scheduler.run = impossibile avviare l'attività pianificata: {err}
+err.scheduler.query = impossibile leggere l'attività pianificata: {err}
+err.scheduler.elevate = impossibile avviare con i diritti di amministratore: {err}
+err.scheduler.elevateCancelled = i diritti di amministratore non sono stati concessi (richiesta UAC annullata)
+err.scheduler.exeCheck = impossibile verificare le autorizzazioni di {path}: {err}
+err.scheduler.unsafeExe = un'attività SYSTEM non può eseguire {exe}: {account} può modificare {path} e quindi eseguire codice proprio come SYSTEM. Installare il programma con il programma di installazione (Program Files) o usare una cartella in cui possono scrivere solo gli amministratori.
+warn.scheduler.systemWindowsAuth = l'attività viene eseguita come SYSTEM con l'autenticazione di Windows: SQL Server richiede un account di accesso per NT AUTHORITY\\SYSTEM (DOMINIO\\COMPUTER$ per un server remoto) con autorizzazione di backup
+warn.scheduler.systemNetworkPath = l'attività viene eseguita come SYSTEM: alla cartella di rete {path} si accede con l'account computer (DOMINIO\\COMPUTER$), che richiede autorizzazioni di lettura, scrittura ed eliminazione
+warn.scheduler.currentUser = l'attività viene eseguita solo mentre {user} è connesso
+
+# ---------- Backend dell'interfaccia (app) ----------
+err.app.jobNotFound = processo non trovato: {job}
+err.app.jobExists = esiste già un processo denominato "{job}"
+err.app.alreadyRunning = il processo "{job}" è già in esecuzione
+err.app.renameRunning = il processo "{job}" è in esecuzione; non può essere rinominato ora
+err.app.deleteRunning = il processo "{job}" è in esecuzione; non può essere eliminato ora
+err.app.elevatedExit = il comando eseguito con i diritti di amministratore non è riuscito (codice di uscita {code})
+err.app.pathOutside = il file non si trova nella cartella dei log: {path}
+err.app.keepDays = la conservazione dei log non può essere negativa
+err.app.theme = tema sconosciuto: {theme}
+warn.app.renamedTask = l'attività pianificata del vecchio nome ({path}) esegue ancora il vecchio processo e non riuscirà; eliminarla e creare di nuovo l'attività
+warn.app.renamedBatch = il file batch del vecchio nome ({path}) esegue ancora il vecchio processo
+warn.app.taskOutdated = l'attività pianificata ({path}) non corrisponde alle impostazioni salvate; aggiornare l'attività
+
+# ---------- Messaggi di log ----------
+log.job.started = processo avviato
+log.job.done = processo terminato
+log.job.failed = impossibile eseguire il processo
+log.job.alreadyRunning = il processo è già in esecuzione; esecuzione non avviata
+log.access.failed = impossibile accedere alla cartella di backup; zip e conservazione verranno saltati
+log.connected = connesso al server
+log.targets = database di destinazione determinati
+log.db.cannotBackup = impossibile eseguire il backup del database
+log.db.skipped = database saltato
+log.backup.started = backup avviato
+log.backup.done = backup terminato
+log.backup.failed = backup non riuscito
+log.backup.sizeUnknown = impossibile leggere la dimensione del backup
+log.zip.started = zip avviato
+log.zip.done = zip terminato
+log.zip.failed = zip non riuscito
+log.retention.done = conservazione applicata
+log.retention.failed = impossibile applicare la conservazione
+log.retention.noSuccess = conservazione non applicata perché nessun backup è riuscito
+log.retention.deleted = backup vecchio eliminato
+log.cli.started = avviato dalla riga di comando
+log.gui.started = avviato dall'interfaccia utente
+warn.run.noLogFile = {err}; non verrà scritto nulla nel file di log
+log.run.saved = report di esecuzione scritto
+log.run.saveFailed = impossibile scrivere il report di esecuzione
+log.cleanup.done = log vecchi eliminati
+log.cleanup.failed = impossibile eliminare i log vecchi
+log.i18n.missing = nei file di lingua mancano alcune chiavi
+
+# ---------- Riepilogo dell'esecuzione ----------
+summary.header = Processo: {job}  Server: {server}  Durata: {elapsed}
+summary.error = ERRORE: {msg}
+summary.warning = AVVISO: {msg}
+summary.dbOK = [OK]   {db}  {size}  {elapsed}
+summary.dbFailed = [ERRORE] {db}  {msg}
+summary.dbSkipped = [SALTATO] {db}  {msg}
+summary.verified = verificato
+summary.zipOK = [ZIP]  {file}  {source} → {size}  {elapsed}
+summary.zipFailed = [ERRORE ZIP] {file}  {msg}
+summary.bakDeleted = .bak eliminato
+summary.deleted = [ELIM]  {file}  {size}
+summary.retentionFailed = [ERRORE CONSERVAZIONE] {msg}
+summary.result = Risultato: {ok} riusciti, {failed} non riusciti, {skipped} saltati
+summary.zipErrors = {count} errore/i zip
+summary.retentionError = errore di conservazione
+summary.exitCode = (codice di uscita {code})
+
+# ---------- Riga di comando ----------
+cli.usage = SqlBackup {version} – backup automatico di MSSQL\n\nUso:\n  SqlBackup.exe                            apre l'interfaccia utente\n  SqlBackup.exe run   --job <processo> [-v] esegue il processo (backup, verifica, zip, conservazione)\n  SqlBackup.exe test  --job <processo>     verifica la connessione e l'accesso alla cartella di backup\n  SqlBackup.exe list  --job <processo> [--json] elenca i database sul server\n  SqlBackup.exe batch --job <processo> [--path <file.bat>]\n                                           scrive un file batch che esegue il processo (predefinito: jobs\\<processo>.bat)\n  SqlBackup.exe task create|delete|run|status --job <processo> [--elevate] [--json]\n                                           gestisce l'attività pianificata (\\SqlBackup\\<processo>)\n  SqlBackup.exe version                    mostra la versione\n\n<processo>: nome del processo (cercato in {jobsDir}) o percorso di un file .json\n  -v              scrive le voci di log anche nella console\n  --json          scrive l'output in formato JSON\n  --elevate       richiede i diritti di amministratore (UAC) quando necessario\n  --lang <codice> lingua (ad es. en, tr, it); predefinita: la lingua delle impostazioni, altrimenti quella di Windows\n  --home <cartella> cartella dei dati (predefinita %ProgramData%\\SqlBackup)\n  --output <file> scrive tutto l'output in un file\n\nCodici di uscita: 0 riuscito, 1 errore parziale (task status: attività non trovata), 2 errore/errore di impostazioni, 3 processo già in esecuzione
+cli.error = ERRORE: {msg}
+cli.warning = AVVISO: {msg}
+cli.yes = sì
+cli.no = no
+cli.err.unknownCommand = comando sconosciuto: {cmd}
+cli.err.unexpectedArg = argomento imprevisto: {arg}
+cli.err.noJob = --job non specificato
+cli.err.jobNotFound = file del processo non trovato: {path}
+cli.err.connect = impossibile connettersi: {err}
+cli.warn.language = impossibile caricare la lingua ({code}): {err}
+cli.phase.backup = backup
+cli.phase.verify = verifica
+cli.phase.zip = zip
+cli.test.server = Server
+cli.test.version = Versione
+cli.test.edition = Edizione
+cli.test.protocol = Protocollo
+cli.test.login = Account di accesso
+cli.test.loginValue = {login} (sysadmin: {sysadmin})
+cli.test.compression = Compressione
+cli.test.compressionYes = supportata
+cli.test.compressionNo = non supportata
+cli.test.defaultBackupDir = Cartella di backup predefinita
+cli.test.access = Accesso alla cartella di backup
+cli.test.accessOK = OK ({path})
+cli.test.accessFailed = ERRORE
+cli.test.success = Connessione riuscita.
+cli.list.header = DATABASE\tSTATO\tRECUPERO\tDIMENSIONE (MB)\tSISTEMA\tULTIMO COMPLETO\tBACKUP
+cli.list.failed = ERRORE: {reason}
+cli.list.skipped = no ({reason})
+cli.list.footer = {count} database, {backup} verranno sottoposti a backup
+
+cli.warn.jobInvalid = il processo ha impostazioni non valide e non riuscirà durante l'esecuzione: {err}
+cli.batch.saved = File batch salvato: {path}
+cli.err.noTaskCommand = comando dell'attività non specificato (create, delete, run, status)
+cli.err.unknownTaskCommand = comando dell'attività sconosciuto: {cmd} (create, delete, run, status)
+cli.err.needAdmin = {err}; eseguire da un prompt dei comandi come amministratore o aggiungere --elevate
+cli.warn.taskExeMismatch = l'attività esegue un file di programma diverso: {exe}
+cli.task.created = Attività pianificata creata: {path}
+cli.task.deleted = Attività pianificata eliminata: {path}
+cli.task.started = Attività pianificata avviata: {path}
+cli.task.notFound = Attività pianificata non trovata: {path}
+cli.task.nextRunAt = Prossima esecuzione: {time}
+cli.task.path = Attività
+cli.task.state = Stato
+cli.task.account = Account
+cli.task.lastRun = Ultima esecuzione
+cli.task.lastResult = Ultimo risultato
+cli.task.nextRun = Prossima esecuzione
+cli.task.command = Comando
+cli.task.never = mai
+cli.task.state.ready = pronta
+cli.task.state.running = in esecuzione
+cli.task.state.queued = in coda
+cli.task.state.disabled = disattivata
+cli.task.result.code = {code} ({text})
+cli.task.result.ok = riuscito
+cli.task.result.partial = errore parziale
+cli.task.result.failed = non riuscito
+cli.task.result.alreadyRunning = il processo era già in esecuzione
+cli.task.result.running = in esecuzione ora
+cli.task.result.other = errore dell'Utilità di pianificazione {code}
+
+# ---------- Interfaccia utente (frontend) ----------
+gui.app.title = SqlBackup
+gui.app.version = Versione {version}
+gui.common.ok = OK
+gui.common.cancel = Annulla
+gui.common.loading = Caricamento…
+gui.menu.jobs = Processi
+gui.menu.logs = Log
+gui.menu.settings = Impostazioni
+gui.settings.appearance = Aspetto
+gui.settings.language = Lingua
+gui.settings.theme = Tema
+gui.settings.themeDark = Scuro
+gui.settings.themeLight = Chiaro
+gui.settings.saved = Impostazioni salvate.
+gui.settings.about = Informazioni
+gui.settings.version = Versione
+gui.settings.dataDir = Cartella dei dati
+
+# ---------- GUI: Comune ----------
+gui.common.yes = Sì
+gui.common.no = No
+gui.common.refresh = Aggiorna
+gui.common.browse = Sfoglia…
+gui.common.selectFolder = Seleziona cartella
+
+# ---------- GUI: Giorni ----------
+gui.day.mon = Lun
+gui.day.tue = Mar
+gui.day.wed = Mer
+gui.day.thu = Gio
+gui.day.fri = Ven
+gui.day.sat = Sab
+gui.day.sun = Dom
+
+# ---------- GUI: Processi ----------
+gui.jobs.new = Nuovo processo
+gui.jobs.empty = Non ci sono ancora processi di backup. Creare un processo per iniziare a eseguire il backup dei database.
+gui.jobs.unreadable = Impossibile leggere alcuni file dei processi:
+gui.jobs.server = Server
+gui.jobs.databases = Database
+gui.jobs.allDatabases = Tutti i database (inclusi i nuovi)
+gui.jobs.databaseCount = {count} database
+gui.jobs.schedule = Pianificazione
+gui.jobs.lastRun = Ultima esecuzione
+gui.jobs.neverRun = Mai eseguito
+gui.jobs.unreadableRun = Report illeggibile
+gui.jobs.nextRun = Prossima esecuzione
+gui.jobs.noTask = Nessuna attività pianificata
+gui.jobs.taskDisabled = Attività disattivata
+gui.jobs.taskOutdated = Attività non aggiornata
+gui.jobs.running = In esecuzione
+gui.jobs.runningElsewhere = In esecuzione in un altro processo (ad es. attività pianificata).
+gui.jobs.invalid = Impostazioni non valide
+gui.jobs.invalidInfo = Questo processo non può essere eseguito finché non vengono corretti i seguenti punti:
+gui.jobs.runNow = Esegui ora
+gui.jobs.stop = Interrompi
+gui.jobs.stopTitle = Interrompi backup
+gui.jobs.stopConfirm = Interrompere il backup in corso di "{job}"? Il database di cui si sta eseguendo il backup verrà contrassegnato come non riuscito.
+gui.jobs.stopNotHere = Questa esecuzione non è stata avviata da questa finestra e non può essere interrotta qui.
+gui.jobs.edit = Modifica
+gui.jobs.duplicate = Duplica
+gui.jobs.duplicateTitle = Duplica "{job}"
+gui.jobs.duplicateInfo = Vengono copiate tutte le impostazioni, compresi la password salvata e la pianificazione. Per la copia non viene creata alcuna attività pianificata.
+gui.jobs.duplicateName = Nome del nuovo processo
+gui.jobs.duplicated = Processo "{job}" creato.
+gui.jobs.history = Cronologia
+gui.jobs.delete = Elimina
+gui.jobs.deleteTitle = Elimina processo
+gui.jobs.deleteConfirm = Eliminare il processo "{job}"? Vengono eliminati anche la relativa attività pianificata e il file .bat predefinito (potrebbe essere richiesta l'approvazione dell'amministratore). I log e i file di backup vengono mantenuti.
+gui.jobs.deleted = Processo "{job}" eliminato.
+
+# ---------- GUI: Risultato dell'esecuzione ----------
+gui.run.starting = Avvio…
+gui.run.phaseBackup = Backup di {db} ({index}/{total}) – {percent}%
+gui.run.phaseVerify = Verifica di {db} ({index}/{total}) – {percent}%
+gui.run.phaseZip = Compressione di {db} ({index}/{total}) – {percent}%
+gui.run.success = Riuscito
+gui.run.partial = Parzialmente non riuscito
+gui.run.failed = Non riuscito
+gui.run.alreadyRunning = Già in esecuzione
+gui.run.doneSuccess = "{job}" completato correttamente.
+gui.run.donePartial = "{job}" completato con errori. Vedere Log per i dettagli.
+gui.run.doneFailed = "{job}" non riuscito. Vedere Log per i dettagli.
+gui.run.doneFailedError = "{job}" non riuscito: {error}
+gui.run.doneAlreadyRunning = "{job}" non è stato avviato perché è già in esecuzione.
+gui.run.job = Processo
+gui.run.status = Stato
+gui.run.server = Server
+gui.run.edition = Edizione
+gui.run.protocol = Protocollo
+gui.run.start = Avviato
+gui.run.duration = Durata
+gui.run.counts = Database
+gui.run.countsText = {ok} riusciti, {failed} non riusciti, {skipped} saltati
+gui.run.warnings = Avvisi:
+gui.run.databases = Database
+gui.run.database = Database
+gui.run.dbSuccess = Riuscito
+gui.run.dbFailed = Non riuscito
+gui.run.dbSkipped = Saltato
+gui.run.file = File
+gui.run.size = Dimensione
+gui.run.verified = Verificato
+gui.run.error = Errore
+gui.run.archives = File ZIP
+gui.run.bakDeleted = .bak eliminato
+gui.run.retention = Pulizia dei backup vecchi
+gui.run.deletedFile = File eliminato
+gui.run.fileDate = Data del backup
+gui.run.nothingDeleted = Nessun backup vecchio da eliminare.
+
+# ---------- GUI: Editor del processo ----------
+gui.editor.newJob = Nuovo processo
+gui.editor.unsaved = Modifiche non salvate
+gui.editor.back = Processi
+gui.editor.save = Salva
+gui.editor.saved = Processo "{job}" salvato.
+gui.editor.saveFailed = Il processo non è stato salvato. Correggere i campi evidenziati.
+gui.editor.saveErrors = Impossibile salvare il processo:
+gui.editor.saveWarnings = Salvato con avvisi:
+gui.editor.saveFirstTitle = Salva processo
+gui.editor.saveFirst = Questa azione usa il processo salvato. Salvare ora le modifiche?
+gui.editor.discardTitle = Modifiche non salvate
+gui.editor.discard = Il processo contiene modifiche non salvate. Uscire senza salvare?
+gui.editor.discardConfirm = Annulla modifiche
+gui.editor.name = Nome del processo
+gui.editor.namePlaceholder = ad es. Backup_Notturno
+gui.editor.nameHint = Usato come nome file e nome dell'attività pianificata: lettere, cifre, '_', '-' e '.' (max 64).
+gui.editor.tabConnection = Connessione
+gui.editor.tabDatabases = Database
+gui.editor.tabBackup = Backup
+gui.editor.tabArchive = ZIP e conservazione
+gui.editor.tabSchedule = Pianificazione
+gui.editor.tabErrors = {count} errore/i in questa scheda
+
+gui.close.title = Chiudi SqlBackup
+gui.close.unsaved = L'editor del processo contiene modifiche non salvate, che andranno perse.
+gui.close.running = I backup in corso verranno annullati: {jobs}
+gui.close.confirm = Chiudere comunque?
+
+# ---------- GUI: Connessione ----------
+gui.conn.server = Server
+gui.conn.serverName = Nome del server
+gui.conn.serverPlaceholder = ad es. . o SRV01 o 10.0.0.5
+gui.conn.serverHint = Nome host o indirizzo IP. Per questo computer usare "." o localhost. È accettato anche HOST\\ISTANZA.
+gui.conn.instance = Istanza
+gui.conn.instanceHint = Lasciare vuoto per l'istanza predefinita (MSSQLSERVER).
+gui.conn.port = Porta
+gui.conn.portHint = Vuoto = predefinita / determinata tramite l'istanza. Solo per TCP.
+gui.conn.protocol = Protocollo
+gui.conn.protocolAuto = Automatico
+gui.conn.protocolHint = La modalità automatica prova i protocolli uno alla volta (locale: Shared Memory, Named Pipes, TCP; remoto: TCP, Named Pipes).
+gui.conn.auth = Autenticazione
+gui.conn.authType = Tipo di autenticazione
+gui.conn.authSql = Autenticazione di SQL Server
+gui.conn.authWindows = Autenticazione di Windows
+gui.conn.user = Nome utente
+gui.conn.password = Password
+gui.conn.passwordStored = (password salvata invariata)
+gui.conn.passwordHint = Lasciare vuoto per mantenere la password salvata. Viene memorizzata crittografata per questo computer (DPAPI).
+gui.conn.passwordUnreadable = La password salvata non può essere decrittografata su questo computer (il processo potrebbe essere stato copiato da un altro computer). Immettere di nuovo la password. ({error})
+gui.conn.windowsAuthInfo = Viene usato l'account che esegue il backup. Se l'attività pianificata viene eseguita come SYSTEM, SQL Server richiede un account di accesso per NT AUTHORITY\\SYSTEM (su un server remoto: DOMINIO\\COMPUTER$) con autorizzazione di backup.
+gui.conn.options = Opzioni
+gui.conn.encrypt = Crittografa la connessione
+gui.conn.trustCert = Considera attendibile il certificato del server
+gui.conn.trustCertHint = Senza crittografia viene crittografato solo l'accesso e il certificato del server non viene convalidato. Con la crittografia attiva, attivare questa opzione per i certificati autofirmati (ad es. un'installazione predefinita di SQL Express).
+gui.conn.timeout = Timeout di connessione (secondi)
+gui.conn.test = Test di connessione
+gui.conn.testButton = Verifica connessione
+gui.conn.testing = Connessione in corso…
+gui.conn.testOk = Connessione riuscita.
+gui.conn.infoServer = Server
+gui.conn.infoVersion = Versione
+gui.conn.infoEdition = Edizione
+gui.conn.infoProtocol = Protocollo
+gui.conn.infoLogin = Account di accesso
+gui.conn.infoSysAdmin = sysadmin
+gui.conn.infoBackupDir = Cartella di backup predefinita
+gui.conn.noCompression = Questa edizione non supporta la compressione dei backup; la compressione viene disattivata automaticamente durante l'esecuzione del processo.
+
+# ---------- GUI: Database ----------
+gui.db.options = Selezione
+gui.db.includeNew = Includi i nuovi database
+gui.db.includeNewHint = Se attivato, a ogni esecuzione viene eseguito il backup di tutti i database del server tranne quelli deselezionati; i database creati in seguito vengono inclusi automaticamente.
+gui.db.excludeSystem = Escludi i database di sistema (master, model, msdb)
+gui.db.list = Database sul server
+gui.db.refresh = Carica elenco
+gui.db.loading = Caricamento dei database…
+gui.db.notLoaded = Immettere i dati di connessione e caricare l'elenco dei database.
+gui.db.selectedList = Selezionati:
+gui.db.summarySelected = {count} selezionati
+gui.db.summaryAllNew = Tutti i database, {count} esclusi
+gui.db.selectAll = Seleziona tutto
+gui.db.missing = Selezionati ma non trovati sul server: {list}
+gui.db.removeMissing = Rimuovi dalla selezione
+gui.db.empty = Nessun database trovato.
+gui.db.name = Nome
+gui.db.system = sistema
+gui.db.readOnly = sola lettura
+gui.db.state = Stato
+gui.db.notBackupable = backup non possibile
+gui.db.recovery = Modello di recupero
+gui.db.size = Dimensione
+gui.db.lastBackup = Ultimo backup completo
+gui.db.never = mai
+
+# ---------- GUI: Backup ----------
+gui.backup.folders = Cartella di backup
+gui.backup.serverPath = Cartella su SQL Server (percorso server)
+gui.backup.serverPathHint = SQL Server scrive qui il backup, visto dal computer di SQL Server (ad es. D:\\SqlBackups).
+gui.backup.useServerDefault = Predefinita del server
+gui.backup.accessPath = La stessa cartella vista da questo programma (percorso di accesso)
+gui.backup.accessPathHint = Lasciare vuoto per un server locale. Per un server remoto immettere il percorso della condivisione (ad es. \\\\SRV01\\SqlBackups). Necessario per ZIP e conservazione.
+gui.backup.checkAccess = Verifica accesso
+gui.backup.noFolder = Immettere prima una cartella.
+gui.backup.accessOk = Questo programma può leggere, scrivere ed eliminare in {path}.
+gui.backup.accessFailed = Nessun accesso a {path}: {error}
+gui.backup.pathsInfo = Il file di backup viene scritto dall'account del servizio SQL Server (ad es. NT Service\\MSSQL$SQLEXPRESS), non da questo programma. Scegliere una cartella accessibile sia all'account del servizio sia all'account che esegue il processo, ad es. D:\\SqlBackups (la cartella predefinita in Program Files di solito nega l'accesso agli altri account).
+gui.backup.fileName = Nome file
+gui.backup.template = Modello del nome file
+gui.backup.templateHint = {db} è obbligatorio. Inoltre: {server}, {job} e parti di data come {yyyyMMdd}, {HHmmss}, {yyyy-MM-dd}. Se manca, viene aggiunto .bak.
+gui.backup.preview = Esempio:
+gui.backup.options = Opzioni
+gui.backup.compression = Compressione
+gui.backup.checksum = Checksum
+gui.backup.copyOnly = Backup di sola copia
+gui.backup.copyOnlyHint = I backup di sola copia non influiscono sulla catena di backup di altri strumenti di backup.
+gui.backup.verify = Verifica dopo il backup (RESTORE VERIFYONLY)
+gui.backup.commandTimeout = Timeout dei comandi (minuti)
+gui.backup.commandTimeoutHint = 0 = illimitato.
+gui.backup.compressionUnsupported = Il server connesso non supporta la compressione (Express/Web); verrà disattivata durante l'esecuzione.
+
+# ---------- GUI: ZIP e conservazione ----------
+gui.archive.zip = ZIP
+gui.archive.zipEnabled = Comprimi i backup in ZIP
+gui.archive.mode = File ZIP
+gui.archive.modeSingle = Un unico ZIP per tutti i database
+gui.archive.modePerDb = Uno ZIP per database
+gui.archive.deleteBak = Elimina i file .bak dopo uno ZIP riuscito
+gui.archive.zipHint = Lo ZIP viene creato al termine di tutti i backup, nella stessa cartella.
+gui.archive.retention = Conservazione
+gui.archive.retentionMode = Elimina i backup vecchi
+gui.archive.retentionNone = Mai
+gui.archive.retentionByDays = Più vecchi di un numero di giorni
+gui.archive.retentionByCount = Mantieni gli ultimi N backup
+gui.archive.retentionDays = Giorni di conservazione
+gui.archive.retentionDaysHint = I backup più vecchi vengono eliminati dopo un backup riuscito.
+gui.archive.retentionCount = Backup da mantenere (per database)
+gui.archive.retentionCountHint = I backup più vecchi oltre questo numero vengono eliminati dopo un backup riuscito.
+gui.archive.retentionInfo = Vengono eliminati solo i file corrispondenti al modello del nome file di questo processo; la data del backup viene letta dal nome del file. Due processi che usano la stessa cartella, lo stesso modello e lo stesso database condividono gli stessi file.
+gui.archive.accessWarning = ZIP e conservazione operano direttamente sui file, quindi questo programma (e l'account dell'attività pianificata) necessita di accesso in lettura, scrittura ed eliminazione al percorso di accesso. Usare "Verifica accesso" nella scheda Backup.
+
+# ---------- GUI: Pianificazione ----------
+gui.schedule.title = Pianificazione
+gui.schedule.frequency = Frequenza
+gui.schedule.daily = Giornaliera
+gui.schedule.weekly = Settimanale
+gui.schedule.hourly = Ogni qualche ora
+gui.schedule.time = Ora
+gui.schedule.startTime = Ora di inizio
+gui.schedule.days = Giorni
+gui.schedule.interval = Ripeti ogni (ore)
+gui.schedule.intervalHint = 1-23. La prima esecuzione avviene all'ora di inizio.
+gui.schedule.runAs = Esegui come
+gui.schedule.runAsSystem = SYSTEM (consigliato)
+gui.schedule.runAsCurrent = Utente corrente
+gui.schedule.runAsHint = SYSTEM viene eseguito anche quando nessuno è connesso; la creazione dell'attività richiede l'approvazione dell'amministratore.
+gui.schedule.warnings = Verificare prima di creare l'attività:
+gui.schedule.dailyText = Ogni giorno alle {time}
+gui.schedule.weeklyText = {days} alle {time}
+gui.schedule.hourlyText = Ogni {hours} h dalle {time}
+gui.task.title = Attività pianificata
+gui.task.notSaved = Salvare il processo per creare un'attività pianificata.
+gui.task.none = Per questo processo non è stata creata alcuna attività pianificata.
+gui.task.path = Attività
+gui.task.state = Stato
+gui.task.stateReady = Pronta
+gui.task.stateRunning = In esecuzione
+gui.task.stateDisabled = Disattivata
+gui.task.stateUnknown = Sconosciuto
+gui.task.lastRun = Ultima esecuzione
+gui.task.never = Mai
+gui.task.nextRun = Prossima esecuzione
+gui.task.account = Account
+gui.task.outdated = L'attività non corrisponde alle impostazioni salvate del processo (pianificazione, account o percorso del programma). Aggiornare l'attività.
+gui.task.create = Crea attività
+gui.task.update = Aggiorna attività
+gui.task.created = Attività pianificata salvata.
+gui.task.run = Esegui attività ora
+gui.task.started = Attività avviata. Il risultato verrà visualizzato in Log.
+gui.task.delete = Elimina attività
+gui.task.deleteTitle = Elimina attività pianificata
+gui.task.deleteConfirm = Eliminare l'attività pianificata {path}? Il processo stesso viene mantenuto.
+gui.task.deleted = Attività pianificata eliminata.
+gui.task.uacHint = Le attività usano il processo salvato. Windows potrebbe richiedere l'approvazione dell'amministratore (UAC).
+gui.batch.title = File batch
+gui.batch.hint = Un file .bat che esegue questo processo, da usare con altri pianificatori o per esecuzioni manuali. Non contiene alcuna password.
+gui.batch.save = Salva .bat…
+gui.batch.saved = Salvato: {path}
+
+# ---------- GUI: Log ----------
+gui.logs.allJobs = Tutti i processi
+gui.logs.tabRuns = Cronologia esecuzioni
+gui.logs.tabFiles = File di log
+gui.logs.start = Avviato
+gui.logs.job = Processo
+gui.logs.status = Stato
+gui.logs.databases = Database
+gui.logs.duration = Durata
+gui.logs.error = Errore
+gui.logs.unreadable = Illeggibile
+gui.logs.noRuns = Ancora nessuna esecuzione.
+gui.logs.runTitle = Dettagli dell'esecuzione
+gui.logs.date = Data
+gui.logs.size = Dimensione
+gui.logs.file = File
+gui.logs.noFiles = Nessun file di log.
+gui.logs.logTitle = Log: {job} – {date}
+gui.logs.truncated = Il file è grande ({size}); viene mostrata solo la parte finale.
+
+# ---------- GUI: Impostazioni ----------
+gui.settings.defaults = Valori predefiniti
+gui.settings.defaultServerPath = Cartella di backup predefinita (percorso server)
+gui.settings.defaultServerPathHint = Proposta per i nuovi processi.
+gui.settings.defaultAccessPath = Percorso di accesso predefinito
+gui.settings.defaultAccessPathHint = Proposto per i nuovi processi; lasciare vuoto quando si esegue il backup di un server locale.
+gui.settings.logKeepDays = Conserva i log per (giorni)
+gui.settings.logKeepDaysHint = I file di log e i report di esecuzione più vecchi vengono eliminati. Vuoto = 30.
+gui.settings.saveDefaults = Salva

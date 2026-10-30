@@ -1,0 +1,606 @@
+# Archivo de idioma de SqlBackup – Español
+# Formato: clave = valor  (UTF-8). Las líneas que empiezan por "#" son comentarios.
+# Los marcadores como {name} se rellenan en tiempo de ejecución; no los cambie al traducir.
+# Secuencias de escape: \n nueva línea, \t tabulación, \\ barra invertida.
+@code = es
+@name = Español
+
+# ---------- Común ----------
+common.unknown = desconocido
+common.taskDescription = Ejecuta el trabajo de SqlBackup "{job}" (creado por SqlBackup).
+common.batchFiles = Archivos por lotes
+
+# ---------- Configuración del trabajo (config) ----------
+err.config.nameInvalid = el nombre del trabajo debe tener entre 1 y 64 caracteres y solo puede contener letras, dígitos, '_', '-' y '.'
+err.config.nameDots = el nombre del trabajo no puede estar formado solo por puntos
+err.config.serverEmpty = el nombre del servidor no puede estar vacío
+err.config.portRange = el puerto debe estar entre 0 y 65535
+err.config.portTCPOnly = el puerto solo se puede usar con el protocolo TCP
+err.config.protocolInvalid = protocolo no válido: "{value}"
+err.config.userEmpty = el nombre de usuario es obligatorio para la autenticación de SQL
+err.config.passwordEmpty = la contraseña es obligatoria para la autenticación de SQL
+err.config.authInvalid = tipo de autenticación no válido: "{value}"
+err.config.timeoutNegative = el tiempo de espera de conexión no puede ser negativo
+err.config.noDatabase = se debe seleccionar al menos una base de datos
+err.config.serverPathEmpty = la carpeta de copia de seguridad (ruta del servidor) no puede estar vacía
+err.config.commandTimeoutNegative = el tiempo de espera de comandos no puede ser negativo
+err.config.deleteBakNeedsZip = para eliminar los .bak después del zip, la opción zip debe estar activada
+err.config.retentionValue = el valor de retención debe ser mayor que 0
+err.config.retentionModeInvalid = modo de retención no válido: "{value}"
+err.config.scheduleTime = la hora de la programación debe tener el formato HH:MM (p. ej. 02:00)
+err.config.scheduleNoDays = se debe seleccionar al menos un día para una programación semanal
+err.config.scheduleDayInvalid = día no válido: "{value}"
+err.config.scheduleInterval = el intervalo de la programación por horas debe ser de 1 a 23 horas
+err.config.scheduleFrequencyInvalid = frecuencia de programación no válida: "{value}"
+err.config.runAsInvalid = cuenta de ejecución no válida: "{value}"
+err.config.templateEmpty = la plantilla de nombre de archivo no puede estar vacía
+err.config.templateNoDb = la plantilla de nombre de archivo debe contener {db}
+err.config.templateInvalidChars = la plantilla de nombre de archivo no puede contener \\ / : * ? " < > |
+err.config.mkdir = no se pudo crear la carpeta {path}: {err}
+err.config.dirPermission = no se pudieron establecer los permisos de la carpeta {path}: {err}
+err.config.jobRead = no se pudo leer el archivo del trabajo: {err}
+err.config.jobParse = no se pudo analizar el archivo del trabajo ({path}): {err}
+err.config.jobVersion = el archivo del trabajo pertenece a una versión más reciente (v{version}); actualice el programa
+err.config.settingsRead = no se pudo leer el archivo de configuración: {err}
+err.config.settingsParse = no se pudo analizar el archivo de configuración ({path}): {err}
+err.config.encrypt = no se pudo cifrar la contraseña: {err}
+err.config.decryptBase64 = el valor cifrado no es válido (no es base64)
+err.config.decrypt = no se pudo descifrar la contraseña (¿se creó en otro equipo?): {err}
+
+# ---------- SQL Server (mssql) ----------
+err.mssql.connect = no se pudo conectar al servidor: {err}
+err.mssql.login = SQL Server rechazó el inicio de sesión: {err}. Compruebe el nombre de usuario y la contraseña (la autenticación de SQL también requiere el modo "Autenticación de SQL Server y Windows" en el servidor). Con la autenticación de Windows, la cuenta que ejecuta el trabajo (SYSTEM para las tareas programadas) necesita un inicio de sesión en el servidor.
+err.mssql.connInvalid = configuración de conexión no válida: {err}
+err.mssql.serverInfo = no se pudo leer la información del servidor: {err}
+err.mssql.listDatabases = no se pudieron enumerar las bases de datos: {err}
+err.mssql.backup = no se pudo hacer la copia de seguridad de {db}: {err}
+err.mssql.backupHint = no se pudo hacer la copia de seguridad de {db}: {err} — Sugerencia: {hint}
+err.mssql.hintAccess = La cuenta de servicio de SQL Server (normalmente {account}) no puede escribir en esta carpeta; conceda a esa cuenta el permiso Modificar sobre la carpeta o elija una carpeta en la que pueda escribir.
+err.mssql.hintPath = No se encontró la carpeta en el equipo que ejecuta SQL Server. La carpeta de copia de seguridad la resuelve el servidor (en un servidor remoto no es una ruta de este equipo); cree la carpeta o use una ruta o un recurso compartido UNC accesible para el servidor.
+err.mssql.hintDiskFull = No hay suficiente espacio libre en el disco de destino; libere espacio o revise la configuración de retención.
+err.mssql.verify = no se pudo verificar la copia de seguridad ({file}): {err}
+err.mssql.backupSet = no se pudo leer la información de la copia de seguridad ({db}): {err}
+err.mssql.canceled = operación cancelada o tiempo de espera agotado: {err}
+warn.mssql.insecureLogin = la contraseña de SQL Server se envía al servidor remoto sin verificar su certificado; alguien en la red podría interceptarla. Active el cifrado con verificación de certificado ("Confiar en el certificado del servidor" desactivado) o use la autenticación de Windows.
+
+# ---------- Plantilla de nombre de archivo ----------
+err.template.unmatchedClose = la plantilla de nombre de archivo tiene un '}' sin pareja
+err.template.unclosed = la plantilla de nombre de archivo tiene un '{' sin cerrar
+err.template.unknown = marcador desconocido en la plantilla de nombre de archivo: {{name}}
+
+# ---------- Ejecución de la copia de seguridad ----------
+err.backup.invalidJob = configuración del trabajo no válida: {err}
+err.backup.alreadyRunning = el trabajo "{job}" ya se está ejecutando; esta ejecución no se inició
+err.backup.lockHeld = el trabajo ya se está ejecutando
+err.backup.lock = no se pudo obtener el bloqueo del trabajo: {err}
+err.backup.password = no se pudo descifrar la contraseña guardada; si el archivo del trabajo se copió de otro equipo, vuelva a introducir la contraseña: {err}
+err.backup.noDatabases = no hay bases de datos para copiar
+err.backup.canceled = operación cancelada
+err.backup.deleteBak = zip creado, pero no se pudo eliminar el .bak: {err}
+err.backup.access = no se puede acceder a la carpeta de copia de seguridad: {msg}. Tanto la cuenta de servicio de SQL Server como la cuenta que ejecuta este programa ({account}) deben poder leer, escribir y eliminar en la carpeta (p. ej. D:\\SqlBackups); en un servidor remoto la ruta de acceso debe ser una ruta UNC
+warn.backup.noCompression = la edición del servidor ({edition}) no admite la compresión de copias de seguridad; compresión desactivada
+
+reason.notFound = no se encontró en el servidor
+reason.systemExcluded = las bases de datos del sistema están excluidas
+reason.tempdb = no se puede hacer copia de seguridad de tempdb
+reason.state = la base de datos no está en un estado que permita la copia de seguridad ({state})
+
+# ---------- Retención ----------
+err.retention.readDir = no se pudo leer la carpeta de copia de seguridad: {err}
+err.retention.delete = no se pudieron eliminar algunas copias de seguridad antiguas: {err}
+warn.retention.noDate = no se aplicó la retención porque la plantilla de nombre de archivo no contiene fecha (año, mes y día)
+warn.retention.canceled = operación cancelada; no se aplicó la retención
+
+# ---------- ZIP (archive) ----------
+err.archive.dirNotFound = no se encontró la carpeta: {path}
+err.archive.dirNoPermission = sin permiso para acceder a la carpeta: {path}
+err.archive.dirAccess = no se puede acceder a la carpeta: {err}
+err.archive.notDir = la ruta no es una carpeta: {path}
+err.archive.noWrite = sin permiso de escritura en la carpeta ({path}): {err}
+err.archive.write = no se puede escribir en la carpeta ({path}): {err}
+err.archive.noRead = sin permiso de lectura en la carpeta ({path}): {err}
+err.archive.noDelete = sin permiso de eliminación en la carpeta ({path}): {err}
+err.archive.noFiles = no hay archivos para comprimir
+err.archive.readBak = no se pudo leer el archivo de copia de seguridad: {err}
+err.archive.duplicateName = un zip no puede contener dos archivos con el mismo nombre: {name}
+err.archive.rename = no se pudo cambiar el nombre del archivo zip: {err}
+err.archive.create = no se pudo crear el archivo zip: {err}
+err.archive.writeZip = no se pudo escribir el archivo zip: {err}
+err.archive.entry = no se pudo crear la entrada del zip: {err}
+err.archive.canceled = zip cancelado: {err}
+err.archive.compress = no se pudo comprimir {name}: {err}
+err.archive.verify = error en la verificación del zip: {err}
+err.archive.verifyEntry = error en la verificación del zip ({name}): {err}
+err.archive.verifyCount = error en la verificación del zip: se esperaban {want} entradas y se encontraron {got}
+err.archive.verifyUnexpected = error en la verificación del zip: entrada inesperada {name}
+err.archive.verifySize = error en la verificación del zip: el tamaño no coincide en {name} ({got} / {want})
+err.archive.verifyReadSize = error en la verificación del zip: el tamaño leído no coincide en {name}
+
+# ---------- Registro ----------
+err.logging.mkdir = no se pudo crear la carpeta de registros: {err}
+err.logging.open = no se pudo abrir el archivo de registro: {err}
+err.logging.runsMkdir = no se pudo crear la carpeta de informes de ejecución: {err}
+err.logging.runWrite = no se pudo escribir el informe de ejecución: {err}
+err.logging.runRead = no se pudo leer el informe de ejecución: {err}
+err.logging.runParse = no se pudo analizar el informe de ejecución ({path}): {err}
+err.logging.cleanup = no se pudieron eliminar algunos archivos de registro antiguos: {err}
+
+# ---------- Archivo por lotes y tarea programada (scheduler) ----------
+err.scheduler.exePath = no se pudo determinar la ruta del programa: {err}
+err.scheduler.path = ruta no válida {path}: {err}
+err.scheduler.badPath = la ruta no se puede usar en una línea de comandos: "{path}"
+err.scheduler.percentPath = la ruta contiene caracteres "%", que el Programador de tareas expande como variables de entorno: {path}
+err.scheduler.batchWrite = no se pudo escribir el archivo por lotes {path}: {err}
+err.scheduler.noUser = no se pudo determinar la cuenta de usuario de la tarea
+err.scheduler.accessDenied = el Programador de tareas denegó el acceso (se requieren derechos de administrador)
+err.scheduler.notFound = no se encontró la tarea programada
+err.scheduler.connect = no se pudo conectar al Programador de tareas: {err}
+err.scheduler.create = no se pudo crear la tarea programada: {err}
+err.scheduler.delete = no se pudo eliminar la tarea programada: {err}
+err.scheduler.run = no se pudo iniciar la tarea programada: {err}
+err.scheduler.query = no se pudo leer la tarea programada: {err}
+err.scheduler.elevate = no se pudo iniciar con derechos de administrador: {err}
+err.scheduler.elevateCancelled = no se concedieron los derechos de administrador (solicitud de UAC cancelada)
+err.scheduler.exeCheck = no se pudieron comprobar los permisos de {path}: {err}
+err.scheduler.unsafeExe = una tarea de SYSTEM no puede ejecutar {exe}: {account} puede modificar {path} y, por tanto, ejecutar su propio código como SYSTEM. Instale el programa con el instalador (Program Files) o use una carpeta en la que solo puedan escribir los administradores.
+warn.scheduler.systemWindowsAuth = la tarea se ejecuta como SYSTEM con autenticación de Windows: SQL Server necesita un inicio de sesión para NT AUTHORITY\\SYSTEM (DOMINIO\\EQUIPO$ en un servidor remoto) con permiso de copia de seguridad
+warn.scheduler.systemNetworkPath = la tarea se ejecuta como SYSTEM: a la carpeta de red {path} se accede con la cuenta del equipo (DOMINIO\\EQUIPO$), que necesita permisos de lectura, escritura y eliminación
+warn.scheduler.currentUser = la tarea solo se ejecuta mientras {user} tenga la sesión iniciada
+
+# ---------- Backend de la interfaz (app) ----------
+err.app.jobNotFound = no se encontró el trabajo: {job}
+err.app.jobExists = ya existe un trabajo llamado "{job}"
+err.app.alreadyRunning = el trabajo "{job}" ya se está ejecutando
+err.app.renameRunning = el trabajo "{job}" se está ejecutando; no se puede cambiar el nombre ahora
+err.app.deleteRunning = el trabajo "{job}" se está ejecutando; no se puede eliminar ahora
+err.app.elevatedExit = el comando ejecutado con derechos de administrador falló (código de salida {code})
+err.app.pathOutside = el archivo no está en la carpeta de registros: {path}
+err.app.keepDays = la retención de registros no puede ser negativa
+err.app.theme = tema desconocido: {theme}
+warn.app.renamedTask = la tarea programada del nombre anterior ({path}) sigue ejecutando el trabajo anterior y fallará; elimínela y vuelva a crear la tarea
+warn.app.renamedBatch = el archivo por lotes del nombre anterior ({path}) sigue ejecutando el trabajo anterior
+warn.app.taskOutdated = la tarea programada ({path}) no coincide con la configuración guardada; actualice la tarea
+
+# ---------- Mensajes de registro ----------
+log.job.started = trabajo iniciado
+log.job.done = trabajo finalizado
+log.job.failed = no se pudo ejecutar el trabajo
+log.job.alreadyRunning = el trabajo ya se está ejecutando; ejecución no iniciada
+log.access.failed = no se puede acceder a la carpeta de copia de seguridad; se omitirán el zip y la retención
+log.connected = conectado al servidor
+log.targets = bases de datos de destino determinadas
+log.db.cannotBackup = no se puede hacer copia de seguridad de la base de datos
+log.db.skipped = base de datos omitida
+log.backup.started = copia de seguridad iniciada
+log.backup.done = copia de seguridad finalizada
+log.backup.failed = error en la copia de seguridad
+log.backup.sizeUnknown = no se pudo leer el tamaño de la copia de seguridad
+log.zip.started = zip iniciado
+log.zip.done = zip finalizado
+log.zip.failed = error en el zip
+log.retention.done = retención aplicada
+log.retention.failed = no se pudo aplicar la retención
+log.retention.noSuccess = no se aplicó la retención porque ninguna copia de seguridad se completó correctamente
+log.retention.deleted = copia de seguridad antigua eliminada
+log.cli.started = iniciado desde la línea de comandos
+log.gui.started = iniciado desde la interfaz de usuario
+warn.run.noLogFile = {err}; no se escribirá nada en el archivo de registro
+log.run.saved = informe de ejecución escrito
+log.run.saveFailed = no se pudo escribir el informe de ejecución
+log.cleanup.done = registros antiguos limpiados
+log.cleanup.failed = no se pudieron limpiar los registros antiguos
+log.i18n.missing = faltan claves en los archivos de idioma
+
+# ---------- Resumen de la ejecución ----------
+summary.header = Trabajo: {job}  Servidor: {server}  Duración: {elapsed}
+summary.error = ERROR: {msg}
+summary.warning = ADVERTENCIA: {msg}
+summary.dbOK = [OK]   {db}  {size}  {elapsed}
+summary.dbFailed = [ERROR] {db}  {msg}
+summary.dbSkipped = [OMITIDA] {db}  {msg}
+summary.verified = verificada
+summary.zipOK = [ZIP]  {file}  {source} → {size}  {elapsed}
+summary.zipFailed = [ERROR ZIP] {file}  {msg}
+summary.bakDeleted = .bak eliminado
+summary.deleted = [ELIM]  {file}  {size}
+summary.retentionFailed = [ERROR RETENCIÓN] {msg}
+summary.result = Resultado: {ok} correctas, {failed} con error, {skipped} omitidas
+summary.zipErrors = {count} error(es) de zip
+summary.retentionError = error de retención
+summary.exitCode = (código de salida {code})
+
+# ---------- Línea de comandos ----------
+cli.usage = SqlBackup {version} – copia de seguridad automática de MSSQL\n\nUso:\n  SqlBackup.exe                            abre la interfaz de usuario\n  SqlBackup.exe run   --job <trabajo> [-v] ejecuta el trabajo (copia, verificación, zip, retención)\n  SqlBackup.exe test  --job <trabajo>      prueba la conexión y el acceso a la carpeta de copia de seguridad\n  SqlBackup.exe list  --job <trabajo> [--json] enumera las bases de datos del servidor\n  SqlBackup.exe batch --job <trabajo> [--path <archivo.bat>]\n                                           escribe un archivo por lotes que ejecuta el trabajo (predeterminado: jobs\\<trabajo>.bat)\n  SqlBackup.exe task create|delete|run|status --job <trabajo> [--elevate] [--json]\n                                           administra la tarea programada (\\SqlBackup\\<trabajo>)\n  SqlBackup.exe version                    muestra la versión\n\n<trabajo>: nombre del trabajo (buscado en {jobsDir}) o ruta a un archivo .json\n  -v              escribe también las entradas del registro en la consola\n  --json          escribe la salida en formato JSON\n  --elevate       solicita derechos de administrador (UAC) cuando sea necesario\n  --lang <código> idioma (p. ej. en, tr, es); predeterminado: el idioma de la configuración o, si no, el de Windows\n  --home <carpeta> carpeta de datos (predeterminada %ProgramData%\\SqlBackup)\n  --output <archivo> escribe toda la salida en un archivo\n\nCódigos de salida: 0 correcto, 1 error parcial (task status: tarea no encontrada), 2 error/error de configuración, 3 el trabajo ya se está ejecutando
+cli.error = ERROR: {msg}
+cli.warning = ADVERTENCIA: {msg}
+cli.yes = sí
+cli.no = no
+cli.err.unknownCommand = comando desconocido: {cmd}
+cli.err.unexpectedArg = argumento inesperado: {arg}
+cli.err.noJob = no se especificó --job
+cli.err.jobNotFound = no se encontró el archivo del trabajo: {path}
+cli.err.connect = no se pudo conectar: {err}
+cli.warn.language = no se pudo cargar el idioma ({code}): {err}
+cli.phase.backup = copia
+cli.phase.verify = verificación
+cli.phase.zip = zip
+cli.test.server = Servidor
+cli.test.version = Versión
+cli.test.edition = Edición
+cli.test.protocol = Protocolo
+cli.test.login = Inicio de sesión
+cli.test.loginValue = {login} (sysadmin: {sysadmin})
+cli.test.compression = Compresión
+cli.test.compressionYes = admitida
+cli.test.compressionNo = no admitida
+cli.test.defaultBackupDir = Carpeta de copia de seguridad predeterminada
+cli.test.access = Acceso a la carpeta de copia de seguridad
+cli.test.accessOK = OK ({path})
+cli.test.accessFailed = ERROR
+cli.test.success = Conexión correcta.
+cli.list.header = BASE DE DATOS\tESTADO\tRECUPERACIÓN\tTAMAÑO (MB)\tSISTEMA\tÚLTIMA COMPLETA\tCOPIA
+cli.list.failed = ERROR: {reason}
+cli.list.skipped = no ({reason})
+cli.list.footer = {count} base(s) de datos, se copiarán {backup}
+
+cli.warn.jobInvalid = el trabajo tiene una configuración no válida y fallará al ejecutarse: {err}
+cli.batch.saved = Archivo por lotes guardado: {path}
+cli.err.noTaskCommand = no se especificó el comando de la tarea (create, delete, run, status)
+cli.err.unknownTaskCommand = comando de tarea desconocido: {cmd} (create, delete, run, status)
+cli.err.needAdmin = {err}; ejecútelo desde un símbolo del sistema de administrador o agregue --elevate
+cli.warn.taskExeMismatch = la tarea ejecuta otro archivo de programa: {exe}
+cli.task.created = Tarea programada creada: {path}
+cli.task.deleted = Tarea programada eliminada: {path}
+cli.task.started = Tarea programada iniciada: {path}
+cli.task.notFound = No se encontró la tarea programada: {path}
+cli.task.nextRunAt = Próxima ejecución: {time}
+cli.task.path = Tarea
+cli.task.state = Estado
+cli.task.account = Cuenta
+cli.task.lastRun = Última ejecución
+cli.task.lastResult = Último resultado
+cli.task.nextRun = Próxima ejecución
+cli.task.command = Comando
+cli.task.never = nunca
+cli.task.state.ready = lista
+cli.task.state.running = en ejecución
+cli.task.state.queued = en cola
+cli.task.state.disabled = deshabilitada
+cli.task.result.code = {code} ({text})
+cli.task.result.ok = correcto
+cli.task.result.partial = error parcial
+cli.task.result.failed = error
+cli.task.result.alreadyRunning = el trabajo ya se estaba ejecutando
+cli.task.result.running = en ejecución ahora
+cli.task.result.other = error del Programador de tareas {code}
+
+# ---------- Interfaz de usuario (frontend) ----------
+gui.app.title = SqlBackup
+gui.app.version = Versión {version}
+gui.common.ok = Aceptar
+gui.common.cancel = Cancelar
+gui.common.loading = Cargando…
+gui.menu.jobs = Trabajos
+gui.menu.logs = Registros
+gui.menu.settings = Configuración
+gui.settings.appearance = Apariencia
+gui.settings.language = Idioma
+gui.settings.theme = Tema
+gui.settings.themeDark = Oscuro
+gui.settings.themeLight = Claro
+gui.settings.saved = Configuración guardada.
+gui.settings.about = Acerca de
+gui.settings.version = Versión
+gui.settings.dataDir = Carpeta de datos
+
+# ---------- GUI: Común ----------
+gui.common.yes = Sí
+gui.common.no = No
+gui.common.refresh = Actualizar
+gui.common.browse = Examinar…
+gui.common.selectFolder = Seleccionar carpeta
+
+# ---------- GUI: Días ----------
+gui.day.mon = Lun
+gui.day.tue = Mar
+gui.day.wed = Mié
+gui.day.thu = Jue
+gui.day.fri = Vie
+gui.day.sat = Sáb
+gui.day.sun = Dom
+
+# ---------- GUI: Trabajos ----------
+gui.jobs.new = Nuevo trabajo
+gui.jobs.empty = Todavía no hay trabajos de copia de seguridad. Cree un trabajo para empezar a hacer copias de seguridad de sus bases de datos.
+gui.jobs.unreadable = No se pudieron leer algunos archivos de trabajo:
+gui.jobs.server = Servidor
+gui.jobs.databases = Bases de datos
+gui.jobs.allDatabases = Todas las bases de datos (incluidas las nuevas)
+gui.jobs.databaseCount = {count} base(s) de datos
+gui.jobs.schedule = Programación
+gui.jobs.lastRun = Última ejecución
+gui.jobs.neverRun = Nunca ejecutado
+gui.jobs.unreadableRun = Informe ilegible
+gui.jobs.nextRun = Próxima ejecución
+gui.jobs.noTask = Sin tarea programada
+gui.jobs.taskDisabled = Tarea deshabilitada
+gui.jobs.taskOutdated = Tarea desactualizada
+gui.jobs.running = En ejecución
+gui.jobs.runningElsewhere = Se está ejecutando en otro proceso (p. ej. una tarea programada).
+gui.jobs.invalid = Configuración no válida
+gui.jobs.invalidInfo = Este trabajo no se puede ejecutar hasta que se corrija lo siguiente:
+gui.jobs.runNow = Ejecutar ahora
+gui.jobs.stop = Detener
+gui.jobs.stopTitle = Detener copia de seguridad
+gui.jobs.stopConfirm = ¿Detener la copia de seguridad en curso de "{job}"? La base de datos que se está copiando se marcará como errónea.
+gui.jobs.stopNotHere = Esta ejecución no se inició desde esta ventana y no se puede detener aquí.
+gui.jobs.edit = Editar
+gui.jobs.duplicate = Duplicar
+gui.jobs.duplicateTitle = Duplicar "{job}"
+gui.jobs.duplicateInfo = Se copia toda la configuración, incluidas la contraseña guardada y la programación. No se crea ninguna tarea programada para la copia.
+gui.jobs.duplicateName = Nombre del nuevo trabajo
+gui.jobs.duplicated = Trabajo "{job}" creado.
+gui.jobs.history = Historial
+gui.jobs.delete = Eliminar
+gui.jobs.deleteTitle = Eliminar trabajo
+gui.jobs.deleteConfirm = ¿Eliminar el trabajo "{job}"? También se eliminan su tarea programada y su archivo .bat predeterminado (puede solicitarse la aprobación de un administrador). Los registros y los archivos de copia de seguridad se conservan.
+gui.jobs.deleted = Trabajo "{job}" eliminado.
+
+# ---------- GUI: Resultado de la ejecución ----------
+gui.run.starting = Iniciando…
+gui.run.phaseBackup = Copiando {db} ({index}/{total}) – {percent} %
+gui.run.phaseVerify = Verificando {db} ({index}/{total}) – {percent} %
+gui.run.phaseZip = Comprimiendo {db} ({index}/{total}) – {percent} %
+gui.run.success = Correcto
+gui.run.partial = Error parcial
+gui.run.failed = Error
+gui.run.alreadyRunning = Ya en ejecución
+gui.run.doneSuccess = "{job}" se completó correctamente.
+gui.run.donePartial = "{job}" se completó con errores. Consulte Registros para ver los detalles.
+gui.run.doneFailed = "{job}" falló. Consulte Registros para ver los detalles.
+gui.run.doneFailedError = "{job}" falló: {error}
+gui.run.doneAlreadyRunning = "{job}" no se inició porque ya se está ejecutando.
+gui.run.job = Trabajo
+gui.run.status = Estado
+gui.run.server = Servidor
+gui.run.edition = Edición
+gui.run.protocol = Protocolo
+gui.run.start = Inicio
+gui.run.duration = Duración
+gui.run.counts = Bases de datos
+gui.run.countsText = {ok} correctas, {failed} con error, {skipped} omitidas
+gui.run.warnings = Advertencias:
+gui.run.databases = Bases de datos
+gui.run.database = Base de datos
+gui.run.dbSuccess = Correcta
+gui.run.dbFailed = Con error
+gui.run.dbSkipped = Omitida
+gui.run.file = Archivo
+gui.run.size = Tamaño
+gui.run.verified = Verificada
+gui.run.error = Error
+gui.run.archives = Archivos ZIP
+gui.run.bakDeleted = .bak eliminado
+gui.run.retention = Limpieza de copias antiguas
+gui.run.deletedFile = Archivo eliminado
+gui.run.fileDate = Fecha de la copia
+gui.run.nothingDeleted = No hay copias de seguridad antiguas que eliminar.
+
+# ---------- GUI: Editor de trabajos ----------
+gui.editor.newJob = Nuevo trabajo
+gui.editor.unsaved = Cambios sin guardar
+gui.editor.back = Trabajos
+gui.editor.save = Guardar
+gui.editor.saved = Trabajo "{job}" guardado.
+gui.editor.saveFailed = El trabajo no se guardó. Corrija los campos marcados.
+gui.editor.saveErrors = No se pudo guardar el trabajo:
+gui.editor.saveWarnings = Guardado con advertencias:
+gui.editor.saveFirstTitle = Guardar trabajo
+gui.editor.saveFirst = Esta acción usa el trabajo guardado. ¿Guardar los cambios ahora?
+gui.editor.discardTitle = Cambios sin guardar
+gui.editor.discard = El trabajo tiene cambios sin guardar. ¿Salir sin guardar?
+gui.editor.discardConfirm = Descartar cambios
+gui.editor.name = Nombre del trabajo
+gui.editor.namePlaceholder = p. ej. Copia_Nocturna
+gui.editor.nameHint = Se usa como nombre de archivo y de tarea programada: letras, dígitos, '_', '-' y '.' (máx. 64).
+gui.editor.tabConnection = Conexión
+gui.editor.tabDatabases = Bases de datos
+gui.editor.tabBackup = Copia de seguridad
+gui.editor.tabArchive = ZIP y retención
+gui.editor.tabSchedule = Programación
+gui.editor.tabErrors = {count} error(es) en esta pestaña
+
+gui.close.title = Cerrar SqlBackup
+gui.close.unsaved = El editor de trabajos tiene cambios sin guardar; se perderán.
+gui.close.running = Se cancelarán las copias de seguridad en curso: {jobs}
+gui.close.confirm = ¿Cerrar de todos modos?
+
+# ---------- GUI: Conexión ----------
+gui.conn.server = Servidor
+gui.conn.serverName = Nombre del servidor
+gui.conn.serverPlaceholder = p. ej. . o SRV01 o 10.0.0.5
+gui.conn.serverHint = Nombre de host o dirección IP. Para este equipo use "." o localhost. También se acepta HOST\\INSTANCIA.
+gui.conn.instance = Instancia
+gui.conn.instanceHint = Déjelo vacío para la instancia predeterminada (MSSQLSERVER).
+gui.conn.port = Puerto
+gui.conn.portHint = Vacío = predeterminado / resuelto a través de la instancia. Solo para TCP.
+gui.conn.protocol = Protocolo
+gui.conn.protocolAuto = Automático
+gui.conn.protocolHint = Automático prueba los protocolos uno a uno (local: Shared Memory, Named Pipes, TCP; remoto: TCP, Named Pipes).
+gui.conn.auth = Autenticación
+gui.conn.authType = Tipo de autenticación
+gui.conn.authSql = Autenticación de SQL Server
+gui.conn.authWindows = Autenticación de Windows
+gui.conn.user = Nombre de usuario
+gui.conn.password = Contraseña
+gui.conn.passwordStored = (contraseña guardada sin cambios)
+gui.conn.passwordHint = Déjelo vacío para conservar la contraseña guardada. Se almacena cifrada para este equipo (DPAPI).
+gui.conn.passwordUnreadable = La contraseña guardada no se puede descifrar en este equipo (es posible que el trabajo se haya copiado de otro equipo). Vuelva a introducir la contraseña. ({error})
+gui.conn.windowsAuthInfo = Se usa la cuenta que ejecuta la copia de seguridad. Si la tarea programada se ejecuta como SYSTEM, SQL Server necesita un inicio de sesión para NT AUTHORITY\\SYSTEM (en un servidor remoto: DOMINIO\\EQUIPO$) con permiso de copia de seguridad.
+gui.conn.options = Opciones
+gui.conn.encrypt = Cifrar la conexión
+gui.conn.trustCert = Confiar en el certificado del servidor
+gui.conn.trustCertHint = Sin cifrado, solo se cifra el inicio de sesión y no se valida el certificado del servidor. Con el cifrado activado, active esta opción para certificados autofirmados (p. ej. una instalación predeterminada de SQL Express).
+gui.conn.timeout = Tiempo de espera de conexión (segundos)
+gui.conn.test = Prueba de conexión
+gui.conn.testButton = Probar conexión
+gui.conn.testing = Conectando…
+gui.conn.testOk = Conexión correcta.
+gui.conn.infoServer = Servidor
+gui.conn.infoVersion = Versión
+gui.conn.infoEdition = Edición
+gui.conn.infoProtocol = Protocolo
+gui.conn.infoLogin = Inicio de sesión
+gui.conn.infoSysAdmin = sysadmin
+gui.conn.infoBackupDir = Carpeta de copia de seguridad predeterminada
+gui.conn.noCompression = Esta edición no admite la compresión de copias de seguridad; la compresión se desactiva automáticamente al ejecutar el trabajo.
+
+# ---------- GUI: Bases de datos ----------
+gui.db.options = Selección
+gui.db.includeNew = Incluir bases de datos nuevas
+gui.db.includeNewHint = Si está activado, en cada ejecución se copian todas las bases de datos del servidor excepto las desmarcadas; las bases de datos creadas más adelante se incluyen automáticamente.
+gui.db.excludeSystem = Excluir bases de datos del sistema (master, model, msdb)
+gui.db.list = Bases de datos del servidor
+gui.db.refresh = Cargar lista
+gui.db.loading = Cargando bases de datos…
+gui.db.notLoaded = Introduzca los datos de conexión y cargue la lista de bases de datos.
+gui.db.selectedList = Seleccionadas:
+gui.db.summarySelected = {count} seleccionada(s)
+gui.db.summaryAllNew = Todas las bases de datos, {count} excluida(s)
+gui.db.selectAll = Seleccionar todo
+gui.db.missing = Seleccionadas pero no encontradas en el servidor: {list}
+gui.db.removeMissing = Quitar de la selección
+gui.db.empty = No se encontraron bases de datos.
+gui.db.name = Nombre
+gui.db.system = sistema
+gui.db.readOnly = solo lectura
+gui.db.state = Estado
+gui.db.notBackupable = no se puede copiar
+gui.db.recovery = Modelo de recuperación
+gui.db.size = Tamaño
+gui.db.lastBackup = Última copia completa
+gui.db.never = nunca
+
+# ---------- GUI: Copia de seguridad ----------
+gui.backup.folders = Carpeta de copia de seguridad
+gui.backup.serverPath = Carpeta en el SQL Server (ruta del servidor)
+gui.backup.serverPathHint = SQL Server escribe aquí la copia de seguridad, vista desde el equipo de SQL Server (p. ej. D:\\SqlBackups).
+gui.backup.useServerDefault = Predeterminada del servidor
+gui.backup.accessPath = La misma carpeta vista desde este programa (ruta de acceso)
+gui.backup.accessPathHint = Déjelo vacío para un servidor local. Para un servidor remoto, introduzca la ruta del recurso compartido (p. ej. \\\\SRV01\\SqlBackups). Necesaria para ZIP y retención.
+gui.backup.checkAccess = Comprobar acceso
+gui.backup.noFolder = Introduzca primero una carpeta.
+gui.backup.accessOk = Este programa puede leer, escribir y eliminar en {path}.
+gui.backup.accessFailed = Sin acceso a {path}: {error}
+gui.backup.pathsInfo = El archivo de copia de seguridad lo escribe la cuenta de servicio de SQL Server (p. ej. NT Service\\MSSQL$SQLEXPRESS), no este programa. Elija una carpeta a la que puedan acceder tanto la cuenta de servicio como la cuenta que ejecuta el trabajo, p. ej. D:\\SqlBackups (la carpeta predeterminada en Program Files suele denegar el acceso a otras cuentas).
+gui.backup.fileName = Nombre de archivo
+gui.backup.template = Plantilla de nombre de archivo
+gui.backup.templateHint = {db} es obligatorio. También: {server}, {job} y partes de fecha como {yyyyMMdd}, {HHmmss}, {yyyy-MM-dd}. Se agrega .bak si falta.
+gui.backup.preview = Ejemplo:
+gui.backup.options = Opciones
+gui.backup.compression = Compresión
+gui.backup.checksum = Suma de comprobación
+gui.backup.copyOnly = Copia de seguridad de solo copia
+gui.backup.copyOnlyHint = Las copias de seguridad de solo copia no afectan a la cadena de copias de otras herramientas de copia de seguridad.
+gui.backup.verify = Verificar después de la copia (RESTORE VERIFYONLY)
+gui.backup.commandTimeout = Tiempo de espera de comandos (minutos)
+gui.backup.commandTimeoutHint = 0 = ilimitado.
+gui.backup.compressionUnsupported = El servidor conectado no admite compresión (Express/Web); se desactivará al ejecutar.
+
+# ---------- GUI: ZIP y retención ----------
+gui.archive.zip = ZIP
+gui.archive.zipEnabled = Comprimir las copias de seguridad en ZIP
+gui.archive.mode = Archivos ZIP
+gui.archive.modeSingle = Un ZIP para todas las bases de datos
+gui.archive.modePerDb = Un ZIP por base de datos
+gui.archive.deleteBak = Eliminar los archivos .bak después de un ZIP correcto
+gui.archive.zipHint = El ZIP se crea cuando terminan todas las copias de seguridad, en la misma carpeta.
+gui.archive.retention = Retención
+gui.archive.retentionMode = Eliminar copias de seguridad antiguas
+gui.archive.retentionNone = Nunca
+gui.archive.retentionByDays = Más antiguas que un número de días
+gui.archive.retentionByCount = Conservar las últimas N copias
+gui.archive.retentionDays = Días que se conservan
+gui.archive.retentionDaysHint = Las copias más antiguas se eliminan tras una copia de seguridad correcta.
+gui.archive.retentionCount = Copias que se conservan (por base de datos)
+gui.archive.retentionCountHint = Las copias más antiguas que superen este número se eliminan tras una copia de seguridad correcta.
+gui.archive.retentionInfo = Solo se eliminan los archivos que coinciden con la plantilla de nombre de archivo de este trabajo; la fecha de la copia se lee del nombre del archivo. Dos trabajos que usan la misma carpeta, plantilla y base de datos comparten los mismos archivos.
+gui.archive.accessWarning = El ZIP y la retención trabajan directamente con los archivos, por lo que este programa (y la cuenta de la tarea programada) necesita acceso de lectura, escritura y eliminación a la ruta de acceso. Use "Comprobar acceso" en la pestaña Copia de seguridad.
+
+# ---------- GUI: Programación ----------
+gui.schedule.title = Programación
+gui.schedule.frequency = Frecuencia
+gui.schedule.daily = Diaria
+gui.schedule.weekly = Semanal
+gui.schedule.hourly = Cada pocas horas
+gui.schedule.time = Hora
+gui.schedule.startTime = Hora de inicio
+gui.schedule.days = Días
+gui.schedule.interval = Repetir cada (horas)
+gui.schedule.intervalHint = 1-23. La primera ejecución es a la hora de inicio.
+gui.schedule.runAs = Ejecutar como
+gui.schedule.runAsSystem = SYSTEM (recomendado)
+gui.schedule.runAsCurrent = Usuario actual
+gui.schedule.runAsHint = SYSTEM se ejecuta aunque no haya nadie con la sesión iniciada; crear la tarea requiere la aprobación de un administrador.
+gui.schedule.warnings = Compruebe antes de crear la tarea:
+gui.schedule.dailyText = Todos los días a las {time}
+gui.schedule.weeklyText = {days} a las {time}
+gui.schedule.hourlyText = Cada {hours} h desde las {time}
+gui.task.title = Tarea programada
+gui.task.notSaved = Guarde el trabajo para crear una tarea programada.
+gui.task.none = No se ha creado ninguna tarea programada para este trabajo.
+gui.task.path = Tarea
+gui.task.state = Estado
+gui.task.stateReady = Lista
+gui.task.stateRunning = En ejecución
+gui.task.stateDisabled = Deshabilitada
+gui.task.stateUnknown = Desconocido
+gui.task.lastRun = Última ejecución
+gui.task.never = Nunca
+gui.task.nextRun = Próxima ejecución
+gui.task.account = Cuenta
+gui.task.outdated = La tarea no coincide con la configuración guardada del trabajo (programación, cuenta o ruta del programa). Actualice la tarea.
+gui.task.create = Crear tarea
+gui.task.update = Actualizar tarea
+gui.task.created = Tarea programada guardada.
+gui.task.run = Ejecutar tarea ahora
+gui.task.started = Tarea iniciada. El resultado aparecerá en Registros.
+gui.task.delete = Eliminar tarea
+gui.task.deleteTitle = Eliminar tarea programada
+gui.task.deleteConfirm = ¿Eliminar la tarea programada {path}? El trabajo en sí se conserva.
+gui.task.deleted = Tarea programada eliminada.
+gui.task.uacHint = Las tareas usan el trabajo guardado. Windows puede solicitar la aprobación de un administrador (UAC).
+gui.batch.title = Archivo por lotes
+gui.batch.hint = Un archivo .bat que ejecuta este trabajo, para usarlo con otros programadores o en ejecuciones manuales. No contiene ninguna contraseña.
+gui.batch.save = Guardar .bat…
+gui.batch.saved = Guardado: {path}
+
+# ---------- GUI: Registros ----------
+gui.logs.allJobs = Todos los trabajos
+gui.logs.tabRuns = Historial de ejecuciones
+gui.logs.tabFiles = Archivos de registro
+gui.logs.start = Inicio
+gui.logs.job = Trabajo
+gui.logs.status = Estado
+gui.logs.databases = Bases de datos
+gui.logs.duration = Duración
+gui.logs.error = Error
+gui.logs.unreadable = Ilegible
+gui.logs.noRuns = Todavía no hay ejecuciones.
+gui.logs.runTitle = Detalles de la ejecución
+gui.logs.date = Fecha
+gui.logs.size = Tamaño
+gui.logs.file = Archivo
+gui.logs.noFiles = No hay archivos de registro.
+gui.logs.logTitle = Registro: {job} – {date}
+gui.logs.truncated = El archivo es grande ({size}); solo se muestra el final.
+
+# ---------- GUI: Configuración ----------
+gui.settings.defaults = Valores predeterminados
+gui.settings.defaultServerPath = Carpeta de copia de seguridad predeterminada (ruta del servidor)
+gui.settings.defaultServerPathHint = Se sugiere para los nuevos trabajos.
+gui.settings.defaultAccessPath = Ruta de acceso predeterminada
+gui.settings.defaultAccessPathHint = Se sugiere para los nuevos trabajos; déjela vacía si hace copias de un servidor local.
+gui.settings.logKeepDays = Conservar registros (días)
+gui.settings.logKeepDaysHint = Se eliminan los archivos de registro y los informes de ejecución más antiguos. Vacío = 30.
+gui.settings.saveDefaults = Guardar

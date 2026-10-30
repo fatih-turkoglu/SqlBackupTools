@@ -7,6 +7,24 @@ Windows için Microsoft SQL Server otomatik yedekleme programı. Bir veya daha �
 - Arayüz dili: İngilizce (varsayılan) ve Türkçe.
 - Kapsam dışı: differential / transaction log yedeği, e-posta bildirimi.
 
+## İndir
+
+Derlemeye gerek yok; son sürümü indirin:
+
+| Dosya | Ne zaman |
+|---|---|
+| [**SqlBackup-windows-amd64-setup.exe**](https://github.com/OWNER/SqlBackup/releases/latest/download/SqlBackup-windows-amd64-setup.exe) | **Önerilen.** `Program Files`'a kurar; zamanlanmış görevi SYSTEM hesabıyla çalıştırmak için gereklidir. |
+| [SqlBackup-windows-amd64.zip](https://github.com/OWNER/SqlBackup/releases/latest/download/SqlBackup-windows-amd64.zip) | Taşınabilir; kurulum yapmadan denemek veya görevi kendi Windows hesabınızla çalıştırmak için. |
+| [SHA256SUMS.txt](https://github.com/OWNER/SqlBackup/releases/latest/download/SHA256SUMS.txt) | İndirilen dosyanın özetini doğrulamak için. |
+
+Önceki sürümler ve değişiklik notları: [Releases](https://github.com/OWNER/SqlBackup/releases).
+
+- Program kod imzalı değildir; Windows SmartScreen ilk açılışta "Windows bilgisayarınızı korudu" diyebilir. **Ek bilgi → Yine de çalıştır** ile devam edin.
+- İndirilen dosyayı doğrulamak için PowerShell'de çıkan değeri `SHA256SUMS.txt` ile karşılaştırın:
+  ```powershell
+  (Get-FileHash .\SqlBackup-windows-amd64-setup.exe -Algorithm SHA256).Hash
+  ```
+
 ## Gereksinimler
 
 - Windows 10 / 11 veya Windows Server 2016+ (64 bit)
@@ -15,9 +33,9 @@ Windows için Microsoft SQL Server otomatik yedekleme programı. Bir veya daha �
 
 ## Kurulum
 
-**Kurulum paketi:** `SqlBackup-amd64-installer.exe` programı `C:\Program Files\SqlBackup` klasörüne kurar, Başlat menüsü ve masaüstü kısayolu ekler.
+**Kurulum paketi:** `SqlBackup-windows-amd64-setup.exe` programı `C:\Program Files\SqlBackup` klasörüne kurar, Başlat menüsü ve masaüstü kısayolu ekler.
 
-**Taşınabilir:** `SqlBackup.exe` ve yanındaki `lang\` klasörünü aynı klasöre kopyalayın. `lang\` yoksa program yalnızca İngilizce çalışır.
+**Taşınabilir:** zip'i bir klasöre açın; `SqlBackup.exe` ile yanındaki `lang\` klasörü birlikte durmalıdır (`lang\` yoksa program yalnızca İngilizce çalışır). Zip'i kullanıcı klasörüne (Masaüstü, İndirilenler) açarsanız SYSTEM görevi oluşturulamaz (bkz. [Zamanlanmış görev](#zamanlanmış-görev)); bunun için kurulum paketini kullanın.
 
 Program işlerini, ayarlarını ve loglarını `%ProgramData%\SqlBackup` klasöründe tutar (zamanlanmış görev SYSTEM hesabıyla da çalışabildiği için kullanıcı profili kullanılmaz):
 
@@ -129,7 +147,8 @@ Go 1.27+, Node.js ve Wails v2 CLI gerekir (`go install github.com/wailsapp/wails
 
 ```powershell
 .\build.ps1                  # temiz sürüm build'i → build\bin\SqlBackup.exe + lang\
-.\build.ps1 -Nsis            # + kurulum paketi (NSIS / makensis PATH'te olmalı)
+.\build.ps1 -Nsis            # + kurulum paketi (NSIS kurulu olmalı)
+.\build.ps1 -Release         # + dist\: setup.exe, taşınabilir zip, SHA256SUMS.txt
 & "$(go env GOPATH)\bin\wails.exe" dev
 
 go vet ./... ; go test ./internal/...
@@ -137,4 +156,21 @@ $env:SQLBACKUP_TEST_SERVER = '.\SQLEXPRESS'; go test ./internal/...   # SQL Serv
 $env:SQLBACKUP_TEST_TASKS = '1'; go test ./internal/scheduler/       # Görev Zamanlayıcı entegrasyon testleri
 ```
 
-Sürüm numarasının tek kaynağı `wails.json` → `info.productVersion` alanıdır. Mimari ve geliştirme notları: [summary.md](summary.md), [plan.md](plan.md).
+Sürüm numarasının tek kaynağı `wails.json` → `info.productVersion` alanıdır.
+
+### Sürüm yayınlama
+
+Derlenmiş dosyalar repoya eklenmez (`dist/` yok sayılır); GitHub Releases'a yüklenir. Dosya adlarında sürüm olmadığı için yukarıdaki `releases/latest/download/...` linkleri her yeni sürümde kendiliğinden son sürümü gösterir.
+
+1. `wails.json` → `info.productVersion` değerini artırıp commit edin.
+2. Temiz çalışma ağacında `.\build.ps1 -Release` (commit edilmemiş değişiklik varsa uyarır).
+3. Etiketleyip yayınlayın ([GitHub CLI](https://cli.github.com/) ile; etiket sürümle aynı olmalı):
+   ```powershell
+   git tag v0.5.0; git push origin v0.5.0
+   gh release create v0.5.0 dist\* --title "SqlBackup 0.5.0" --generate-notes
+   ```
+   `gh` yoksa GitHub'da **Releases → Draft a new release** ile aynı etiketi seçip `dist\` içindeki üç dosyayı yükleyin.
+
+## Lisans
+
+[MIT](LICENSE)

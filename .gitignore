@@ -11,3 +11,10 @@ frontend/dist
 .vscode/
 .idea/
 Thumbs.db
+
+# Sürüm paketleri (build.ps1 -Release); GitHub Releases'a yüklenir, repoya girmez
+dist/
+
+# Yerel geliştirme notları (yalnızca bu makinede)
+summary.md
+plan.md

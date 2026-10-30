@@ -26,11 +26,11 @@ Derlemeye gerek yok; son sürümü indirin:
 
 | Dosya | Ne zaman |
 |---|---|
-| [**SqlBackup-windows-amd64-setup.exe**](https://github.com/OWNER/SqlBackup/releases/latest/download/SqlBackup-windows-amd64-setup.exe) | **Önerilen.** `Program Files`'a kurar; zamanlanmış görevi SYSTEM hesabıyla çalıştırmak için gereklidir. |
-| [SqlBackup-windows-amd64.zip](https://github.com/OWNER/SqlBackup/releases/latest/download/SqlBackup-windows-amd64.zip) | Taşınabilir; kurulum yapmadan denemek veya görevi kendi Windows hesabınızla çalıştırmak için. |
-| [SHA256SUMS.txt](https://github.com/OWNER/SqlBackup/releases/latest/download/SHA256SUMS.txt) | İndirilen dosyanın özetini doğrulamak için. |
+| [**SqlBackup-windows-amd64-setup.exe**](https://github.com/fatih-turkoglu/SqlBackupTools/releases/latest/download/SqlBackup-windows-amd64-setup.exe) | **Önerilen.** `Program Files`'a kurar; zamanlanmış görevi SYSTEM hesabıyla çalıştırmak için gereklidir. |
+| [SqlBackup-windows-amd64.zip](https://github.com/fatih-turkoglu/SqlBackupTools/releases/latest/download/SqlBackup-windows-amd64.zip) | Taşınabilir; kurulum yapmadan denemek veya görevi kendi Windows hesabınızla çalıştırmak için. |
+| [SHA256SUMS.txt](https://github.com/fatih-turkoglu/SqlBackupTools/releases/latest/download/SHA256SUMS.txt) | İndirilen dosyanın özetini doğrulamak için. |
 
-Önceki sürümler ve değişiklik notları: [Releases](https://github.com/OWNER/SqlBackup/releases).
+Önceki sürümler ve değişiklik notları: [Releases](https://github.com/fatih-turkoglu/SqlBackupTools/releases).
 
 - Program kod imzalı değildir; Windows SmartScreen ilk açılışta "Windows bilgisayarınızı korudu" diyebilir. **Ek bilgi → Yine de çalıştır** ile devam edin.
 - İndirilen dosyayı doğrulamak için PowerShell'de çıkan değeri `SHA256SUMS.txt` ile karşılaştırın:

@@ -26,11 +26,11 @@ No need to build; download the latest release:
 
 | File | When |
 |---|---|
-| [**SqlBackup-windows-amd64-setup.exe**](https://github.com/OWNER/SqlBackup/releases/latest/download/SqlBackup-windows-amd64-setup.exe) | **Recommended.** Installs to `Program Files`; required for running the scheduled task as SYSTEM. |
-| [SqlBackup-windows-amd64.zip](https://github.com/OWNER/SqlBackup/releases/latest/download/SqlBackup-windows-amd64.zip) | Portable; for trying it without installing, or running the task under your own Windows account. |
-| [SHA256SUMS.txt](https://github.com/OWNER/SqlBackup/releases/latest/download/SHA256SUMS.txt) | For verifying the downloaded file. |
+| [**SqlBackup-windows-amd64-setup.exe**](https://github.com/fatih-turkoglu/SqlBackupTools/releases/latest/download/SqlBackup-windows-amd64-setup.exe) | **Recommended.** Installs to `Program Files`; required for running the scheduled task as SYSTEM. |
+| [SqlBackup-windows-amd64.zip](https://github.com/fatih-turkoglu/SqlBackupTools/releases/latest/download/SqlBackup-windows-amd64.zip) | Portable; for trying it without installing, or running the task under your own Windows account. |
+| [SHA256SUMS.txt](https://github.com/fatih-turkoglu/SqlBackupTools/releases/latest/download/SHA256SUMS.txt) | For verifying the downloaded file. |
 
-Older versions and release notes: [Releases](https://github.com/OWNER/SqlBackup/releases).
+Older versions and release notes: [Releases](https://github.com/fatih-turkoglu/SqlBackupTools/releases).
 
 - The program is not code-signed; Windows SmartScreen may say "Windows protected your PC" on first launch. Continue with **More info → Run anyway**.
 - To verify a download, compare the value printed by PowerShell with `SHA256SUMS.txt`:
